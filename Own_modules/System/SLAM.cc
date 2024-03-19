@@ -15,47 +15,24 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
- * Author: Juan J. Gómez Rodríguez (jjgomez@unizar.es)
- *
- * Implementation of the Map visualizer
- */
+#include "SLAM.h"
 
-#ifndef SLAM_MAPVISUALIZER_H
-#define SLAM_MAPVISUALIZER_H
+#include "Optimization/g2oBundleAdjustment.h"
 
-#include "Map/Map.h"
+using namespace std;
 
-#include <pangolin/pangolin.h>
+SLAM::SLAM() : tracker_() {
+}
 
-#include <memory>
+SLAM::SLAM(const std::string &settingsFile) {
+    //Load settings from file
+    cout << "Loading system settings from: " << settingsFile << endl;
+    settings_ = Settings(settingsFile);
+    cout << settings_ << endl;
 
-class MapVisualizer {
-public:
-    MapVisualizer() = delete;
-    MapVisualizer(std::shared_ptr<Map> pMap);
+    //Create map
+    pMap_ = shared_ptr<Map>(new Map(settings_.getMinCommonObs()));
 
-    /*
-     * Updates the visualization of the map
-     */
-    void update();
-
-    /*
-     * Updates the current pose
-     */
-    void updateCurrentPose(Sophus::SE3f& currPose);
-
-private:
-    std::shared_ptr<Map> pMap_;
-
-    void drawMapPoints();
-    void drawCurrentPose();
-
-    pangolin::View d_cam;
-    pangolin::OpenGlRenderState s_cam;
-
-    Sophus::SE3f currPose_;
-};
-
-
-#endif //SLAM_MAPVISUALIZER_H
+    //Create visualizers
+    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
+}

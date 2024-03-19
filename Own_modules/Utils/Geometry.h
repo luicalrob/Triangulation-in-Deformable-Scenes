@@ -21,8 +21,8 @@
  * File with some useful geometric functons
  */
 
-#ifndef MINI_SLAM_GEOMETRY_H
-#define MINI_SLAM_GEOMETRY_H
+#ifndef SLAM_GEOMETRY_H
+#define SLAM_GEOMETRY_H
 
 #include <Eigen/Core>
 #include <sophus/se3.hpp>
@@ -51,4 +51,4 @@ float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2);
  */
 Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12);
 
-#endif //MINI_SLAM_GEOMETRY_H
+#endif //SLAM_GEOMETRY_H

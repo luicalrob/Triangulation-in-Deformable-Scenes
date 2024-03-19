@@ -21,8 +21,8 @@
  * This class represents a MapPoint: a 3D landmark
  */
 
-#ifndef MINI_SLAM_MAPPOINT_H
-#define MINI_SLAM_MAPPOINT_H
+#ifndef SLAM_MAPPOINT_H
+#define SLAM_MAPPOINT_H
 
 #include <opencv2/opencv.hpp>
 
@@ -96,4 +96,4 @@ private:
 };
 
 
-#endif //MINI_SLAM_MAPPOINT_H
+#endif //SLAM_MAPPOINT_H

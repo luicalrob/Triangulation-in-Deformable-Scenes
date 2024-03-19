@@ -18,44 +18,51 @@
 /*
  * Author: Juan J. Gómez Rodríguez (jjgomez@unizar.es)
  *
- * Implementation of the Map visualizer
+ * This class is the Mini-SLAM system. It takes care of processing each image and send it to the
+ * the tracker and to the mapping
  */
 
-#ifndef SLAM_MAPVISUALIZER_H
-#define SLAM_MAPVISUALIZER_H
+#ifndef SLAM_SLAM_H
+#define SLAM_SLAM_H
 
 #include "Map/Map.h"
 
-#include <pangolin/pangolin.h>
+#include "System/Settings.h"
+¡
+#include "Visualization/MapVisualizer.h"
 
-#include <memory>
+#include "sophus/se3.hpp"
 
-class MapVisualizer {
+#include <opencv2/opencv.hpp>
+
+class SLAM {
 public:
-    MapVisualizer() = delete;
-    MapVisualizer(std::shared_ptr<Map> pMap);
+    SLAM();
 
     /*
-     * Updates the visualization of the map
+     * Constructor with the path to the settings file
      */
-    void update();
-
-    /*
-     * Updates the current pose
-     */
-    void updateCurrentPose(Sophus::SE3f& currPose);
+    SLAM(const std::string& settingsFile);
 
 private:
+
+    /*
+     * Settings of the system. Loaded from a file
+     */
+    Settings settings_;
+
+    /*
+     * Map of the SLAM system
+     */
     std::shared_ptr<Map> pMap_;
 
-    void drawMapPoints();
-    void drawCurrentPose();
+    /*
+     * Visualizers
+     */
+    std::shared_ptr<FrameVisualizer> visualizer_;
+    std::shared_ptr<MapVisualizer> mapVisualizer_;
 
-    pangolin::View d_cam;
-    pangolin::OpenGlRenderState s_cam;
-
-    Sophus::SE3f currPose_;
 };
 
 
-#endif //SLAM_MAPVISUALIZER_H
+#endif //SLAM_SLAM_H

@@ -22,8 +22,8 @@
  * a graph relating observations between them
  */
 
-#ifndef MINI_SLAM_MAP_H
-#define MINI_SLAM_MAP_H
+#ifndef SLAM_MAP_H
+#define SLAM_MAP_H
 
 
 #include "Map/MapPoint.h"
@@ -78,4 +78,4 @@ private:
 };
 
 
-#endif //MINI_SLAM_MAP_H
+#endif //SLAM_MAP_H
