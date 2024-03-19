@@ -14,14 +14,21 @@ set(root ${CMAKE_CURRENT_SOURCE_DIR})
 
 #Define header and source files of the library
 set(HEADER_FILES
+        ${root}/Calibration/CameraModel.h
+        ${root}/Calibration/PinHole.h
         ${root}/Map/Map.h
         ${root}/Map/MapPoint.h
+        ${root}/System/Settings.h
+        ${root}/System/SLAM.h
         ${root}/Visualization/MapVisualizer.h
         ${root}/Utils/Geometry.h)
 
 set(SOURCE_FILES
+        ${root}/Calibration/PinHole.cc
         ${root}/Map/Map.cc
         ${root}/Map/MapPoint.cc
+        ${root}/System/Settings.cc
+        ${root}/System/SLAM.cc
         ${root}/Visualization/MapVisualizer.cc
         ${root}/Utils/Geometry.cc)
 
