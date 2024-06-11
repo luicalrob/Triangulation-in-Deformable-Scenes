@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 
 def generate_points(num_points, movement_scale=0.1):
@@ -16,9 +17,9 @@ def save_points(filename, points):
     np.savetxt(filename, points, delimiter=',')
 
 # Generate and save original and moved points
-num_points = 100  # Number of points in the dataset
+num_points = 20  # Number of points in the dataset
 movement_scale = 0.1  # Scale of movement for the moved points
 original_points, moved_points = generate_points(num_points, movement_scale)
 
-save_points('original_points.csv', original_points)
-save_points('moved_points.csv', moved_points)
+save_points('Data/original_points.csv', original_points)
+save_points('Data/moved_points.csv', moved_points)

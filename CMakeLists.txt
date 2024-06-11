@@ -25,4 +25,4 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
 endif()
 
 add_subdirectory(Modules)
-#add_subdirectory(Apps)
+add_subdirectory(Execution)

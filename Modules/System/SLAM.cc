@@ -34,7 +34,7 @@ SLAM::SLAM(const std::string &settingsFile) {
     //Create visualizers
     mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
 
-    loadPoints("original_points.csv", "moved_points.csv");
+    loadPoints("Data/original_points.csv", "Data/moved_points.csv");
 
     Sophus::SE3f T1w, T2w;
     std::vector<cv::Point2f> points1, points2;
