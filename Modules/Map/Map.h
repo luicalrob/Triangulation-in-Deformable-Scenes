@@ -27,6 +27,7 @@
 
 
 #include "Map/MapPoint.h"
+#include "Map/KeyFrame.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -50,9 +51,19 @@ public:
     void insertMapPoint(std::shared_ptr<MapPoint> pMP);
 
     /*
+     * Inserts a new KeyFrame into the map
+     */
+    void insertKeyFrame(std::shared_ptr<KeyFrame> pKF);
+
+    /*
      * Removes a MapPoint from the map
      */
     void removeMapPoint(ID id);
+
+    /*
+     * Gets the KeyFrame with the given id
+     */
+    std::shared_ptr<KeyFrame> getKeyFrame(ID id);
 
     /*
      * Gets the MapPoint with the given id
@@ -65,9 +76,9 @@ public:
     std::unordered_map<ID,std::shared_ptr<MapPoint>>& getMapPoints();
 
     /*
-     * Fuses 2 MapPoints in one so the final MapPoints holds the observation from both
+     * Gets all KeyFrames of the map
      */
-    void fuseMapPoints(ID mp1, ID mp2);
+    std::unordered_map<ID,std::shared_ptr<KeyFrame>>& getKeyFrames();
 
 private:
 
@@ -75,6 +86,9 @@ private:
      * Mapping of the KeyFrame/MapPoint ids and the KeyFrame/MapPoint itself
      */
     std::unordered_map<ID,std::shared_ptr<MapPoint>> mMapPoints_;
+    std::unordered_map<ID,std::shared_ptr<KeyFrame>> mKeyFrames_;
+
+    float minCommonObs_;
 };
 
 

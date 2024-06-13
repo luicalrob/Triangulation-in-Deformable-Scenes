@@ -18,27 +18,24 @@
 /*
  * Author: Juan J. Gómez Rodríguez (jjgomez@unizar.es)
  *
- * A demo showing the Mini-SLAM library processing a sequence of the EuRoC dataset
+ * Implementaiton of the Budle Adjustemn problem with the g2o optimization library
  */
 
-#include "System/SLAM.h"
+#ifndef MINI_SLAM_G2OBUNDLEADJUSTMENT_H
+#define MINI_SLAM_G2OBUNDLEADJUSTMENT_H
 
-#include <opencv2/opencv.hpp>
+#include "Map/Map.h"
 
-using namespace std;
+/*
+ * Performs a full Bundle Adjustment (optimizes both camera poses and 3D points)
+ */
+void bundleAdjustment(Map* pMap);
 
-int main(){
-    //Check program parameters are good
-    // if(argc != 4){
-    //     cerr << "[Error]: you need to invoke the program with 1 parameter: " << endl;
-    //     cerr << "\ttrajectory file name" << endl;
-    //     cerr << "Finishing execution..." << endl;
-    //     return -1;
-    // }
-
-    //Create SLAM system
-    SLAM SLAM("Data/Test.yaml");
+/*
+ * Performs an only pose optimization with the given Frame. It detects outliers and removes them
+ * from the Frame. Returns the number of inliers (the number of MapPoints hold after the optimization)
+ */
+int poseOnlyOptimization(Frame& currFrame);
 
 
-    return 0;
-}
+#endif //MINI_SLAM_G2OBUNDLEADJUSTMENT_H

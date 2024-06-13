@@ -49,6 +49,7 @@ private:
     std::shared_ptr<Map> pMap_;
 
     void drawMapPoints();
+    void drawKeyFrames();
     void drawCurrentPose();
 
     pangolin::View d_cam;

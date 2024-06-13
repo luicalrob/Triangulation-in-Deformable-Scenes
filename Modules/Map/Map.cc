@@ -31,10 +31,20 @@ void Map::insertMapPoint(std::shared_ptr<MapPoint> pMP) {
     mMapPoints_[pMP->getId()] = pMP;
 }
 
+void Map::insertKeyFrame(std::shared_ptr<KeyFrame> pKF) {
+    mKeyFrames_[pKF->getId()] = pKF;
+}
+
 void Map::removeMapPoint(ID id) {
     mMapPoints_.erase(id);
 }
 
+std::shared_ptr<KeyFrame> Map::getKeyFrame(ID id) {
+    if(mKeyFrames_.count(id) != 0)
+        return mKeyFrames_[id];
+    else
+        return nullptr;
+}
 
 std::shared_ptr<MapPoint> Map::getMapPoint(ID id) {
     if(mMapPoints_.count(id) != 0)
@@ -47,17 +57,6 @@ std::unordered_map<ID, std::shared_ptr<MapPoint> > & Map::getMapPoints() {
     return mMapPoints_;
 }
 
-void Map::fuseMapPoints(ID mp1, ID mp2) {
-    //Decide which point we keep alive and which we kill
-    int obs1 = mMapPointObs_[mp1].size();
-    int obs2 = mMapPointObs_[mp2].size();
-
-    ID mpToKeep = (obs1 > obs2) ? mp1 : mp2;
-    ID mpToDelete = (obs1 > obs2) ? mp2 : mp1;
-
-    removeMapPoint(mpToDelete);
-}
-
-int Map::getNumberOfObservations(ID mp) {
-    return mMapPointObs_[mp].size();
+std::unordered_map<ID, std::shared_ptr<KeyFrame> > & Map::getKeyFrames() {
+    return mKeyFrames_;
 }

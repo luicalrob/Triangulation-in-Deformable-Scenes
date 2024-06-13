@@ -28,7 +28,8 @@
 #include "Map/Map.h"
 
 #include "System/Settings.h"
-¡
+
+#include "Visualization/FrameVisualizer.h"
 #include "Visualization/MapVisualizer.h"
 
 #include "sophus/se3.hpp"

@@ -62,6 +62,15 @@ Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12){
     /*
      * Your code for Lab 4 - Task 2 here!
      */
+    Eigen::Matrix<float,3,3> R = T12.rotationMatrix();
+    Eigen::Matrix<float,3,1> t = T12.translation();
+
+    Eigen::Matrix3f tx;
+    tx << 0, -t[2], t[1],
+        t[2], 0, -t[0],
+        -t[1], t[0], 0;
+    
+    E = tx * R;
 
     return E;
 }

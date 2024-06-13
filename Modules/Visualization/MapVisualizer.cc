@@ -24,7 +24,7 @@
 using namespace std;
 
 MapVisualizer::MapVisualizer(shared_ptr<Map> pMap) : pMap_(pMap){
-    pangolin::CreateWindowAndBind("slam",1024,768);
+    pangolin::CreateWindowAndBind("Mini-SLAM",1024,768);
 
     // 3D Mouse handler requires depth testing to be enabled
     glEnable(GL_DEPTH_TEST);
@@ -74,6 +74,54 @@ void MapVisualizer::drawMapPoints() {
     }
 
     glEnd();
+}
+
+void MapVisualizer::drawKeyFrames() {
+    const float &w = 0.05;
+    const float h = w*0.75;
+    const float z = w*0.6;
+
+    auto keyFrames = pMap_->getKeyFrames();
+
+    for(auto kf : keyFrames){
+        if(kf.second->getId() == 0){
+            glColor3f(1.0f,0.0f,0.0f);
+            glLineWidth(5);
+        }
+        else{
+            glColor3f(0.0f,0.0f,1.0f);
+            glLineWidth(2);
+        }
+        Sophus::SE3f Twc = kf.second->getPose().inverse();
+
+        glPushMatrix();
+        glMultMatrixf(Twc.matrix().data());
+
+        glBegin(GL_LINES);
+        glVertex3f(0,0,0);
+        glVertex3f(w,h,z);
+        glVertex3f(0,0,0);
+        glVertex3f(w,-h,z);
+        glVertex3f(0,0,0);
+        glVertex3f(-w,-h,z);
+        glVertex3f(0,0,0);
+        glVertex3f(-w,h,z);
+
+        glVertex3f(w,h,z);
+        glVertex3f(w,-h,z);
+
+        glVertex3f(-w,h,z);
+        glVertex3f(-w,-h,z);
+
+        glVertex3f(-w,h,z);
+        glVertex3f(w,h,z);
+
+        glVertex3f(-w,-h,z);
+        glVertex3f(w,-h,z);
+        glEnd();
+
+        glPopMatrix();
+    }
 }
 
 void MapVisualizer::drawCurrentPose() {
