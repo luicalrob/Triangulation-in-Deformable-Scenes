@@ -14,7 +14,7 @@ def generate_points(num_points, movement_scale=0.1):
     return original_points, moved_points
 
 def save_points(filename, points):
-    np.savetxt(filename, points, delimiter=',')
+    np.savetxt(filename, points, delimiter=' ')
 
 # Generate and save original and moved points
 num_points = 20  # Number of points in the dataset
