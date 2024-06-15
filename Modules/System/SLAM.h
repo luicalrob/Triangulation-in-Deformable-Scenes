@@ -45,6 +45,12 @@ public:
      */
     SLAM(const std::string& settingsFile);
 
+    /*
+     * Load simulation 3D points
+     */
+    void loadPoints(const std::string &originalFile, const std::string &movedFile);
+
+
 private:
 
     /*
@@ -62,6 +68,12 @@ private:
      */
     std::shared_ptr<FrameVisualizer> visualizer_;
     std::shared_ptr<MapVisualizer> mapVisualizer_;
+
+    /*
+     * Simulation Points
+     */
+    std::vector<Eigen::Vector3f> originalPoints_;
+    std::vector<Eigen::Vector3f> movedPoints_;
 
 };
 

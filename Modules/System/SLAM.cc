@@ -48,49 +48,51 @@ SLAM::SLAM(const std::string &settingsFile) {
 }
 
 
-// void SLAM::loadPoints(const std::string &originalFile, const std::string &movedFile) {
-//     std::ifstream originalFileStream(originalFile);
-//     if (!originalFileStream.is_open()) {
-//         cerr << "Error opening original points file: " << originalFile << endl;
-//         return;
-//     }
+void SLAM::loadPoints(const std::string &originalFile, const std::string &movedFile) {
+    std::ifstream originalFileStream(originalFile);
+    if (!originalFileStream.is_open()) {
+        std::cerr << "Error opening original points file: " << originalFile << std::endl;
+        return;
+    }
 
-//     std::ifstream movedFileStream(movedFile);
-//     if (!movedFileStream.is_open()) {
-//         cerr << "Error opening moved points file: " << movedFile << endl;
-//         return;
-//     }
+    std::ifstream movedFileStream(movedFile);
+    if (!movedFileStream.is_open()) {
+        std::cerr << "Error opening moved points file: " << movedFile << std::endl;
+        return;
+    }
 
-//     // Read points from files and create MapPoints
-//     std::string line;
-//     while (std::getline(originalFileStream, line)) {
-//         std::istringstream iss(line);
-//         float x, y, z;
-//         if (!(iss >> x >> y >> z)) {
-//             cerr << "Error reading original points file format" << endl;
-//             continue;
-//         }
-//         Eigen::Vector3f originalPoint(x, y, z);
+    originalPoints_.clear();  // Clear previous points if any
+    movedPoints_.clear();     // Clear previous points if any
 
-//         // Read corresponding moved point
-//         std::getline(movedFileStream, line);
-//         std::istringstream issMoved(line);
-//         float xMoved, yMoved, zMoved;
-//         if (!(issMoved >> xMoved >> yMoved >> zMoved)) {
-//             cerr << "Error reading moved points file format" << endl;
-//             continue;
-//         }
-//         Eigen::Vector3f movedPoint(xMoved, yMoved, zMoved);
+    std::string line;
+    while (std::getline(originalFileStream, line)) {
+        std::istringstream iss(line);
+        float x, y, z;
+        if (!(iss >> x >> y >> z)) {
+            std::cerr << "Error reading original points file format" << std::endl;
+            continue;
+        }
+        Eigen::Vector3f originalPoint(x, y, z);
+        originalPoints_.push_back(originalPoint);
 
-//         // Create MapPoint and add to the map
-//         shared_ptr<MapPoint> pMapPoint(new MapPoint(originalPoint));
-//         pMapPoint->setWorldPosition(movedPoint); // Set the moved position
-//         pMap_->addPoint(pMapPoint);
-//     }
+        // Read corresponding moved point
+        if (!std::getline(movedFileStream, line)) {
+            std::cerr << "Error reading moved points file format" << std::endl;
+            continue;
+        }
+        std::istringstream issMoved(line);
+        float xMoved, yMoved, zMoved;
+        if (!(issMoved >> xMoved >> yMoved >> zMoved)) {
+            std::cerr << "Error reading moved points file format" << std::endl;
+            continue;
+        }
+        Eigen::Vector3f movedPoint(xMoved, yMoved, zMoved);
+        movedPoints_.push_back(movedPoint);
+    }
 
-//     // Close files
-//     originalFileStream.close();
-//     movedFileStream.close();
+    // Close files
+    originalFileStream.close();
+    movedFileStream.close();
 
-//     cout << "Loaded " << pMap_->getNumPoints() << " MapPoints from files." << endl;
-// }
+    std::cout << "Loaded " << originalPoints_.size() << " MapPoints from files." << std::endl;
+}

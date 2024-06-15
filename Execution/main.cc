@@ -28,16 +28,11 @@
 using namespace std;
 
 int main(){
-    //Check program parameters are good
-    // if(argc != 4){
-    //     cerr << "[Error]: you need to invoke the program with 1 parameter: " << endl;
-    //     cerr << "\ttrajectory file name" << endl;
-    //     cerr << "Finishing execution..." << endl;
-    //     return -1;
-    // }
 
     //Create SLAM system
     SLAM SLAM("Data/Test.yaml");
+
+    SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
 
 
     return 0;
