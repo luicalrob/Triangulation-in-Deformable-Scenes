@@ -28,12 +28,17 @@
 using namespace std;
 
 int main(){
+    Eigen::Vector3f firstCamera(0.0, 0.0, 0.0);
+    Eigen::Vector3f secondCamera(0.4, 0.0, 0.0);
 
     //Create SLAM system
     SLAM SLAM("Data/Test.yaml");
 
     SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
 
+    SLAM.setCameraPoses(firstCamera, secondCamera);
+
+    SLAM.createMatches(1); // with an average error of 1 pixel 
 
     return 0;
 }

@@ -32,6 +32,8 @@
 #include "Visualization/FrameVisualizer.h"
 #include "Visualization/MapVisualizer.h"
 
+#include "Tracking/Frame.h"
+
 #include "sophus/se3.hpp"
 
 #include <opencv2/opencv.hpp>
@@ -50,6 +52,8 @@ public:
      */
     void loadPoints(const std::string &originalFile, const std::string &movedFile);
 
+    Eigen::Matrix3f lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY());
+
 
 private:
 
@@ -62,6 +66,8 @@ private:
      * Map of the SLAM system
      */
     std::shared_ptr<Map> pMap_;
+    cv::Mat currIm_;
+    Frame currFrame_, prevFrame_;
 
     /*
      * Visualizers
