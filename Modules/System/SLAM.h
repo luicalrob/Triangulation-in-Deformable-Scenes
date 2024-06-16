@@ -25,14 +25,14 @@
 #ifndef SLAM_SLAM_H
 #define SLAM_SLAM_H
 
-#include "Map/Map.h"
-
 #include "System/Settings.h"
 
 #include "Visualization/FrameVisualizer.h"
 #include "Visualization/MapVisualizer.h"
 
 #include "Tracking/Frame.h"
+#include "Map/KeyFrame.h"
+#include "Map/Map.h"
 
 #include "sophus/se3.hpp"
 
@@ -52,6 +52,19 @@ public:
      */
     void loadPoints(const std::string &originalFile, const std::string &movedFile);
 
+    /*
+     * Project 3D points with a gaussian error
+     */
+    void createKeyPoints(float reprojErrorDesv);
+
+    /*
+     * Mapping of the simulation matches
+     */
+    void mapping();
+
+    /*
+     * Create camera orientation matrix from two points
+     */
     Eigen::Matrix3f lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY());
 
 
@@ -67,8 +80,9 @@ private:
      */
     std::shared_ptr<Map> pMap_;
     cv::Mat currIm_;
-    Frame currFrame_, prevFrame_;
-
+    Frame prevFrame_, currFrame_;
+    KeyFrame prevKeyFrame_, currKeyFrame_;
+    Sophus::SE3f Tcw;
     /*
      * Visualizers
      */

@@ -24,7 +24,7 @@ num_points = 20  # Number of points in the dataset
 movement_scale = 0.1  # Scale of movement for the moved points
 
 # Original points position
-x_mean = 0.2
+x_mean = 0.05
 x_std = 0.05
 y_mean = 0.5
 y_std = 0.1

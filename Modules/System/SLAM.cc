@@ -16,6 +16,8 @@
 */
 
 #include "SLAM.h"
+#include "Optimization/g2oBundleAdjustment.h"
+#include "Utils/Geometry.h"
 
 using namespace std;
 
@@ -103,45 +105,130 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     R = lookAt(secondCamera, movedPoints_[0]);
     Sophus::SE3f T2w(R, secondCamera);
     currFrame_.setPose(T2w);
+    Tcw = T2w;
 
     mapVisualizer_->updateCurrentPose(T2w);
+}
 
-    // compute E matrix
-    Sophus::SE3f T21 = T2w*T1w.inverse();
-    Eigen::Matrix<float,3,3> E = computeEssentialMatrixFromPose(T21);
+void SLAM::createKeyPoints(float reprojErrorDesv) {
+    std::default_random_engine generator;
+    std::normal_distribution<float> distribution(0.0f, reprojErrorDesv);
 
-    createKeyPoints();
-    {
-    for(size_t i = 0; i < movedPoints_.size(); i++){
-    // todos los original points
-    Eigen::Vector2f original_p2D;
-    Eigen::Vector2f moved_p2D;
-    calibration1->project(originalPoints_[i], original_p2D);
-    calibration2->project(movedPoints_[i], moved_p2D);
+    for(size_t i = 0; i < movedPoints_.size(); ++i) {
+        Eigen::Vector2f original_p2D;
+        Eigen::Vector2f moved_p2D;
+            
+        calibration1_->project(originalPoints_[i], original_p2D);
+        calibration2_->project(movedPoints_[i], moved_p2D);
 
-    // añadir ruido gaussiano de 1 pixel de media (solo unidades de pixel)
-    prevFrame_.setKeyPoint(original_p2D, i);
-    currFrame_.setKeyPoint(moved_p2D, i);
+        // Add Gaussian reprojection noise in units of pixels
+        original_p2D.x() += std::round(distribution(generator));
+        original_p2D.y() += std::round(distribution(generator));
+        moved_p2D.x() += std::round(distribution(generator));
+        moved_p2D.y() += std::round(distribution(generator));
 
+        prevFrame_.setKeyPoint(original_p2D, i);
+        currFrame_.setKeyPoint(moved_p2D, i);
     }
 
-    shared_ptr<KeyFrame> kf0(new KeyFrame(prevFrame_));
-    shared_ptr<KeyFrame> kf1(new KeyFrame(currFrame_));
+    std::shared_ptr<KeyFrame> kf0(new KeyFrame(prevFrame_));
+    std::shared_ptr<KeyFrame> kf1(new KeyFrame(currFrame_));
 
-    // promote to keyframes for visualization
-    pMap_->insertKeyFrame(kf0);
-    pMap_->insertKeyFrame(kf1);
+    // Promote to keyframes for visualization
+    prevKeyFrame_ = kf0;
+    currKeyFrame_ = kf1;
+    pMap_->insertKeyFrame(prevKeyFrame_);
+    pMap_->insertKeyFrame(currKeyFrame_);
+}
 
+void SLAM::mapping() {
+    int nTriangulated = 0;
 
-    // auto x1 = currKeyFrame_->getKeyPoint(i).pt;
-    // auto x2 = pKF->getKeyPoint(vMatches[i]).pt;
+    // Each moved point correspond with the point in the same index in the original vector
+    vector<int> vMatches(currKeyFrame_->getMapPoints().size()); //movedPoints_.size()?
+    int nMatches = movedPoints_.size();
 
-    // Eigen::Vector3f xn1 = calibration1->unproject(x1).normalized();
-    // Eigen::Vector3f xn2 = calibration2->unproject(x2).normalized();
-    //Eigen::Vector3f x3D;
-    //triangulate(xn1, xn2, T1w, T2w, x3D);
+    vector<cv::KeyPoint> vTriangulated1, vTriangulated2;
+    vector<int> vMatches_;
 
-    //Eigen::Vector3f ray1 = (E*calibration->unproject(kf1->getKeyPoint(i).pt).transpose()).normalized();
+    //Try to triangulate a new MapPoint with each match
+    for(size_t i = 0; i < vMatches.size(); i++){
+        if(vMatches[i] != -1){
+            shared_ptr<CameraModel> calibration2 = pKF->getCalibration();
+            auto x1 = currKeyFrame_->getKeyPoint(i).pt;
+            auto x2 = prevKeyFrame_->getKeyPoint(vMatches[i]).pt; //i?
+
+            Eigen::Vector3f xn1 = calibration1_->unproject(x1).normalized();
+            Eigen::Vector3f xn2 = calibration2_->unproject(x2).normalized();
+            Eigen::Vector3f x3D;
+
+            triangulate(xn1, xn2, T1w, T2w, x3D);
+
+            //Check positive depth
+            auto x_1 = T1w * x3D;
+            auto x_2 = T2w * x3D;
+            if(x_1[2] < 0.0 || x_2[2] < 0.0) continue;
+
+            //Check parallax
+            auto ray1 = (T1w.inverse().rotationMatrix() * xn1).normalized();
+            auto ray2 = (T2w.inverse().rotationMatrix() * xn2).normalized();
+            auto parallax = cosRayParallax(ray1, ray2);
+
+            if(parallax > settings_.getMinCos()) continue;
+
+            //Check reprojection error
+
+            Eigen::Vector2f p_p1;
+            Eigen::Vector2f p_p2;
+            calibration1->project(T1w*x3D, p_p1);
+            calibration2->project(T2w*x3D, p_p2);
+
+            cv::Point2f cv_p1(p_p1[0], p_p1[1]);
+            cv::Point2f cv_p2(p_p2[0], p_p2[1]);
+
+            auto e1 = squaredReprojectionError(x1, cv_p1);
+            auto e2 = squaredReprojectionError(x2, cv_p2);
+
+            if(e1 > 5.991 || e2 > 5.991) continue;
+
+            std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
+
+            pMap_->insertMapPoint(map_point);
+
+            currKeyFrame_->setMapPoint(i, map_point);
+            prevKeyFrame_->setMapPoint(vMatches[i], map_point); // i?
+
+            nTriangulated++;
+        }
+    }
+
+    std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
+
+    // visualize
+    // visualizer_->drawCurrentFrame(currFrame_);
+    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
+    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
+    mapVisualizer_->update();
+    mapVisualizer_->updateCurrentPose(Tcw);
+
+    // stop
+    //Uncomment for step by step execution (pressing esc key)
+    std::cout << "Press esc to continue... " << std::endl;
+    while((cv::waitKey(10) & 0xEFFFFF) != 27){
+        mapVisualizer_->update();
+    }
+
+    // correct reporjection error
+    bundleAdjustment(pMap_.get());
+
+    std::cout << "Bundle adjustment completed " << std::endl;
+
+    // visualize
+    // visualizer_->drawCurrentFrame(currFrame_);
+    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
+    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
+    mapVisualizer_->update();
+    mapVisualizer_->updateCurrentPose(Tcw);
 }
 
 Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY()) {
