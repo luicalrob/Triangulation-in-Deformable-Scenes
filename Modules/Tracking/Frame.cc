@@ -86,6 +86,10 @@ Grid Frame::getGrid() {
     return grid_;
 }
 
+void Frame::setKeyPoint(cv::KeyPoint pKP, const size_t idx) {
+    vKeys_[idx] = pKP;
+}
+
 void Frame::setMapPoint(size_t idx, std::shared_ptr<MapPoint> pMP) {
     vMapPoints_[idx] = pMP;
 }

@@ -16,8 +16,12 @@
 */
 
 #include "SLAM.h"
+
+#include "Map/KeyFrame.h"
+#include "Map/MapPoint.h"
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
+
 
 using namespace std;
 
@@ -33,12 +37,15 @@ SLAM::SLAM(const std::string &settingsFile) {
     //Create visualizers
     mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
 
-    currFrame_ = Frame(settings.getFeaturesPerImage(),settings.getGridCols(),settings.getGridRows(),
-                       settings.getImCols(),settings.getImRows(), settings.getNumberOfScales(), settings.getScaleFactor(),
-                       settings.getCalibration(),settings.getDistortionParameters());
-    prevFrame_ = Frame(settings.getFeaturesPerImage(),settings.getGridCols(),settings.getGridRows(),
-                       settings.getImCols(),settings.getImRows(),settings.getNumberOfScales(), settings.getScaleFactor(),
-                       settings.getCalibration(),settings.getDistortionParameters());
+    currFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
+                       settings_.getImCols(),settings_.getImRows(), settings_.getNumberOfScales(), settings_.getScaleFactor(),
+                       settings_.getCalibration(),settings_.getDistortionParameters());
+    prevFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
+                       settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
+                       settings_.getCalibration(),settings_.getDistortionParameters());
+
+    calibration1_ = currFrame_.getCalibration();
+    calibration2_ = prevFrame_.getCalibration();
 }
 
 
@@ -92,11 +99,6 @@ void SLAM::loadPoints(const std::string &originalFile, const std::string &movedF
 }
 
 void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector3f secondCamera) {
-
-    // definitions
-    shared_ptr<CameraModel> calibration1 = currFrame_->getCalibration();
-    shared_ptr<CameraModel> calibration2 = prevFrame_->getCalibration();
-
     // set camera poses and orientation
     Eigen::Matrix3f R = Eigen::Matrix3f::Identity();
     Sophus::SE3f T1w(R, firstCamera);
@@ -114,29 +116,32 @@ void SLAM::createKeyPoints(float reprojErrorDesv) {
     std::default_random_engine generator;
     std::normal_distribution<float> distribution(0.0f, reprojErrorDesv);
 
+    // shared_ptr<CameraModel> calibration1 = prevFrame_.getCalibration();
+    // shared_ptr<CameraModel> calibration2 = currFrame_.getCalibration();
+    
     for(size_t i = 0; i < movedPoints_.size(); ++i) {
-        Eigen::Vector2f original_p2D;
-        Eigen::Vector2f moved_p2D;
-            
-        calibration1_->project(originalPoints_[i], original_p2D);
-        calibration2_->project(movedPoints_[i], moved_p2D);
+        cv::Point2f original_p2D;
+        cv::Point2f moved_p2D;
+        
+        original_p2D = calibration1_->project(originalPoints_[i]);
+        moved_p2D = calibration2_->project(originalPoints_[i]);
 
         // Add Gaussian reprojection noise in units of pixels
-        original_p2D.x() += std::round(distribution(generator));
-        original_p2D.y() += std::round(distribution(generator));
-        moved_p2D.x() += std::round(distribution(generator));
-        moved_p2D.y() += std::round(distribution(generator));
+        original_p2D.x += std::round(distribution(generator));
+        original_p2D.y += std::round(distribution(generator));
+        moved_p2D.x += std::round(distribution(generator));
+        moved_p2D.y += std::round(distribution(generator));
 
-        prevFrame_.setKeyPoint(original_p2D, i);
-        currFrame_.setKeyPoint(moved_p2D, i);
+        cv::KeyPoint original_keypoint(original_p2D, 1.0f); // 1.0f is the size of the keypoint
+        cv::KeyPoint moved_keypoint(moved_p2D, 1.0f);
+
+        prevFrame_.setKeyPoint(original_keypoint, i);
+        currFrame_.setKeyPoint(moved_keypoint, i);
     }
 
-    std::shared_ptr<KeyFrame> kf0(new KeyFrame(prevFrame_));
-    std::shared_ptr<KeyFrame> kf1(new KeyFrame(currFrame_));
-
     // Promote to keyframes for visualization
-    prevKeyFrame_ = kf0;
-    currKeyFrame_ = kf1;
+    prevKeyFrame_ = std::make_shared<KeyFrame>(prevFrame_);
+    currKeyFrame_ = std::make_shared<KeyFrame>(currFrame_);
     pMap_->insertKeyFrame(prevKeyFrame_);
     pMap_->insertKeyFrame(currKeyFrame_);
 }
@@ -151,12 +156,14 @@ void SLAM::mapping() {
     vector<cv::KeyPoint> vTriangulated1, vTriangulated2;
     vector<int> vMatches_;
 
+    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T2w = currFrame_.getPose();
+
     //Try to triangulate a new MapPoint with each match
     for(size_t i = 0; i < vMatches.size(); i++){
         if(vMatches[i] != -1){
-            shared_ptr<CameraModel> calibration2 = pKF->getCalibration();
             auto x1 = currKeyFrame_->getKeyPoint(i).pt;
-            auto x2 = prevKeyFrame_->getKeyPoint(vMatches[i]).pt; //i?
+            auto x2 = prevKeyFrame_->getKeyPoint(i).pt; //vMatches[i]?
 
             Eigen::Vector3f xn1 = calibration1_->unproject(x1).normalized();
             Eigen::Vector3f xn2 = calibration2_->unproject(x2).normalized();
@@ -180,8 +187,8 @@ void SLAM::mapping() {
 
             Eigen::Vector2f p_p1;
             Eigen::Vector2f p_p2;
-            calibration1->project(T1w*x3D, p_p1);
-            calibration2->project(T2w*x3D, p_p2);
+            calibration1_->project(T1w*x3D, p_p1);
+            calibration2_->project(T2w*x3D, p_p2);
 
             cv::Point2f cv_p1(p_p1[0], p_p1[1]);
             cv::Point2f cv_p2(p_p2[0], p_p2[1]);
@@ -196,7 +203,7 @@ void SLAM::mapping() {
             pMap_->insertMapPoint(map_point);
 
             currKeyFrame_->setMapPoint(i, map_point);
-            prevKeyFrame_->setMapPoint(vMatches[i], map_point); // i?
+            prevKeyFrame_->setMapPoint(i, map_point); // vMatches[i]?
 
             nTriangulated++;
         }
@@ -214,9 +221,9 @@ void SLAM::mapping() {
     // stop
     //Uncomment for step by step execution (pressing esc key)
     std::cout << "Press esc to continue... " << std::endl;
-    while((cv::waitKey(10) & 0xEFFFFF) != 27){
-        mapVisualizer_->update();
-    }
+    // while((cv::waitKey(10) & 0xEFFFFF) != 27){
+    //     mapVisualizer_->update();
+    // }
 
     // correct reporjection error
     bundleAdjustment(pMap_.get());
@@ -229,9 +236,16 @@ void SLAM::mapping() {
     // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
     mapVisualizer_->update();
     mapVisualizer_->updateCurrentPose(Tcw);
+
+    // stop
+    //Uncomment for step by step execution (pressing esc key)
+    std::cout << "Press esc to continue... " << std::endl;
+    while((cv::waitKey(10) & 0xEFFFFF) != 27){
+        mapVisualizer_->update();
+    }
 }
 
-Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY()) {
+Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector) {
     Eigen::Vector3f forward = (target_pos - camera_pos).normalized();
     Eigen::Vector3f right = up_vector.cross(forward).normalized();
     Eigen::Vector3f up = forward.cross(right).normalized();

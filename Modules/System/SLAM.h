@@ -53,6 +53,11 @@ public:
     void loadPoints(const std::string &originalFile, const std::string &movedFile);
 
     /*
+     * Define simulation poses in the environment
+     */
+    void setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector3f secondCamera);
+
+    /*
      * Project 3D points with a gaussian error
      */
     void createKeyPoints(float reprojErrorDesv);
@@ -80,9 +85,14 @@ private:
      */
     std::shared_ptr<Map> pMap_;
     cv::Mat currIm_;
+
     Frame prevFrame_, currFrame_;
-    KeyFrame prevKeyFrame_, currKeyFrame_;
+    std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
+
     Sophus::SE3f Tcw;
+
+    std::shared_ptr<CameraModel> calibration1_;
+    std::shared_ptr<CameraModel> calibration2_;
     /*
      * Visualizers
      */
