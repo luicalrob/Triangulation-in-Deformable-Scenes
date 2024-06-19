@@ -22,8 +22,8 @@
  * a graph relating observations between them
  */
 
-#ifndef SLAM_MAP_H
-#define SLAM_MAP_H
+#ifndef MINI_SLAM_MAP_H
+#define MINI_SLAM_MAP_H
 
 
 #include "Map/MapPoint.h"
@@ -71,6 +71,27 @@ public:
     std::shared_ptr<MapPoint> getMapPoint(ID id);
 
     /*
+     * Adds to the map the observation of a MapPoint with id mpId at the KeyPoint of index idx
+     * in the KeyFrame with id kfId
+     */
+    void addObservation(ID kfId, ID mpId, size_t idx);
+
+    /*
+     * Removes the observation of the MapPoint with id mpId in the KeyFrame with id kfId
+     */
+    void removeObservation(ID kfId, ID mpId);
+
+    /*
+     * Gets the covisible KeyFrames of the KeyFrame with id kfId
+     */
+    std::vector<std::pair<ID,int>> getCovisibleKeyFrames(ID kfId);
+
+    /*
+     * Gets the number of commong observations between 2 KeyFrames
+     */
+    int numberOfCommonObservationsBetweenKeyFrames(ID kf1, ID kf2);
+
+    /*
      * Gets all MapPoints of the map
      */
     std::unordered_map<ID,std::shared_ptr<MapPoint>>& getMapPoints();
@@ -80,7 +101,66 @@ public:
      */
     std::unordered_map<ID,std::shared_ptr<KeyFrame>>& getKeyFrames();
 
+    /*
+     * Gets the local map of a given KeyFrame. The local map is composed by the 1-neighbour KeyFrames and its
+     * observed MapPoints
+     */
+    void getLocalMapOfKeyFrame(ID kfId, std::set<ID>& sLocalMapPointsIds, std::set<ID>& sLocalKeyFramesIds,
+                                std::set<ID>& sLocalFixedKeyFramesIds);
+
+    /*
+     * Fuses 2 MapPoints in one so the final MapPoints holds the observation from both
+     */
+    void fuseMapPoints(ID mp1, ID mp2);
+
+
+    int firstKeyFrameOfMapPoint(ID mp);
+    /*
+     * Checks if a MapPoint is seen in a KeyFrame
+     */
+    int isMapPointInKeyFrame(ID mp, ID kf);
+
+    /*
+     * Gets the number of observations of a given MapPoint
+     */
+    int getNumberOfObservations(ID mp);
+
+    /*
+     * Checks that the KeyFrame with the given ID is consistent with the information
+     * in the graph. FOR DEBUG PURPOSES ONLY
+     */
+    void checkKeyFrame(ID kfId){
+        /*std::shared_ptr<KeyFrame> pKF = mKeyFrames_[kfId];
+        std::vector<std::shared_ptr<MapPoint>>& vMps = pKF->getMapPoints();
+
+        //Node to the KeyFrame
+        GraphNode_ n = mKeyFrameGraph_[kfId];
+        std::unordered_set<ID> graphIds;
+        while(n){
+            assert(graphIds.count(n->nMapPointId_) == 0);
+            assert(mMapPoints_.count(n->nMapPointId_) != 0);
+            graphIds.insert(n->nMapPointId_);
+            n = n->pNextMapPoint_;
+        }
+
+
+        for(int i = 0; i < vMps.size(); i++){
+            std::shared_ptr<MapPoint> pMP = vMps[i];
+            if(pMP){
+                assert(graphIds.count(pMP->getId()) == 1);
+                assert(mMapPoints_.count(pMP->getId()) != 0);
+                graphIds.erase(pMP->getId());
+            }
+        }
+
+        assert(graphIds.size() == 0);*/
+    }
+
 private:
+    /*
+     * Updates the orientation and most distinctive descriptor of a MapPoint
+     */
+    void updateOrientationAndDescriptor(ID mpId);
 
     /*
      * Mapping of the KeyFrame/MapPoint ids and the KeyFrame/MapPoint itself
@@ -88,8 +168,40 @@ private:
     std::unordered_map<ID,std::shared_ptr<MapPoint>> mMapPoints_;
     std::unordered_map<ID,std::shared_ptr<KeyFrame>> mKeyFrames_;
 
+    /*
+     * Observation graph
+     */
+    std::unordered_map<ID,std::unordered_map<ID,size_t>> mKeyFrameObs_;
+    std::unordered_map<ID,std::unordered_map<ID,size_t>> mMapPointObs_;
+
+    /*
+     * Covisibility graph
+     */
+    std::unordered_map<ID,std::unordered_map<ID,int>> mCovisibilityGraph_;
+
+    /*
+     * Observation graph
+     */
+    class GraphNode{
+    public:
+        GraphNode(ID kfId, ID mpId, size_t indexInKeyFrame){
+            nKeyFrameId_ = kfId;
+            nMapPointId_ = mpId;
+            idxInKf_ = indexInKeyFrame;
+        }
+
+        ID nKeyFrameId_, nMapPointId_;
+        int idxInKf_;
+        std::shared_ptr<GraphNode> pPrevKeyFrame_, pNextKeyFrame_;
+        std::shared_ptr<GraphNode> pPrevMapPoint_, pNextMapPoint_;
+    };
+    typedef std::shared_ptr<GraphNode> GraphNode_;
+
+    std::unordered_map<ID,GraphNode_> mKeyFrameGraph_;
+    std::unordered_map<ID,GraphNode_> mMapPointGraph_;
+
     float minCommonObs_;
 };
 
 
-#endif //SLAM_MAP_H
+#endif //MINI_SLAM_MAP_H

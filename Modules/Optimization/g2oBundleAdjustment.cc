@@ -237,3 +237,204 @@ int poseOnlyOptimization(Frame& currFrame){
 
     return nGood;
 }
+
+void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
+    unordered_map<KeyFrame_,size_t> mKeyFrameId, mFixedKeyFrameId;
+    unordered_map<MapPoint_,size_t> mMapPointId;
+
+    //Get local map
+    set<ID> sLocalMapPoints, sLocalKeyFrames, sFixedKeyFrames;
+    pMap->getLocalMapOfKeyFrame(currKeyFrameId,sLocalMapPoints,sLocalKeyFrames,sFixedKeyFrames);
+
+    //Create optimizer
+    g2o::SparseOptimizer optimizer;
+    std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>>();
+
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
+            g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linearSolver))
+    );
+
+    optimizer.setAlgorithm(solver);
+    optimizer.setVerbose(false);
+
+    const float thHuber2D = sqrt(5.99);
+
+    vector<EdgeSE3ProjectXYZ*> vEdges;
+    vector<ID> vEdgesKF;
+    vector<ID> vEdgesMP;
+    vector<size_t> vMpInKf;
+
+    vEdges.reserve(sLocalKeyFrames.size()*sLocalMapPoints.size());
+    vEdgesKF.reserve(sLocalKeyFrames.size()*sLocalMapPoints.size());
+    vEdgesMP.reserve(sLocalKeyFrames.size()*sLocalMapPoints.size());
+    vMpInKf.reserve(sLocalKeyFrames.size()*sLocalMapPoints.size());
+
+    size_t currId = 0;
+    //Set optimization
+    for(ID kfID : sLocalKeyFrames){
+        KeyFrame_ pKF = pMap->getKeyFrame(kfID);
+
+        //Set KeyFrame data
+        Sophus::SE3f kfPose = pKF->getPose();
+        g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+        vSE3->setEstimate(g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>()));
+        vSE3->setId(currId);
+        if(pKF->getId()==0){
+            vSE3->setFixed(true);
+        }
+        optimizer.addVertex(vSE3);
+
+        mKeyFrameId[pKF] = currId;
+        currId++;
+
+        //Set MapPoints
+        vector<MapPoint_>& vMPs = pKF->getMapPoints();
+        for (size_t i = 0; i < vMPs.size(); i++) {
+            MapPoint_ pMP = vMPs[i];
+            if (!pMP) continue;
+
+
+            assert(sLocalMapPoints.count(pMP->getId()) != 0);
+            //Check if this MapPoint has been already added to the optimization
+            if (mMapPointId.count(pMP) == 0) {
+                VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
+                Eigen::Vector3d p3D = pMP->getWorldPosition().cast<double>();
+                vPoint->setEstimate(p3D);
+                vPoint->setId(currId);
+                vPoint->setMarginalized(true);
+                optimizer.addVertex(vPoint);
+
+                mMapPointId[pMP] = currId;
+                currId++;
+            }
+
+            //Set edge
+            cv::Point2f uv = pKF->getKeyPoint(i).pt;
+            int octave = pKF->getKeyPoint(i).octave;
+            Eigen::Matrix<double,2,1> obs;
+            obs << uv.x, uv.y;
+
+            EdgeSE3ProjectXYZ* e = new EdgeSE3ProjectXYZ();
+
+            e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[pMP])));
+            e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF])));
+            e->setMeasurement(obs);
+            e->setInformation(Eigen::Matrix2d::Identity() * pKF->getInvSigma2(octave));
+
+            g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+            e->setRobustKernel(rk);
+            rk->setDelta(thHuber2D);
+
+            e->pCamera = pKF->getCalibration();
+
+            vEdges.push_back(e);
+            vEdgesKF.push_back(kfID);
+            vEdgesMP.push_back(pMP->getId());
+            vMpInKf.push_back(i);
+
+            optimizer.addEdge(e);
+        }
+    }
+
+    //Set fixed KeyFrames
+    for(ID fixedKFId : sFixedKeyFrames){
+        KeyFrame_ pKF = pMap->getKeyFrame(fixedKFId);
+
+        //Set KeyFrame data
+        Sophus::SE3f kfPose = pKF->getPose();
+        g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+        vSE3->setEstimate(g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>()));
+        vSE3->setId(currId);
+        vSE3->setFixed(true);
+
+        optimizer.addVertex(vSE3);
+
+        mFixedKeyFrameId[pKF] = currId;
+        currId++;
+
+        //Set MapPoints
+        vector<MapPoint_>& vMPs = pKF->getMapPoints();
+        for (size_t i = 0; i < vMPs.size(); i++) {
+            MapPoint_ pMP = vMPs[i];
+            if (!pMP) continue;
+            if(sLocalMapPoints.count(pMP->getId()) == 0) continue;
+
+            assert(mMapPointId.count(pMP) > 0);
+
+            //Set edge
+            cv::Point2f uv = pKF->getKeyPoint(i).pt;
+            int octave = pKF->getKeyPoint(i).octave;
+            Eigen::Matrix<double,2,1> obs;
+            obs << uv.x, uv.y;
+
+            EdgeSE3ProjectXYZ* e = new EdgeSE3ProjectXYZ();
+
+            e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[pMP])));
+            e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mFixedKeyFrameId[pKF])));
+            e->setMeasurement(obs);
+            e->setInformation(Eigen::Matrix2d::Identity() * pKF->getInvSigma2(octave));
+
+            g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+            e->setRobustKernel(rk);
+            rk->setDelta(thHuber2D);
+
+            e->pCamera = pKF->getCalibration();
+
+            vEdges.push_back(e);
+            vEdgesKF.push_back(fixedKFId);
+            vEdgesMP.push_back(pMP->getId());
+            vMpInKf.push_back(i);
+
+            optimizer.addEdge(e);
+        }
+    }
+
+    //Run optimization
+    optimizer.initializeOptimization();
+    optimizer.optimize(5);
+
+    //Remove outliers
+    for(size_t i = 0; i < vEdges.size(); i++){
+        EdgeSE3ProjectXYZ* e = vEdges[i];
+
+        if(e->chi2() > 5.991 || !e->isDepthPositive()){
+            e->setLevel(1);
+        }
+
+        e->setRobustKernel(0);
+    }
+
+    optimizer.initializeOptimization(0);
+    optimizer.optimize(10);
+
+    //Remove outlier observations from map
+    for(size_t i = 0; i < vEdges.size(); i++){
+        EdgeSE3ProjectXYZ* e = vEdges[i];
+
+        //Remove observation
+        if(e->chi2() > 5.991 || !e->isDepthPositive()){
+            //Remove from KeyFrame
+            pMap->getKeyFrame(vEdgesKF[i])->setMapPoint(vMpInKf[i], nullptr);
+
+            //Remove from map
+            pMap->removeObservation(vEdgesKF[i],vEdgesMP[i]);
+
+            pMap->checkKeyFrame(vEdgesKF[i]);
+        }
+    }
+
+    //Recover results
+    for(pair<KeyFrame_,size_t> pairKeyFrameId : mKeyFrameId){
+        KeyFrame_ pKF = pairKeyFrameId.first;
+        g2o::VertexSE3Expmap* vertex = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pairKeyFrameId.second));
+        Sophus::SE3f sophusPose(vertex->estimate().to_homogeneous_matrix().cast<float>());
+        pKF->setPose(sophusPose);
+    }
+
+    for(pair<MapPoint_,size_t> pairMapPointId : mMapPointId){
+        MapPoint_ pMP = pairMapPointId.first;
+        VertexSBAPointXYZ* vPoint = static_cast<VertexSBAPointXYZ*>(optimizer.vertex(pairMapPointId.second));
+        Eigen::Vector3f p3D = vPoint->estimate().cast<float>();
+        pMP->setWorldPosition(p3D);
+    }
+}

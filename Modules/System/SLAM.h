@@ -68,6 +68,11 @@ public:
     void mapping();
 
     /*
+     * Measure the pos & or errors of the poses and the 3D error of the mapPoints
+     */
+    void measureErrors();
+
+    /*
      * Create camera orientation matrix from two points
      */
     Eigen::Matrix3f lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY());
