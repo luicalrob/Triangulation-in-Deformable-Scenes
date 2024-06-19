@@ -203,5 +203,5 @@ private:
     float minCommonObs_;
 };
 
-
 #endif //MINI_SLAM_MAP_H
+

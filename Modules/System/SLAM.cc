@@ -236,6 +236,59 @@ void SLAM::mapping() {
     // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
     mapVisualizer_->update();
     mapVisualizer_->updateCurrentPose(Tcw_);
+}
+
+void SLAM::measureErrors() {
+
+    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T2w = currFrame_.getPose();
+
+    Sophus::SE3f T1w_corrected = pMap_->getKeyFrame(0)->getPose();
+    Sophus::SE3f T2w_corrected = pMap_->getKeyFrame(1)->getPose();
+
+    // Show position and orientation errors in pose 1
+    Eigen::Vector3f position_error1 = T1w_corrected.translation() - T1w.translation();
+    Eigen::Vector3f orientation_error1 = (T1w_corrected.so3().inverse() * T1w.so3()).log();
+
+    std::cout << "\nError in position 1:\n";
+    std::cout << "x: " << position_error1.x() << " y: " << position_error1.y() << " z: " << position_error1.z() << std::endl;
+    std::cout << "Error in orientation 1:\n";
+    std::cout << "x: " << orientation_error1.x() << " y: " << orientation_error1.y() << " z: " << orientation_error1.z() << std::endl;
+
+    // Show position and orientation errors in pose 2
+    Eigen::Vector3f position_error2 = T2w_corrected.translation() - T2w.translation();
+    Eigen::Vector3f orientation_error2 = (T2w_corrected.so3().inverse() * T2w.so3()).log();
+
+    std::cout << "\nError in position 2:\n";
+    std::cout << "x: " << position_error2.x() << " y: " << position_error2.y() << " z: " << position_error2.z() << std::endl;
+    std::cout << "Error in orientation 2:\n";
+    std::cout << "x: " << orientation_error2.x() << " y: " << orientation_error2.y() << " z: " << orientation_error2.z() << std::endl;
+
+    // 3D Error measurement in map points
+    std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
+
+    float total_error = 0.0f;
+    int point_count = 0;
+    for (const auto& [id, mapPoint] : mapPoints_corrected) {
+        Eigen::Vector3f corrected_position = mapPoint->getWorldPosition();
+        Eigen::Vector3f original_position = originalPoints_[id]; 
+
+        Eigen::Vector3f point_error = corrected_position - original_position;
+        float error_magnitude = point_error.norm();
+        total_error += error_magnitude;
+        point_count++;
+
+        // std::cout << "\nError for point " << id << ":\n";
+        // std::cout << "x: " << point_error.x() << " y: " << point_error.y() << " z: " << point_error.z() << std::endl;
+    }
+
+    if (point_count > 0) {
+        float average_error = total_error / point_count;
+        std::cout << "\nTotal error in 3D: " << total_error << std::endl;
+        std::cout << "Average error in 3D: " << average_error << std::endl;
+    } else {
+        std::cout << "No points to compare." << std::endl;
+    }
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
