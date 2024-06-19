@@ -43,5 +43,7 @@ int main(){
 
     SLAM.mapping();
 
+    SLAM.measureErrors();
+
     return 0;
 }

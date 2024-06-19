@@ -152,9 +152,6 @@ void SLAM::mapping() {
 
     std::cout << "Number of keypoints: " << nMatches << std::endl;
 
-    vector<cv::KeyPoint> vTriangulated1, vTriangulated2;
-    vector<int> vMatches_;
-
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
 
@@ -162,7 +159,7 @@ void SLAM::mapping() {
     for(size_t i = 0; i < nMatches; i++){ //vMatches.size()
         // if(vMatches[i] != -1){
         auto x1 = currKeyFrame_->getKeyPoint(i).pt;
-        auto x2 = prevKeyFrame_->getKeyPoint(i).pt; //vMatches[i]?
+        auto x2 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
 
         Eigen::Vector3f xn1 = calibration1_->unproject(x1).normalized();
         Eigen::Vector3f xn2 = calibration2_->unproject(x2).normalized();
@@ -201,6 +198,9 @@ void SLAM::mapping() {
 
         pMap_->insertMapPoint(map_point);
 
+        pMap_->addObservation(currKeyFrame_->getId(), map_point->getId(), i);
+        pMap_->addObservation(prevKeyFrame_->getId(), map_point->getId(), i); // vMatches[i] si las parejas no fuesen ordenadas
+
         currKeyFrame_->setMapPoint(i, map_point);
         prevKeyFrame_->setMapPoint(i, map_point); // vMatches[i]?
 
@@ -219,13 +219,14 @@ void SLAM::mapping() {
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
-    // std::cout << "Press esc to continue... " << std::endl;
-    // while((cv::waitKey(10) & 0xEFFFFF) != 27){
-    //     mapVisualizer_->update();
-    // }
+    cv::namedWindow("Test Window"); 
+    std::cout << "Press esc to continue... " << std::endl;
+    while((cv::waitKey(10) & 0xEFFFFF) != 27){
+        mapVisualizer_->update();
+    }
 
     // correct reporjection error
-    // bundleAdjustment(pMap_.get());
+    // localBundleAdjustment(pMap_.get(),currKeyFrame_->getId());
 
     std::cout << "Bundle adjustment completed " << std::endl;
 
@@ -235,6 +236,59 @@ void SLAM::mapping() {
     // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
     mapVisualizer_->update();
     mapVisualizer_->updateCurrentPose(Tcw_);
+}
+
+void SLAM::measureErrors() {
+
+    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T2w = currFrame_.getPose();
+
+    Sophus::SE3f T1w_corrected = pMap_->getKeyFrame(0)->getPose();
+    Sophus::SE3f T2w_corrected = pMap_->getKeyFrame(1)->getPose();
+
+    // Show position and orientation errors in pose 1
+    Eigen::Vector3f position_error1 = T1w_corrected.translation() - T1w.translation();
+    Eigen::Vector3f orientation_error1 = (T1w_corrected.so3().inverse() * T1w.so3()).log();
+
+    std::cout << "\nError in position 1:\n";
+    std::cout << "x: " << position_error1.x() << " y: " << position_error1.y() << " z: " << position_error1.z() << std::endl;
+    std::cout << "Error in orientation 1:\n";
+    std::cout << "x: " << orientation_error1.x() << " y: " << orientation_error1.y() << " z: " << orientation_error1.z() << std::endl;
+
+    // Show position and orientation errors in pose 2
+    Eigen::Vector3f position_error2 = T2w_corrected.translation() - T2w.translation();
+    Eigen::Vector3f orientation_error2 = (T2w_corrected.so3().inverse() * T2w.so3()).log();
+
+    std::cout << "\nError in position 2:\n";
+    std::cout << "x: " << position_error2.x() << " y: " << position_error2.y() << " z: " << position_error2.z() << std::endl;
+    std::cout << "Error in orientation 2:\n";
+    std::cout << "x: " << orientation_error2.x() << " y: " << orientation_error2.y() << " z: " << orientation_error2.z() << std::endl;
+
+    // 3D Error measurement in map points
+    std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
+
+    float total_error = 0.0f;
+    int point_count = 0;
+    for (const auto& [id, mapPoint] : mapPoints_corrected) {
+        Eigen::Vector3f corrected_position = mapPoint->getWorldPosition();
+        Eigen::Vector3f original_position = originalPoints_[id]; 
+
+        Eigen::Vector3f point_error = corrected_position - original_position;
+        float error_magnitude = point_error.norm();
+        total_error += error_magnitude;
+        point_count++;
+
+        // std::cout << "\nError for point " << id << ":\n";
+        // std::cout << "x: " << point_error.x() << " y: " << point_error.y() << " z: " << point_error.z() << std::endl;
+    }
+
+    if (point_count > 0) {
+        float average_error = total_error / point_count;
+        std::cout << "\nTotal error in 3D: " << total_error << std::endl;
+        std::cout << "Average error in 3D: " << average_error << std::endl;
+    } else {
+        std::cout << "No points to compare." << std::endl;
+    }
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
