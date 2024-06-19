@@ -29,7 +29,7 @@ using namespace std;
 
 int main(){
     Eigen::Vector3f firstCamera(0.0, 0.0, 0.0);
-    Eigen::Vector3f secondCamera(0.4, 0.0, 0.0);
+    Eigen::Vector3f secondCamera(0.25, 0.05, 0.0);
 
     //Create SLAM system
     SLAM SLAM("Data/Test.yaml");
@@ -39,7 +39,7 @@ int main(){
 
     SLAM.setCameraPoses(firstCamera, secondCamera);
 
-    SLAM.createKeyPoints(1.0f); // with a desviation in the reprojection error of 1 pixel 
+    SLAM.createKeyPoints(0.55f); // with a desviation in the reprojection error of 1 pixel 
 
     SLAM.mapping();
 

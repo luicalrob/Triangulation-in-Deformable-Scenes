@@ -107,7 +107,7 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     R = lookAt(secondCamera, movedPoints_[0]);
     Sophus::SE3f T2w(R, secondCamera);
     currFrame_.setPose(T2w);
-    Tcw = T2w;
+    Tcw_ = T1w;
 
     mapVisualizer_->updateCurrentPose(T2w);
 }
@@ -115,9 +115,6 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
 void SLAM::createKeyPoints(float reprojErrorDesv) {
     std::default_random_engine generator;
     std::normal_distribution<float> distribution(0.0f, reprojErrorDesv);
-
-    // shared_ptr<CameraModel> calibration1 = prevFrame_.getCalibration();
-    // shared_ptr<CameraModel> calibration2 = currFrame_.getCalibration();
     
     for(size_t i = 0; i < movedPoints_.size(); ++i) {
         cv::Point2f original_p2D;
@@ -153,6 +150,8 @@ void SLAM::mapping() {
     vector<int> vMatches(currKeyFrame_->getMapPoints().size()); //movedPoints_.size()?
     int nMatches = movedPoints_.size();
 
+    std::cout << "Number of keypoints: " << nMatches << std::endl;
+
     vector<cv::KeyPoint> vTriangulated1, vTriangulated2;
     vector<int> vMatches_;
 
@@ -160,53 +159,53 @@ void SLAM::mapping() {
     Sophus::SE3f T2w = currFrame_.getPose();
 
     //Try to triangulate a new MapPoint with each match
-    for(size_t i = 0; i < vMatches.size(); i++){
-        if(vMatches[i] != -1){
-            auto x1 = currKeyFrame_->getKeyPoint(i).pt;
-            auto x2 = prevKeyFrame_->getKeyPoint(i).pt; //vMatches[i]?
+    for(size_t i = 0; i < nMatches; i++){ //vMatches.size()
+        // if(vMatches[i] != -1){
+        auto x1 = currKeyFrame_->getKeyPoint(i).pt;
+        auto x2 = prevKeyFrame_->getKeyPoint(i).pt; //vMatches[i]?
 
-            Eigen::Vector3f xn1 = calibration1_->unproject(x1).normalized();
-            Eigen::Vector3f xn2 = calibration2_->unproject(x2).normalized();
-            Eigen::Vector3f x3D;
+        Eigen::Vector3f xn1 = calibration1_->unproject(x1).normalized();
+        Eigen::Vector3f xn2 = calibration2_->unproject(x2).normalized();
+        Eigen::Vector3f x3D;
 
-            triangulate(xn1, xn2, T1w, T2w, x3D);
+        triangulate(xn1, xn2, T1w, T2w, x3D);
 
-            //Check positive depth
-            auto x_1 = T1w * x3D;
-            auto x_2 = T2w * x3D;
-            if(x_1[2] < 0.0 || x_2[2] < 0.0) continue;
+        //Check positive depth
+        auto x_1 = T1w * x3D;
+        auto x_2 = T2w * x3D;
+        if(x_1[2] < 0.0 || x_2[2] < 0.0) continue;
 
-            //Check parallax
-            auto ray1 = (T1w.inverse().rotationMatrix() * xn1).normalized();
-            auto ray2 = (T2w.inverse().rotationMatrix() * xn2).normalized();
-            auto parallax = cosRayParallax(ray1, ray2);
+        //Check parallax
+        auto ray1 = (T1w.inverse().rotationMatrix() * xn1).normalized();
+        auto ray2 = (T2w.inverse().rotationMatrix() * xn2).normalized();
+        auto parallax = cosRayParallax(ray1, ray2);
 
-            if(parallax > settings_.getMinCos()) continue;
+        if(parallax > settings_.getMinCos()) continue;
 
-            //Check reprojection error
+        //Check reprojection error
 
-            Eigen::Vector2f p_p1;
-            Eigen::Vector2f p_p2;
-            calibration1_->project(T1w*x3D, p_p1);
-            calibration2_->project(T2w*x3D, p_p2);
+        Eigen::Vector2f p_p1;
+        Eigen::Vector2f p_p2;
+        calibration1_->project(T1w*x3D, p_p1);
+        calibration2_->project(T2w*x3D, p_p2);
 
-            cv::Point2f cv_p1(p_p1[0], p_p1[1]);
-            cv::Point2f cv_p2(p_p2[0], p_p2[1]);
+        cv::Point2f cv_p1(p_p1[0], p_p1[1]);
+        cv::Point2f cv_p2(p_p2[0], p_p2[1]);
 
-            auto e1 = squaredReprojectionError(x1, cv_p1);
-            auto e2 = squaredReprojectionError(x2, cv_p2);
+        auto e1 = squaredReprojectionError(x1, cv_p1);
+        auto e2 = squaredReprojectionError(x2, cv_p2);
 
-            if(e1 > 5.991 || e2 > 5.991) continue;
+        if(e1 > 5.991 || e2 > 5.991) continue;
 
-            std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
+        std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
 
-            pMap_->insertMapPoint(map_point);
+        pMap_->insertMapPoint(map_point);
 
-            currKeyFrame_->setMapPoint(i, map_point);
-            prevKeyFrame_->setMapPoint(i, map_point); // vMatches[i]?
+        currKeyFrame_->setMapPoint(i, map_point);
+        prevKeyFrame_->setMapPoint(i, map_point); // vMatches[i]?
 
-            nTriangulated++;
-        }
+        nTriangulated++;
+        // }
     }
 
     std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
@@ -215,18 +214,18 @@ void SLAM::mapping() {
     // visualizer_->drawCurrentFrame(currFrame_);
     // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
     // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    mapVisualizer_->update();
-    mapVisualizer_->updateCurrentPose(Tcw);
+    // mapVisualizer_->update();
+    // mapVisualizer_->updateCurrentPose(Tcw_);
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
-    std::cout << "Press esc to continue... " << std::endl;
+    // std::cout << "Press esc to continue... " << std::endl;
     // while((cv::waitKey(10) & 0xEFFFFF) != 27){
     //     mapVisualizer_->update();
     // }
 
     // correct reporjection error
-    bundleAdjustment(pMap_.get());
+    // bundleAdjustment(pMap_.get());
 
     std::cout << "Bundle adjustment completed " << std::endl;
 
@@ -235,7 +234,7 @@ void SLAM::mapping() {
     // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
     // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
     mapVisualizer_->update();
-    mapVisualizer_->updateCurrentPose(Tcw);
+    mapVisualizer_->updateCurrentPose(Tcw_);
 
     // stop
     //Uncomment for step by step execution (pressing esc key)

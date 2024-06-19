@@ -20,16 +20,13 @@ def save_points(filename, points):
     np.savetxt(filename, points, delimiter=' ')
 
 # Generate and save original and moved points
-num_points = 20  # Number of points in the dataset
+num_points = 200  # Number of points in the dataset
 movement_scale = 0.1  # Scale of movement for the moved points
 
 # Original points position
-x_mean = 0.05
-x_std = 0.05
-y_mean = 0.5
-y_std = 0.1
-z_mean = 0.0
-z_std = 0.05
+x_mean, x_std = 0.0, 0.125
+y_mean, y_std = 0.0, 0.125
+z_mean, z_std = 1.1, 0.1
 
 original_points, moved_points = generate_points(num_points, movement_scale, x_mean, x_std, y_mean, y_std, z_mean, z_std)
 

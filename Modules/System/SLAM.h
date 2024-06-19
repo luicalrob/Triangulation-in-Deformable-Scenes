@@ -89,7 +89,7 @@ private:
     Frame prevFrame_, currFrame_;
     std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
 
-    Sophus::SE3f Tcw;
+    Sophus::SE3f Tcw_;
 
     std::shared_ptr<CameraModel> calibration1_;
     std::shared_ptr<CameraModel> calibration2_;
