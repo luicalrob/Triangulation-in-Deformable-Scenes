@@ -37,5 +37,9 @@ void bundleAdjustment(Map* pMap);
  */
 int poseOnlyOptimization(Frame& currFrame);
 
+/*
+ * Performs a Bundle Adjustmen using the local map around the given KeyFrame
+ */
+void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
 
 #endif //MINI_SLAM_G2OBUNDLEADJUSTMENT_H
