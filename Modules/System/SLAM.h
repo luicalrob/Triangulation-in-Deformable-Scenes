@@ -96,8 +96,10 @@ private:
 
     Sophus::SE3f Tcw_;
 
-    std::shared_ptr<CameraModel> calibration1_;
-    std::shared_ptr<CameraModel> calibration2_;
+    std::shared_ptr<CameraModel> prevCalibration_;
+    std::shared_ptr<CameraModel> currCalibration_;
+
+    std::vector<int> insertedIndexes_; // 3D points inserted in the map, to compare the positions
     /*
      * Visualizers
      */

@@ -37,15 +37,16 @@ SLAM::SLAM(const std::string &settingsFile) {
     //Create visualizers
     mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
 
-    currFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
-                       settings_.getImCols(),settings_.getImRows(), settings_.getNumberOfScales(), settings_.getScaleFactor(),
-                       settings_.getCalibration(),settings_.getDistortionParameters());
     prevFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
                        settings_.getCalibration(),settings_.getDistortionParameters());
 
-    calibration1_ = currFrame_.getCalibration();
-    calibration2_ = prevFrame_.getCalibration();
+    currFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
+                       settings_.getImCols(),settings_.getImRows(), settings_.getNumberOfScales(), settings_.getScaleFactor(),
+                       settings_.getCalibration(),settings_.getDistortionParameters());
+
+    prevCalibration_ = prevFrame_.getCalibration();
+    currCalibration_ = currFrame_.getCalibration();
 }
 
 
@@ -107,7 +108,7 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     R = lookAt(secondCamera, movedPoints_[0]);
     Sophus::SE3f T2w(R, secondCamera);
     currFrame_.setPose(T2w);
-    Tcw_ = T1w;
+    Tcw_ = T2w;
 
     mapVisualizer_->updateCurrentPose(T2w);
 }
@@ -116,18 +117,24 @@ void SLAM::createKeyPoints(float reprojErrorDesv) {
     std::default_random_engine generator;
     std::normal_distribution<float> distribution(0.0f, reprojErrorDesv);
     
+    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T2w = currFrame_.getPose();
+
     for(size_t i = 0; i < movedPoints_.size(); ++i) {
         cv::Point2f original_p2D;
         cv::Point2f moved_p2D;
         
-        original_p2D = calibration1_->project(originalPoints_[i]);
-        moved_p2D = calibration2_->project(originalPoints_[i]);
+        Eigen::Vector3f p3Dcam1 = T1w * originalPoints_[i];
+        Eigen::Vector3f p3Dcam2 = T2w * movedPoints_[i];
+
+        original_p2D = prevCalibration_->project(p3Dcam1);
+        moved_p2D = currCalibration_->project(p3Dcam2);
 
         // Add Gaussian reprojection noise in units of pixels
-        original_p2D.x += std::round(distribution(generator));
-        original_p2D.y += std::round(distribution(generator));
-        moved_p2D.x += std::round(distribution(generator));
-        moved_p2D.y += std::round(distribution(generator));
+        original_p2D.x = std::round(original_p2D.x + distribution(generator));
+        original_p2D.y = std::round(original_p2D.y + distribution(generator));
+        moved_p2D.x = std::round(moved_p2D.x + distribution(generator));
+        moved_p2D.y = std::round(moved_p2D.y + distribution(generator));
 
         cv::KeyPoint original_keypoint(original_p2D, 1.0f); // 1.0f is the size of the keypoint
         cv::KeyPoint moved_keypoint(moved_p2D, 1.0f);
@@ -147,7 +154,7 @@ void SLAM::mapping() {
     int nTriangulated = 0;
 
     // Each moved point correspond with the point in the same index in the original vector
-    vector<int> vMatches(currKeyFrame_->getMapPoints().size()); //movedPoints_.size()?
+    vector<int> vMatches(currKeyFrame_->getMapPoints().size()); // if we had to search for matches
     int nMatches = movedPoints_.size();
 
     std::cout << "Number of keypoints: " << nMatches << std::endl;
@@ -158,11 +165,11 @@ void SLAM::mapping() {
     //Try to triangulate a new MapPoint with each match
     for(size_t i = 0; i < nMatches; i++){ //vMatches.size()
         // if(vMatches[i] != -1){
-        auto x1 = currKeyFrame_->getKeyPoint(i).pt;
-        auto x2 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
+        auto x1 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
+        auto x2 = currKeyFrame_->getKeyPoint(i).pt; 
 
-        Eigen::Vector3f xn1 = calibration1_->unproject(x1).normalized();
-        Eigen::Vector3f xn2 = calibration2_->unproject(x2).normalized();
+        Eigen::Vector3f xn1 = prevCalibration_->unproject(x1).normalized();
+        Eigen::Vector3f xn2 = currCalibration_->unproject(x2).normalized();
         Eigen::Vector3f x3D;
 
         triangulate(xn1, xn2, T1w, T2w, x3D);
@@ -183,8 +190,8 @@ void SLAM::mapping() {
 
         Eigen::Vector2f p_p1;
         Eigen::Vector2f p_p2;
-        calibration1_->project(T1w*x3D, p_p1);
-        calibration2_->project(T2w*x3D, p_p2);
+        prevCalibration_->project(T1w*x3D, p_p1);
+        currCalibration_->project(T2w*x3D, p_p2);
 
         cv::Point2f cv_p1(p_p1[0], p_p1[1]);
         cv::Point2f cv_p2(p_p2[0], p_p2[1]);
@@ -197,14 +204,17 @@ void SLAM::mapping() {
         std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
 
         pMap_->insertMapPoint(map_point);
+        // Save the index "i" of the original/moved match
+        insertedIndexes_.push_back(i);
 
+        pMap_->addObservation(prevKeyFrame_->getId(), map_point->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
         pMap_->addObservation(currKeyFrame_->getId(), map_point->getId(), i);
-        pMap_->addObservation(prevKeyFrame_->getId(), map_point->getId(), i); // vMatches[i] si las parejas no fuesen ordenadas
 
-        currKeyFrame_->setMapPoint(i, map_point);
         prevKeyFrame_->setMapPoint(i, map_point); // vMatches[i]?
+        currKeyFrame_->setMapPoint(i, map_point);
 
         nTriangulated++;
+
         // }
     }
 
@@ -226,7 +236,7 @@ void SLAM::mapping() {
     }
 
     // correct reporjection error
-    localBundleAdjustment(pMap_.get(),currKeyFrame_->getId());
+    // localBundleAdjustment(pMap_.get(),currKeyFrame_->getId());
     std::cout << "Bundle adjustment completed " << std::endl;
 
     // visualize
@@ -267,17 +277,20 @@ void SLAM::measureErrors() {
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
 
     float total_error = 0.0f;
-    int point_count = 0;
-    for (const auto& [id, mapPoint] : mapPoints_corrected) {
+    int point_count = insertedIndexes_.size();
+    for(size_t i = 0; i < insertedIndexes_.size(); i++){ 
+        std::shared_ptr<MapPoint> mapPoint = pMap_->getMapPoint(i);
         Eigen::Vector3f corrected_position = mapPoint->getWorldPosition();
-        Eigen::Vector3f original_position = originalPoints_[id]; 
+        Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[i]]; 
 
         Eigen::Vector3f point_error = corrected_position - original_position;
         float error_magnitude = point_error.norm();
         total_error += error_magnitude;
-        point_count++;
 
-        // std::cout << "\nError for point " << id << ":\n";
+        // std::cout << "\nError for point: " << mapPoint->getId() << "\n";
+        // std::cout << "Position " << insertedIndexes_[i] << "\n";
+        // std::cout << "point x: " << original_position.x() << " y: " << original_position.y() << " z: " << original_position.z() << std::endl;
+        // std::cout << "Mappoint x: " << corrected_position.x() << " y: " << corrected_position.y() << " z: " << corrected_position.z() << std::endl;
         // std::cout << "x: " << point_error.x() << " y: " << point_error.y() << " z: " << point_error.z() << std::endl;
     }
 
