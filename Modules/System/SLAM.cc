@@ -236,7 +236,7 @@ void SLAM::mapping() {
     }
 
     // correct reporjection error
-    // localBundleAdjustment(pMap_.get(),currKeyFrame_->getId());
+    localBundleAdjustment(pMap_.get(),currKeyFrame_->getId());
     std::cout << "Bundle adjustment completed " << std::endl;
 
     // visualize
