@@ -42,4 +42,9 @@ int poseOnlyOptimization(Frame& currFrame);
  */
 void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
 
+/*
+ * Performs a Bundle Adjustmen and ARAP optimization (optimizes both camera poses and two different 3D points solutions)
+ */
+void arapOptimization(Map* pMap);
+
 #endif //MINI_SLAM_G2OBUNDLEADJUSTMENT_H

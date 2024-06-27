@@ -236,7 +236,7 @@ void SLAM::mapping() {
     }
 
     // correct reporjection error
-    localBundleAdjustment(pMap_.get(),currKeyFrame_->getId());
+    arapOptimization(pMap_.get());
     std::cout << "Bundle adjustment completed " << std::endl;
 
     // visualize
