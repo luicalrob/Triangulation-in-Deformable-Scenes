@@ -176,14 +176,14 @@ void EdgeSE3ProjectXYZKeyFrame::linearizeOplus() {
 
     Eigen::Matrix<double,2,3> projectJac = -pCamera->projectJac(xyz_trans);
 
-    _jacobianOplusXi =  projectJac * T.rotation().toRotationMatrix();
+    _jacobianOplusXi =  projectJac * T.rotation().toRotationMatrix(); //2x3
 
     Eigen::Matrix<double,3,6> SE3deriv;
     SE3deriv << 0.f, z,   -y, 1.f, 0.f, 0.f,
                  -z , 0.f, x, 0.f, 1.f, 0.f,
                  y ,  -x , 0.f, 0.f, 0.f, 1.f;
 
-    _jacobianOplusXj = projectJac * SE3deriv;
+    _jacobianOplusXj = projectJac * SE3deriv; //2x6
 }
 
 

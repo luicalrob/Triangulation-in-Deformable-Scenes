@@ -188,10 +188,13 @@ public:
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
 
-        _error = v1->estimate() - v2->estimate() - _measurement; // [DUDA] should i use other two vertex instead of _measurement?
+        _error = (v2->estimate() - Xj2world) - (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
     }
 
     virtual void linearizeOplus();
+
+    Eigen::Vector3d Xj1world;
+    Eigen::Vector3d Xj2world;
 };
 
 #endif //MINI_SLAM_G2OTYPES_H
