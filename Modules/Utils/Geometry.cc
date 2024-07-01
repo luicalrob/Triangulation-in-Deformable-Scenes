@@ -49,6 +49,37 @@ void triangulate(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
     x3D = T2w.inverse() * p3D1;
 }
 
+void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
+                 const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2){
+    Sophus::SE3f T21 = T2w * T1w.inverse();
+    Eigen::Vector3f m0 = T21.rotationMatrix() * xn1;
+    Eigen::Vector3f m1 = xn2;
+
+    Eigen::Vector3f t = T21.translation().normalized();
+    Eigen::Matrix<float,3,2> M;
+    M.col(0) = m0.normalized();
+    M.col(1) = m1.normalized();
+
+    Eigen::Matrix<float,2,3> A = M.transpose() * (Eigen::Matrix3f::Identity() - t*t.transpose());
+    Eigen::JacobiSVD<Eigen::Matrix<float,2,3>> svd(A, Eigen::ComputeFullV);
+    Eigen::Vector3f n = svd.matrixV().col(1);
+
+    Eigen::Vector3f m0_ = m0 - (m0.dot(n)) * n;
+    Eigen::Vector3f m1_ = m1 - (m1.dot(n)) * n;
+
+    Eigen::Vector3f z = m1_.cross(m0_);
+    float lambda0 = z.dot(T21.translation().cross(m1_))/(z.squaredNorm());
+    Eigen::Vector3f p3D1 = T21.translation() + lambda0*m0;
+
+    float lambda1 = z.dot(T21.translation().cross(m0_))/(z.squaredNorm());
+    Eigen::Vector3f p3D2 = lambda1 * m1;
+
+    x3D_1 = T2w.inverse() * p3D1;
+    std::cout << "x3D_1: x:" << x3D_1.x() << " y: " << x3D_1.y() << " z: " << x3D_1.z() << "\n";
+    x3D_2 = T2w.inverse() * p3D2; // same 3D point
+    std::cout << "x3D_2: x:" << x3D_2.x() << " y: " << x3D_2.y() << " z: " << x3D_2.z() << "\n";
+}
+
 float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2){
     float errx = p1.x - p2.x;
     float erry = p1.y - p2.y;

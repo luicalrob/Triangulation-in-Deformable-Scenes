@@ -170,13 +170,14 @@ void SLAM::mapping() {
 
         Eigen::Vector3f xn1 = prevCalibration_->unproject(x1).normalized();
         Eigen::Vector3f xn2 = currCalibration_->unproject(x2).normalized();
-        Eigen::Vector3f x3D;
+        Eigen::Vector3f x3D_1;
+        Eigen::Vector3f x3D_2;
 
-        triangulate(xn1, xn2, T1w, T2w, x3D);
+        triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
 
         //Check positive depth
-        auto x_1 = T1w * x3D;
-        auto x_2 = T2w * x3D;
+        auto x_1 = T1w * x3D_1;
+        auto x_2 = T2w * x3D_2;
         if(x_1[2] < 0.0 || x_2[2] < 0.0) continue;
 
         //Check parallax
@@ -190,29 +191,36 @@ void SLAM::mapping() {
 
         Eigen::Vector2f p_p1;
         Eigen::Vector2f p_p2;
-        prevCalibration_->project(T1w*x3D, p_p1);
-        currCalibration_->project(T2w*x3D, p_p2);
+        prevCalibration_->project(T1w*x3D_1, p_p1);
+        currCalibration_->project(T2w*x3D_2, p_p2);
 
         cv::Point2f cv_p1(p_p1[0], p_p1[1]);
         cv::Point2f cv_p2(p_p2[0], p_p2[1]);
 
+        std::cout << "x1 x:" << x1.x << " y: " << x1.y << "\n";
+        std::cout << "cv_p1 x:" << cv_p1.x << " y: " << cv_p1.y << "\n";
+        
         auto e1 = squaredReprojectionError(x1, cv_p1);
         auto e2 = squaredReprojectionError(x2, cv_p2);
+        std::cout << "e1: " << e1 << "e2: " << e2 << "\n";
 
         if(e1 > 5.991 || e2 > 5.991) continue;
 
-        std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
+        std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
+        std::shared_ptr<MapPoint> map_point_2(new MapPoint(x3D_2));
 
-        pMap_->insertMapPoint(map_point);
+        pMap_->insertMapPoint(map_point_1);
+        pMap_->insertMapPoint(map_point_2);
         // Save the index "i" of the original/moved match
         insertedIndexes_.push_back(i);
 
-        pMap_->addObservation(prevKeyFrame_->getId(), map_point->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
-        pMap_->addObservation(currKeyFrame_->getId(), map_point->getId(), i);
+        pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
+        pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
 
-        prevKeyFrame_->setMapPoint(i, map_point); // vMatches[i]?
-        currKeyFrame_->setMapPoint(i, map_point);
+        prevKeyFrame_->setMapPoint(i, map_point_1); // vMatches[i]?
+        currKeyFrame_->setMapPoint(i, map_point_2);
 
+        nTriangulated++;
         nTriangulated++;
 
         // }
@@ -276,16 +284,26 @@ void SLAM::measureErrors() {
     // 3D Error measurement in map points
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
 
+    float total_error_original = 0.0f;
+    float total_error_moved = 0.0f;
     float total_error = 0.0f;
-    int point_count = insertedIndexes_.size();
+    int point_count = insertedIndexes_.size()*2;
     for(size_t i = 0; i < insertedIndexes_.size(); i++){ 
-        std::shared_ptr<MapPoint> mapPoint = pMap_->getMapPoint(i);
-        Eigen::Vector3f corrected_position = mapPoint->getWorldPosition();
-        Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[i]]; 
+        std::shared_ptr<MapPoint> mapPoint1 = pMap_->getMapPoint(i);
+        std::shared_ptr<MapPoint> mapPoint2 = pMap_->getMapPoint(i+1);
+        Eigen::Vector3f opt_original_position = mapPoint1->getWorldPosition();
+        Eigen::Vector3f opt_moved_position = mapPoint2->getWorldPosition();
 
-        Eigen::Vector3f point_error = corrected_position - original_position;
-        float error_magnitude = point_error.norm();
-        total_error += error_magnitude;
+        Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[i]]; 
+        Eigen::Vector3f moved_position = movedPoints_[insertedIndexes_[i]]; 
+
+        Eigen::Vector3f original_error = opt_original_position - original_position;
+        Eigen::Vector3f moved_error = opt_moved_position - moved_position;
+        float error_magnitude_original = original_error.norm();
+        float error_magnitude_moved = moved_error.norm();
+        total_error_original += error_magnitude_original;
+        total_error_moved += error_magnitude_moved;
+        total_error += error_magnitude_moved + error_magnitude_original;
 
         // std::cout << "\nError for point: " << mapPoint->getId() << "\n";
         // std::cout << "Position " << insertedIndexes_[i] << "\n";
@@ -295,6 +313,12 @@ void SLAM::measureErrors() {
     }
 
     if (point_count > 0) {
+        float average_error_original = total_error_original / insertedIndexes_.size();
+        std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
+        std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
+        float average_error_moved = total_error_moved / insertedIndexes_.size();
+        std::cout << "\nTotal error in MOVED 3D: " << total_error_moved << std::endl;
+        std::cout << "Average error in MOVED 3D: " << average_error_moved << std::endl;
         float average_error = total_error / point_count;
         std::cout << "\nTotal error in 3D: " << total_error << std::endl;
         std::cout << "Average error in 3D: " << average_error << std::endl;

@@ -41,6 +41,9 @@ float cosRayParallax(const Eigen::Vector3f& a, const Eigen::Vector3f& b);
 void triangulate(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
                  const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, Eigen::Vector3f &x3D);
 
+void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
+                 const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
+
 /*
  * Squared reprojection error
  */

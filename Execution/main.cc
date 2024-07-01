@@ -35,7 +35,7 @@ int main(){
     SLAM SLAM("Data/Test.yaml");
 
     // maybe first lets try without movement
-    SLAM.loadPoints("Data/original_points.csv", "Data/original_points.csv");
+    SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
 
     SLAM.setCameraPoses(firstCamera, secondCamera);
 

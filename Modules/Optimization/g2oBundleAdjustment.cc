@@ -535,7 +535,7 @@ void arapOptimization(Map* pMap){
                         optimizer.addVertex(vPoint);
 
                         mMapPointId[firstPointToOptimize] = currId;
-                        //std::cout << "Id: (" << currId << ")\n";
+                        std::cout << "Id: (" << currId << ")\n";
                         currId++;
                     }
 
@@ -549,7 +549,7 @@ void arapOptimization(Map* pMap){
                         optimizer.addVertex(vPoint);
 
                         mMapPointId[secondPointToOptimize] = currId;
-                        //std::cout << "ID: (" << currId << ")\n";
+                        std::cout << "ID: (" << currId << ")\n";
                         currId++;
                     }
 
@@ -600,7 +600,7 @@ void arapOptimization(Map* pMap){
                     eArap->setVertex(1, optimizer.vertex(mMapPointId[secondPointToOptimize]));
                     eArap->Xj1world = firstPointMeasurement->getWorldPosition().cast<double>();
                     eArap->Xj2world = secondPointMeasurement->getWorldPosition().cast<double>();
-                    eArap->setInformation(Eigen::Matrix3d::Identity());// * pKF1->getARAPWeight(pMP1, pMP2));
+                    //eArap->setInformation(Eigen::Matrix3d::Identity());// * pKF1->getARAPWeight(pMP1, pMP2));
 
                     optimizer.addEdge(eArap);
                 }
