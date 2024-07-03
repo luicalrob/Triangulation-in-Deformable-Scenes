@@ -24,6 +24,8 @@
 #include <g2o/types/sba/types_sba.h>
 #include <g2o/types/sba/types_six_dof_expmap.h>
 #include <g2o/core/robust_kernel_impl.h>
+#include <g2o/solvers/csparse/linear_solver_csparse.h>
+
 
 #include <g2o/solvers/dense/linear_solver_dense.h>
 
@@ -39,13 +41,19 @@ void bundleAdjustment(Map* pMap){
     //Get all KeyFrames from map
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
 
-    //Create optimizer
+    // Create optimizer
     g2o::SparseOptimizer optimizer;
-    std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>>();
 
-    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
-            g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linearSolver))
-    );
+    std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver =
+        std::make_unique<g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>>();
+
+    g2o::OptimizationAlgorithmLevenberg* solver =
+        new g2o::OptimizationAlgorithmLevenberg(std::make_unique<g2o::BlockSolver_6_3>(std::move(linearSolver)));
+
+    // g2o::BlockSolver_6_3::LinearSolverType * linearSolver = new g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>();
+    // g2o::BlockSolver_6_3* solver = new g2o::BlockSolver_6_3(linearSolver);
+    // g2o::OptimizationAlgorithmLevenberg* algo = new g2o::OptimizationAlgorithmLevenberg(solver);
+
 
     optimizer.setAlgorithm(solver);
     optimizer.setVerbose(false);
@@ -134,13 +142,18 @@ void bundleAdjustment(Map* pMap){
 }
 
 int poseOnlyOptimization(Frame& currFrame){
-    //Create optimizer
+    // Create optimizer
     g2o::SparseOptimizer optimizer;
-    std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>>();
 
-    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
-            g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linearSolver))
-    );
+    // std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver =
+    //     std::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>>();
+
+    // std::unique_ptr<g2o::OptimizationAlgorithmLevenberg> solver =
+    //     std::make_unique<g2o::OptimizationAlgorithmLevenberg>(std::move(linearSolver));
+
+    g2o::BlockSolver_6_3::LinearSolverType * linearSolver = new g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>();
+    //g2o::BlockSolver_6_3* solver = new g2o::BlockSolver_6_3(linearSolver);
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(linearSolver);
 
     optimizer.setAlgorithm(solver);
 
@@ -246,13 +259,18 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     set<ID> sLocalMapPoints, sLocalKeyFrames, sFixedKeyFrames;
     pMap->getLocalMapOfKeyFrame(currKeyFrameId,sLocalMapPoints,sLocalKeyFrames,sFixedKeyFrames);
 
-    //Create optimizer
+    // Create optimizer
     g2o::SparseOptimizer optimizer;
-    std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>>();
 
-    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
-            g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linearSolver))
-    );
+    // std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver =
+    //     std::make_unique<g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>>();
+
+    // std::unique_ptr<g2o::OptimizationAlgorithmLevenberg> solver =
+    //     std::make_unique<g2o::OptimizationAlgorithmLevenberg>(std::move(linearSolver));
+
+    g2o::BlockSolver_6_3::LinearSolverType * linearSolver = new g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>();
+    //g2o::BlockSolver_6_3* solver = new g2o::BlockSolver_6_3(linearSolver);
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(linearSolver);
 
     optimizer.setAlgorithm(solver);
     optimizer.setVerbose(false);
@@ -446,14 +464,23 @@ void arapOptimization(Map* pMap){
 
     //Get all KeyFrames from map
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
-
+    
     g2o::SparseOptimizer optimizer;
-    auto linearSolver = g2o::make_unique<g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>>();
-    auto solver = new g2o::OptimizationAlgorithmLevenberg(
-        g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linearSolver))
-    );
 
-    optimizer.setAlgorithm(solver);
+    // std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =
+    // new g2o::LinearSolverCSparse<g2o::BlockSolverX::PoseMatrixType>();
+
+    // g2o::OptimizationAlgorithmLevenberg solver =
+    // new g2o::OptimizationAlgorithmLevenberg(std::move(linearSolver));
+
+    g2o::BlockSolverX::LinearSolverType * linearSolver = new g2o::LinearSolverCSparse<g2o::BlockSolverX::PoseMatrixType>();
+    g2o::BlockSolverX* solver = new g2o::BlockSolverX(linearSolver);
+    g2o::OptimizationAlgorithmLevenberg* algo = new g2o::OptimizationAlgorithmLevenberg(solver);
+
+    //std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =  g2o::LinearSolverCSparse<g2o::BlockSolverX::PoseMatrixType>();
+    //g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(linearSolver);
+
+    optimizer.setAlgorithm(algo);
     optimizer.setVerbose(false);
 
     const float thHuber2D = sqrt(5.99);
@@ -535,7 +562,7 @@ void arapOptimization(Map* pMap){
                         optimizer.addVertex(vPoint);
 
                         mMapPointId[firstPointToOptimize] = currId;
-                        std::cout << "Id: (" << currId << ")\n";
+                        //std::cout << "Id: (" << currId << ")\n";
                         currId++;
                     }
 
@@ -549,7 +576,7 @@ void arapOptimization(Map* pMap){
                         optimizer.addVertex(vPoint);
 
                         mMapPointId[secondPointToOptimize] = currId;
-                        std::cout << "ID: (" << currId << ")\n";
+                        //std::cout << "ID: (" << currId << ")\n";
                         currId++;
                     }
 
@@ -596,11 +623,21 @@ void arapOptimization(Map* pMap){
 
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
-                    eArap->setVertex(0, optimizer.vertex(mMapPointId[firstPointToOptimize]));
-                    eArap->setVertex(1, optimizer.vertex(mMapPointId[secondPointToOptimize]));
+                    eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                    eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                     eArap->Xj1world = firstPointMeasurement->getWorldPosition().cast<double>();
                     eArap->Xj2world = secondPointMeasurement->getWorldPosition().cast<double>();
-                    //eArap->setInformation(Eigen::Matrix3d::Identity());// * pKF1->getARAPWeight(pMP1, pMP2));
+
+                    Eigen::Vector3d p3Daux = secondPointToOptimize->getWorldPosition().cast<double>();
+
+                    Eigen::Matrix<double,3,1> point;
+                    point << p3Daux.x(), p3Daux.y(), p3Daux.z();
+                    //eArap->setMeasurement(point);
+                    eArap->setInformation(Eigen::Matrix3d::Identity());// * pKF2->getInvSigma2(octave));// * pKF1->getARAPWeight(pMP1, pMP2));
+
+                    // rk = new g2o::RobustKernelHuber;
+                    // eArap->setRobustKernel(rk);
+                    // rk->setDelta(thHuber2D);
 
                     optimizer.addEdge(eArap);
                 }

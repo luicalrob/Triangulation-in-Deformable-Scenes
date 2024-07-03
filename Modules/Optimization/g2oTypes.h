@@ -166,13 +166,13 @@ public:
 
         // Compute the reprojection error
         _error = obs - projected.cast<double>();
+        std::cout << "Obsevations error: " << _error << std::endl;
     }
 
     virtual void linearizeOplus();
 
     std::shared_ptr<CameraModel> pCamera;
 };
-
 
 class EdgeARAP : public g2o::BaseBinaryEdge<3, Eigen::Vector3d, VertexSBAPointXYZ, VertexSBAPointXYZ> {
 public:
@@ -189,9 +189,10 @@ public:
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
 
         _error = (v2->estimate() - Xj2world) - (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
+        std::cout << "ARAP error: " << _error << std::endl;
     }
 
-    virtual void linearizeOplus();
+    // virtual void linearizeOplus();
 
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;

@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.5)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 include_directories(
+        ${PROJECT_BINARY_DIR}
         ${EIGEN3_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/Thirdparty/Sophus
         ${SLAM_LIB_INCLUDE_DIR})

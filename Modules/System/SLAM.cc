@@ -157,7 +157,7 @@ void SLAM::mapping() {
     vector<int> vMatches(currKeyFrame_->getMapPoints().size()); // if we had to search for matches
     int nMatches = movedPoints_.size();
 
-    std::cout << "Number of keypoints: " << nMatches << std::endl;
+    std::cout << "Number of matches: " << nMatches << std::endl;
 
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
@@ -197,12 +197,12 @@ void SLAM::mapping() {
         cv::Point2f cv_p1(p_p1[0], p_p1[1]);
         cv::Point2f cv_p2(p_p2[0], p_p2[1]);
 
-        std::cout << "x1 x:" << x1.x << " y: " << x1.y << "\n";
-        std::cout << "cv_p1 x:" << cv_p1.x << " y: " << cv_p1.y << "\n";
+        // std::cout << "x1 x:" << x1.x << " y: " << x1.y << "\n";
+        // std::cout << "cv_p1 x:" << cv_p1.x << " y: " << cv_p1.y << "\n";
         
         auto e1 = squaredReprojectionError(x1, cv_p1);
         auto e2 = squaredReprojectionError(x2, cv_p2);
-        std::cout << "e1: " << e1 << "e2: " << e2 << "\n";
+        //std::cout << "e1: " << e1 << "e2: " << e2 << "\n";
 
         if(e1 > 5.991 || e2 > 5.991) continue;
 

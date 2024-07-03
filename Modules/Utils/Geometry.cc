@@ -75,9 +75,9 @@ void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2
     Eigen::Vector3f p3D2 = lambda1 * m1;
 
     x3D_1 = T2w.inverse() * p3D1;
-    std::cout << "x3D_1: x:" << x3D_1.x() << " y: " << x3D_1.y() << " z: " << x3D_1.z() << "\n";
+    //std::cout << "x3D_1: x:" << x3D_1.x() << " y: " << x3D_1.y() << " z: " << x3D_1.z() << "\n";
     x3D_2 = T2w.inverse() * p3D2; // same 3D point
-    std::cout << "x3D_2: x:" << x3D_2.x() << " y: " << x3D_2.y() << " z: " << x3D_2.z() << "\n";
+    //std::cout << "x3D_2: x:" << x3D_2.x() << " y: " << x3D_2.y() << " z: " << x3D_2.z() << "\n";
 }
 
 float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2){

@@ -178,12 +178,16 @@ void EdgeSE3ProjectXYZKeyFrame::linearizeOplus() {
 
     _jacobianOplusXi =  projectJac * T.rotation().toRotationMatrix(); //2x3
 
+    //std::cout << "_jacobianOplusXi: (" << _jacobianOplusXi << ")\n";
+
     Eigen::Matrix<double,3,6> SE3deriv;
     SE3deriv << 0.f, z,   -y, 1.f, 0.f, 0.f,
                  -z , 0.f, x, 0.f, 1.f, 0.f,
                  y ,  -x , 0.f, 0.f, 0.f, 1.f;
 
     _jacobianOplusXj = projectJac * SE3deriv; //2x6
+
+    //std::cout << "_jacobianOplusXj: (" << _jacobianOplusXj << ")\n";
 }
 
 
@@ -191,11 +195,13 @@ void EdgeSE3ProjectXYZKeyFrame::linearizeOplus() {
 EdgeARAP::EdgeARAP(){}
 
 bool EdgeARAP::read(std::istream& is){
-    for (int i=0; i<2; i++){
+
+    for (int i=0; i<3; i++){
         is >> _measurement[i];
     }
-    for (int i=0; i<2; i++)
-        for (int j=i; j<2; j++) {
+
+    for (int i=0; i<3; i++)
+        for (int j=i; j<3; j++) {
             is >> information()(i,j);
             if (i!=j)
                 information()(j,i)=information()(i,j);
@@ -205,18 +211,18 @@ bool EdgeARAP::read(std::istream& is){
 
 bool EdgeARAP::write(std::ostream& os) const {
 
-    for (int i=0; i<2; i++){
+    for (int i=0; i<3; i++){
         os << measurement()[i] << " ";
     }
 
-    for (int i=0; i<2; i++)
-        for (int j=i; j<2; j++){
+    for (int i=0; i<3; i++)
+        for (int j=i; j<3; j++){
             os << " " <<  information()(i,j);
         }
     return os.good();
 }
 
-void EdgeARAP::linearizeOplus() {
-    _jacobianOplusXi = Eigen::Matrix3d::Identity();
-    _jacobianOplusXj = -Eigen::Matrix3d::Identity();
-}
+// void EdgeARAP::linearizeOplus() {
+//     _jacobianOplusXi = Eigen::Matrix3d::Identity();
+//     _jacobianOplusXj = -Eigen::Matrix3d::Identity();
+// }
