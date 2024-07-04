@@ -9,8 +9,8 @@ set(CMAKE_BUILD_TYPE DEBUG)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-#We require the C++17 standard
-set(CMAKE_CXX_STANDARD 17)
+#We require the C++14 standard
+set(CMAKE_CXX_STANDARD 14)
 
 #Compilation flags:
 #   -Flag for code optimizations: -O3
@@ -23,6 +23,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
   set(OpenCV_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
 endif()
+
+# Add compile definition to use vendored Ceres
+add_definitions(-DG2O_USE_VENDORED_CERES)
 
 add_subdirectory(Modules)
 add_subdirectory(Execution)

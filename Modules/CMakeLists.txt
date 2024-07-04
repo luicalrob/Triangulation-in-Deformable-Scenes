@@ -53,7 +53,6 @@ configure_file(${CMAKE_SOURCE_DIR}/Thirdparty/g2o/config.h.in
 # Include directories
 include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${CMAKE_CURRENT_SOURCE_DIR}
-                    ${PROJECT_BINARY_DIR}
                     ${EIGEN3_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/Thirdparty/Sophus
                     ${CMAKE_SOURCE_DIR}/Thirdparty/g2o
