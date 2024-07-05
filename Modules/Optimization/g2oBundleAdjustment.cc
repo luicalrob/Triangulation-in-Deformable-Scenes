@@ -43,6 +43,7 @@ void bundleAdjustment(Map* pMap){
 
     //Create optimizer
     g2o::SparseOptimizer optimizer;
+    
     std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>>();
 
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
@@ -453,25 +454,7 @@ void arapOptimization(Map* pMap){
     // Create optimizer
     g2o::SparseOptimizer optimizer;
 
-    // BUILDS but don't work (chatgpt)
-    // g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
-    //     g2o::make_unique<g2o::BlockSolverX>(
-    //         g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()
-    //     )
-    // );
-
-    // BUILDS but don't work (guy from internet)
-    // typedef g2o::BlockSolver<g2o::BlockSolverTraits<-1, -1> > SlamBlockSolver;
-    // typedef g2o::LinearSolverEigen<SlamBlockSolver::PoseMatrixType> SlamLinearSolver;
-    // auto linearSolver = std::make_unique<SlamLinearSolver>();
-    // linearSolver->setBlockOrdering(false);
-    // g2o::OptimizationAlgorithmLevenberg* solver =
-    //     new g2o::OptimizationAlgorithmLevenberg(
-    //         std::make_unique<SlamBlockSolver>(std::move(linearSolver)));
-
-    // BUILDS but don't work, us
-    
-    std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverEigen<g2o::BlockSolverX::PoseMatrixType>>();
+    std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>();
 
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
             g2o::make_unique<g2o::BlockSolverX>(std::move(linearSolver))
@@ -528,13 +511,84 @@ void arapOptimization(Map* pMap){
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
             // [DUDA] Primero asumire que todos son diferentes, deberia fusionar una vez hecha la optimización si quedan muy juntos??
 
-            size_t length = pKF1->getNummberOfMapPoints();
-
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];
                 MapPoint_ pMPi2 = v2MPs[i];
                 if (!pMPi1) continue;
                 if (!pMPi2) continue;
+
+                MapPoint_ firstPointToOptimize = pMPi1;
+                MapPoint_ secondPointToOptimize = pMPi2;
+
+                //Check if this MapPoint has been already added to the optimization
+                if (mMapPointId.count(firstPointToOptimize) == 0) {
+                    //EdgeSE3ProjectXYZ* vPoint = new EdgeSE3ProjectXYZ();
+                    VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
+                    Eigen::Vector3d p3D = firstPointToOptimize->getWorldPosition().cast<double>();
+                    vPoint->setEstimate(p3D);
+                    vPoint->setId(currId);
+                    //vPoint->setMarginalized(true);
+                    optimizer.addVertex(vPoint);
+
+                    mMapPointId[firstPointToOptimize] = currId;
+                    //std::cout << "Id: (" << currId << ")\n";
+                    currId++;
+                }
+
+                if (mMapPointId.count(secondPointToOptimize) == 0) {
+                    //EdgeSE3ProjectXYZ* vPoint = new EdgeSE3ProjectXYZ();
+                    VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
+                    Eigen::Vector3d p3D = secondPointToOptimize->getWorldPosition().cast<double>();
+                    vPoint->setEstimate(p3D);
+                    vPoint->setId(currId);
+                    //vPoint->setMarginalized(true);
+                    optimizer.addVertex(vPoint);
+
+                    mMapPointId[secondPointToOptimize] = currId;
+                    //std::cout << "ID: (" << currId << ")\n";
+                    currId++;
+                }
+
+                //Set fisrt projection edge
+                cv::Point2f uv = pKF1->getKeyPoint(i).pt;
+                int octave = pKF1->getKeyPoint(i).octave;
+                Eigen::Matrix<double,2,1> obs;
+                obs << uv.x, uv.y;
+
+                EdgeSE3ProjectXYZKeyFrame* eKF1 = new EdgeSE3ProjectXYZKeyFrame();
+
+                eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                eKF1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
+                eKF1->setMeasurement(obs);
+                eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave));
+
+                g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+                eKF1->setRobustKernel(rk);
+                rk->setDelta(thHuber2D);
+
+                eKF1->pCamera = pKF1->getCalibration();
+
+                optimizer.addEdge(eKF1);
+
+                //Set second projection edge
+                uv = pKF2->getKeyPoint(i).pt;
+                octave = pKF2->getKeyPoint(i).octave;
+                obs << uv.x, uv.y;
+
+                EdgeSE3ProjectXYZKeyFrame* eKF2 = new EdgeSE3ProjectXYZKeyFrame();
+
+                eKF2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                eKF2->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF2])));
+                eKF2->setMeasurement(obs);
+                eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave));
+
+                rk = new g2o::RobustKernelHuber;
+                eKF2->setRobustKernel(rk);
+                rk->setDelta(thHuber2D);
+
+                eKF2->pCamera = pKF2->getCalibration();
+
+                optimizer.addEdge(eKF2);
 
                 for (size_t j = 0; j < v1MPs.size(); j++) { // [DUDA] Posible error si el segundo mapa es de otro size
                     MapPoint_ pMPj1 = v1MPs[j];
@@ -543,80 +597,9 @@ void arapOptimization(Map* pMap){
                     if (!pMPj2) continue;
                     if (pMPi1 == pMPj1 || pMPi2 == pMPj2) continue;
 
-                    MapPoint_ firstPointToOptimize = pMPi1;
-                    MapPoint_ secondPointToOptimize = pMPi2;
+                    
                     MapPoint_ firstPointMeasurement = pMPj1;
                     MapPoint_ secondPointMeasurement = pMPj2;
-
-                    //Check if this MapPoint has been already added to the optimization
-                    if (mMapPointId.count(firstPointToOptimize) == 0) {
-                        //EdgeSE3ProjectXYZ* vPoint = new EdgeSE3ProjectXYZ();
-                        VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
-                        Eigen::Vector3d p3D = firstPointToOptimize->getWorldPosition().cast<double>();
-                        vPoint->setEstimate(p3D);
-                        vPoint->setId(currId);
-                        vPoint->setMarginalized(true);
-                        optimizer.addVertex(vPoint);
-
-                        mMapPointId[firstPointToOptimize] = currId;
-                        //std::cout << "Id: (" << currId << ")\n";
-                        currId++;
-                    }
-
-                    if (mMapPointId.count(secondPointToOptimize) == 0) {
-                        //EdgeSE3ProjectXYZ* vPoint = new EdgeSE3ProjectXYZ();
-                        VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
-                        Eigen::Vector3d p3D = secondPointToOptimize->getWorldPosition().cast<double>();
-                        vPoint->setEstimate(p3D);
-                        vPoint->setId(currId);
-                        vPoint->setMarginalized(true);
-                        optimizer.addVertex(vPoint);
-
-                        mMapPointId[secondPointToOptimize] = currId;
-                        //std::cout << "ID: (" << currId << ")\n";
-                        currId++;
-                    }
-
-                    //Set fisrt projection edge
-                    cv::Point2f uv = pKF1->getKeyPoint(i).pt;
-                    int octave = pKF1->getKeyPoint(i).octave;
-                    Eigen::Matrix<double,2,1> obs;
-                    obs << uv.x, uv.y;
-
-                    EdgeSE3ProjectXYZKeyFrame* eKF1 = new EdgeSE3ProjectXYZKeyFrame();
-
-                    eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    eKF1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
-                    eKF1->setMeasurement(obs);
-                    eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave));
-
-                    g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-                    eKF1->setRobustKernel(rk);
-                    rk->setDelta(thHuber2D);
-
-                    eKF1->pCamera = pKF1->getCalibration();
-
-                    optimizer.addEdge(eKF1);
-
-                    //Set second projection edge
-                    uv = pKF2->getKeyPoint(i).pt;
-                    octave = pKF2->getKeyPoint(i).octave;
-                    obs << uv.x, uv.y;
-
-                    EdgeSE3ProjectXYZKeyFrame* eKF2 = new EdgeSE3ProjectXYZKeyFrame();
-
-                    eKF2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    eKF2->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF2])));
-                    eKF2->setMeasurement(obs);
-                    eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave));
-
-                    rk = new g2o::RobustKernelHuber;
-                    eKF2->setRobustKernel(rk);
-                    rk->setDelta(thHuber2D);
-
-                    eKF2->pCamera = pKF2->getCalibration();
-
-                    optimizer.addEdge(eKF2);
 
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
@@ -625,20 +608,12 @@ void arapOptimization(Map* pMap){
                     eArap->Xj1world = firstPointMeasurement->getWorldPosition().cast<double>();
                     eArap->Xj2world = secondPointMeasurement->getWorldPosition().cast<double>();
 
-                    Eigen::Vector3d p3Daux = secondPointToOptimize->getWorldPosition().cast<double>();
-
-                    Eigen::Matrix<double,3,1> point;
-                    point << p3Daux.x(), p3Daux.y(), p3Daux.z();
-                    //eArap->setMeasurement(point);
-                    
                     // coger todas los errores en distancias por cada punto
                     //sacar la desv tipica en x, y, z
                     // invertirlo y usarlo
                     eArap->setInformation(Eigen::Matrix3d::Identity());// * pKF2->getInvSigma2(octave));// * pKF1->getARAPWeight(pMP1, pMP2));
+                    eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
 
-                    // rk = new g2o::RobustKernelHuber;
-                    // eArap->setRobustKernel(rk);
-                    // rk->setDelta(thHuber2D);
 
                     optimizer.addEdge(eArap);
                 }
@@ -648,6 +623,7 @@ void arapOptimization(Map* pMap){
 
     //Run optimization
     optimizer.initializeOptimization();
+
     std::cout << "Starting... \n";
     optimizer.optimize(5);
     // tras unas iteraciones con las soluciones o modificando lo que tienes

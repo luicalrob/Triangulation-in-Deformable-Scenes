@@ -166,7 +166,7 @@ public:
 
         // Compute the reprojection error
         _error = obs - projected.cast<double>();
-        std::cout << "Obsevations error: " << _error << std::endl;
+        //std::cout << "Obsevations error: " << _error << std::endl;
     }
 
     virtual void linearizeOplus();
@@ -187,9 +187,10 @@ public:
     void computeError() {
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        Eigen::Vector3d obs(_measurement);
 
-        _error = (v2->estimate() - Xj2world) - (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
-        std::cout << "ARAP error: " << _error << std::endl;
+        _error = obs + (v2->estimate() - Xj2world) - (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
+        //std::cout << "ARAP error: " << _error << std::endl;
     }
 
     // virtual void linearizeOplus();
