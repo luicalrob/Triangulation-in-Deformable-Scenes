@@ -590,9 +590,19 @@ void arapOptimization(Map* pMap){
                 optimizer.addEdge(eKF2);
 
                 Eigen::Vector3d distancesInvTipDesv;
-                distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
+                distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2); 
+                // [DUDA] cogerla para todos los puntos o los neighbours?
 
                 Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
+
+                vector<MapPoint_>& nearestNeighbors_firstPoint = findNearestNeighbors(*firstPointToOptimize, *v1MPs, 2);
+                vector<MapPoint_>& nearestNeighbors_secondPoint;
+                vector<size_t> vIndicesToCheck(100);
+                findMPsIndices(nearestNeighbors_firstPoint, vIndicesToCheck); // implement
+
+                for(auto j : vIndicesToCheck){
+                    nearestNeighbors_secondPoint.push_back(pKF2->getMapPoint(j));
+                }
 
                 for (size_t j = 0; j < v1MPs.size(); j++) { // [DUDA] Posible error si el segundo mapa es de otro size
                     MapPoint_ pMPj1 = v1MPs[j];

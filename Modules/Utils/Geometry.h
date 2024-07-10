@@ -62,4 +62,9 @@ Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12);
  */
 double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eigen::Vector3d &v2);
 
+/*
+ * Returns the x nearest neighbour of mainMP mapPoint given a list of mapPoints and x number of neighbours desired
+ */
+std::vector<MapPoint*> findNearestNeighbors(MapPoint* mainMP, const std::vector<MapPoint*>& vMPs, int x);
+
 #endif //SLAM_GEOMETRY_H
