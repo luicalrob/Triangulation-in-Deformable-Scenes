@@ -1,4 +1,4 @@
-#Miinimum CMAKE version required
+# Minimum CMAKE version required
 cmake_minimum_required(VERSION 3.5)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -9,10 +9,15 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/Thirdparty/Sophus
         ${SLAM_LIB_INCLUDE_DIR})
 
-#Set executalble directory
+# Set executable directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Execution)
 
-#Set the name of the Program
-set(PROGRAM_NAME main)
-add_executable(${PROGRAM_NAME} main.cc)
-target_link_libraries(${PROGRAM_NAME} ${OpenCV_LIBS} slam)
+# Set the name of the main program and add its source file
+set(MAIN_PROGRAM_NAME main)
+add_executable(${MAIN_PROGRAM_NAME} main.cc)
+target_link_libraries(${MAIN_PROGRAM_NAME} ${OpenCV_LIBS} slam)
+
+# Set the name of the cotangent program and add its source file
+set(COTANGENT_PROGRAM_NAME cotangent)
+add_executable(${COTANGENT_PROGRAM_NAME} cotangent.cc)
+target_link_libraries(${COTANGENT_PROGRAM_NAME} ${OpenCV_LIBS} slam)
