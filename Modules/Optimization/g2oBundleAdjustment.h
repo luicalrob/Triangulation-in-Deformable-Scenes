@@ -47,4 +47,9 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
  */
 void arapOptimization(Map* pMap);
 
+/*
+ * Compute the tipical desviation of the distances between two objects given two mappoints to compare
+ */
+Eigen::Vector3d getInvUncertainty(MapPoint& firstPoint, MapPoint& secondPoint, KeyFrame& pKF1, KeyFrame& pKF2);
+
 #endif //MINI_SLAM_G2OBUNDLEADJUSTMENT_H

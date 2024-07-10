@@ -442,7 +442,6 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     }
 }
 
-
 void arapOptimization(Map* pMap){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
@@ -590,6 +589,11 @@ void arapOptimization(Map* pMap){
 
                 optimizer.addEdge(eKF2);
 
+                Eigen::Vector3d distancesInvTipDesv;
+                distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
+
+                Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
+
                 for (size_t j = 0; j < v1MPs.size(); j++) { // [DUDA] Posible error si el segundo mapa es de otro size
                     MapPoint_ pMPj1 = v1MPs[j];
                     MapPoint_ pMPj2 = v2MPs[j];
@@ -609,11 +613,11 @@ void arapOptimization(Map* pMap){
                     eArap->Xj2world = secondPointMeasurement->getWorldPosition().cast<double>();
 
                     // coger todas los errores en distancias por cada punto
-                    //sacar la desv tipica en x, y, z
+                    // sacar la desv tipica en x, y, z
                     // invertirlo y usarlo
-                    eArap->setInformation(Eigen::Matrix3d::Identity());// * pKF2->getInvSigma2(octave));// * pKF1->getARAPWeight(pMP1, pMP2));
-                    eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
 
+                    eArap->setInformation(informationMatrix);
+                    eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
 
                     optimizer.addEdge(eArap);
                 }
@@ -625,7 +629,7 @@ void arapOptimization(Map* pMap){
     optimizer.initializeOptimization();
 
     std::cout << "Starting... \n";
-    optimizer.optimize(5);
+    optimizer.optimize(15);
     // tras unas iteraciones con las soluciones o modificando lo que tienes
 
     std::cout << "Optimizado \n";
@@ -642,5 +646,44 @@ void arapOptimization(Map* pMap){
         VertexSBAPointXYZ* vPoint = static_cast<VertexSBAPointXYZ*>(optimizer.vertex(pairMapPointId.second));
         Eigen::Vector3f p3D = vPoint->estimate().cast<float>();
         pMP->setWorldPosition(p3D);
+    }
+}
+
+Eigen::Vector3d getInvUncertainty(MapPoint& firstPoint, MapPoint& secondPoint, KeyFrame& pKF1, KeyFrame& pKF2) {
+    vector<shared_ptr<MapPoint>>& v1MPs = pKF1.getMapPoints();
+    vector<shared_ptr<MapPoint>>& v2MPs = pKF2.getMapPoints();
+
+    Eigen::Vector3d distancesErrorSquared = Eigen::Vector3d::Zero();
+    size_t validPairs = 0;
+
+    for (size_t j = 0; j < v1MPs.size(); j++) {
+        auto pMPj1 = v1MPs[j];
+        auto pMPj2 = v2MPs[j];
+
+        if (!pMPj1 || !pMPj2) continue;
+        if (firstPoint.getId() == pMPj1->getId() || secondPoint.getId() == pMPj2->getId()) continue;
+
+        Eigen::Vector3d firstObjectDistance = firstPoint.getWorldPosition().cast<double>() - (pMPj1)->getWorldPosition().cast<double>();
+        Eigen::Vector3d secondObjectDistance = secondPoint.getWorldPosition().cast<double>() - (pMPj2)->getWorldPosition().cast<double>();
+
+        Eigen::Vector3d diff = secondObjectDistance - firstObjectDistance;
+        distancesErrorSquared += diff.cwiseProduct(diff);
+        validPairs++;
+    }
+
+    if (validPairs > 0) {
+        distancesErrorSquared /= static_cast<double>(validPairs); // Normalize by number of valid pairs
+
+        Eigen::Vector3d stddev = distancesErrorSquared.cwiseSqrt();
+
+        Eigen::Vector3d invStddev;
+        invStddev << 1.0 / stddev(0), 1.0 / stddev(1), 1.0 / stddev(2);
+
+        //std::cout << "distancesError: " << invStddev << " of point : " << firstPoint.getId() <<  std::endl;
+
+        return invStddev;
+    } else {
+        // Handle case where there are no valid pairs
+        return Eigen::Vector3d::Zero(); // Or some other default value
     }
 }

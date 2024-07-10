@@ -13,7 +13,7 @@ def generate_points(num_points, scale_movement, x_mean, x_std, y_mean, y_std, z_
 
     # Move along x-axis
     moved_points = original_points.copy()
-    moved_points[:, 0] += np.random.normal(scale=movement_scale, size=num_points)  
+    moved_points[:, 0] += np.random.normal(scale=scale_movement, size=num_points)  
     return original_points, moved_points
 
 def save_points(filename, points):

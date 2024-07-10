@@ -170,11 +170,12 @@ void SLAM::mapping() {
 
         Eigen::Vector3f xn1 = prevCalibration_->unproject(x1).normalized();
         Eigen::Vector3f xn2 = currCalibration_->unproject(x2).normalized();
-        Eigen::Vector3f x3D;
+        // Eigen::Vector3f x3D;
         Eigen::Vector3f x3D_1;
         Eigen::Vector3f x3D_2;
 
-        triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+        triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+        // triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         // triangulate(xn1, xn2, T1w, T2w, x3D);
 
         //Check positive depth
@@ -210,7 +211,7 @@ void SLAM::mapping() {
         auto e2 = squaredReprojectionError(x2, cv_p2);
         //std::cout << "e1: " << e1 << "e2: " << e2 << "\n";
 
-        if(e1 > 5.991 || e2 > 5.991) continue;
+        //if(e1 > 5.991 || e2 > 5.991) continue;
 
         // std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
         std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
@@ -254,9 +255,21 @@ void SLAM::mapping() {
         mapVisualizer_->update();
     }
 
-    // correct reporjection error
+    // correct error
     arapOptimization(pMap_.get());
-    std::cout << "Bundle adjustment completed " << std::endl;
+    std::cout << "Bundle adjustment completed... fisrt 15 iterations " << std::endl;
+
+    // visualize
+    // visualizer_->drawCurrentFrame(currFrame_);
+    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
+    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
+    mapVisualizer_->update();
+    mapVisualizer_->updateCurrentPose(Tcw_);
+
+    measureErrors();
+
+    arapOptimization(pMap_.get());
+    std::cout << "Bundle adjustment completed... second 15 iterations " << std::endl;
 
     // visualize
     // visualizer_->drawCurrentFrame(currFrame_);
