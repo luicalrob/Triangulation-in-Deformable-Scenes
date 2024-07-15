@@ -39,7 +39,7 @@ int main(){
 
     SLAM.setCameraPoses(firstCamera, secondCamera);
 
-    SLAM.createKeyPoints(0.55f); // with a desviation in the reprojection error of 1 pixel 
+    SLAM.createKeyPoints(0.5f); // with a desviation in the reprojection error of 1 pixel 
 
     SLAM.mapping();
 

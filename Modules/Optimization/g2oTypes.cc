@@ -164,8 +164,9 @@ bool EdgeSE3ProjectXYZKeyFrame::write(std::ostream& os) const {
 }
 
 void EdgeSE3ProjectXYZKeyFrame::linearizeOplus() {
-    g2o::VertexSE3Expmap * vj = static_cast<g2o::VertexSE3Expmap *>(_vertices[1]);
-    g2o::SE3Quat T(vj->estimate());
+    //g2o::VertexSE3Expmap * vj = static_cast<g2o::VertexSE3Expmap *>(_vertices[1]);
+    // g2o::SE3Quat T(vj->estimate());
+    g2o::SE3Quat T = cameraPose;
     VertexSBAPointXYZ* vi = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
     Eigen::Vector3d xyz = vi->estimate();
     Eigen::Vector3d xyz_trans = T.map(xyz);
@@ -178,16 +179,16 @@ void EdgeSE3ProjectXYZKeyFrame::linearizeOplus() {
 
     _jacobianOplusXi =  projectJac * T.rotation().toRotationMatrix(); //2x3
 
-    //std::cout << "_jacobianOplusXi: (" << _jacobianOplusXi << ")\n";
+    // std::cout << "_jacobianOplusXi: (" << _jacobianOplusXi << ")\n";
 
-    Eigen::Matrix<double,3,6> SE3deriv;
-    SE3deriv << 0.f, z,   -y, 1.f, 0.f, 0.f,
-                 -z , 0.f, x, 0.f, 1.f, 0.f,
-                 y ,  -x , 0.f, 0.f, 0.f, 1.f;
+    // Eigen::Matrix<double,3,6> SE3deriv;
+    // SE3deriv << 0.f, z,   -y, 1.f, 0.f, 0.f,
+    //              -z , 0.f, x, 0.f, 1.f, 0.f,
+    //              y ,  -x , 0.f, 0.f, 0.f, 1.f;
 
-    _jacobianOplusXj = projectJac * SE3deriv; //2x6
+    // _jacobianOplusXj = projectJac * SE3deriv; //2x6
 
-    //std::cout << "_jacobianOplusXj: (" << _jacobianOplusXj << ")\n";
+    // std::cout << "_jacobianOplusXj: (" << _jacobianOplusXj << ")\n";
 }
 
 

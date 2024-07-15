@@ -475,36 +475,36 @@ void arapOptimization(Map* pMap){
             KeyFrame_ pKF2 = k2->second;
             std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
 
-            //Check if this MapPoint has been already added to the optimization
-            if (mKeyFrameId.count(pKF1) == 0) {
-                //Set KeyFrame data
-                Sophus::SE3f kfPose = pKF1->getPose();
-                g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-                vSE3->setEstimate(g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>()));
-                vSE3->setId(currId);
-                if(pKF1->getId()==0){
-                    vSE3->setFixed(true);
-                }
-                optimizer.addVertex(vSE3);
+            //Check if this KeyFrame has been already added to the optimization
+            // if (mKeyFrameId.count(pKF1) == 0) {
+            //     //Set KeyFrame data
+            //     Sophus::SE3f kfPose = pKF1->getPose();
+            //     g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+            //     vSE3->setEstimate(g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>()));
+            //     vSE3->setId(currId);
+            //     if(pKF1->getId()==0){
+            //         vSE3->setFixed(true);
+            //     }
+            //     optimizer.addVertex(vSE3);
 
-                mKeyFrameId[pKF1] = currId;
-                currId++;
-            }
+            //     mKeyFrameId[pKF1] = currId;
+            //     currId++;
+            // }
 
-            if (mKeyFrameId.count(pKF2) == 0) {
-                //Set KeyFrame data
-                Sophus::SE3f kfPose = pKF2->getPose();
-                g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-                vSE3->setEstimate(g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>()));
-                vSE3->setId(currId);
-                if(pKF2->getId()==0){
-                    vSE3->setFixed(true);
-                }
-                optimizer.addVertex(vSE3);
+            // if (mKeyFrameId.count(pKF2) == 0) {
+            //     //Set KeyFrame data
+            //     Sophus::SE3f kfPose = pKF2->getPose();
+            //     g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+            //     vSE3->setEstimate(g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>()));
+            //     vSE3->setId(currId);
+            //     if(pKF2->getId()==0){
+            //         vSE3->setFixed(true);
+            //     }
+            //     optimizer.addVertex(vSE3);
 
-                mKeyFrameId[pKF2] = currId;
-                currId++;
-            }
+            //     mKeyFrameId[pKF2] = currId;
+            //     currId++;
+            // }
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
@@ -557,7 +557,7 @@ void arapOptimization(Map* pMap){
                 EdgeSE3ProjectXYZKeyFrame* eKF1 = new EdgeSE3ProjectXYZKeyFrame();
 
                 eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                eKF1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
+                //eKF1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
                 eKF1->setMeasurement(obs);
                 eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave));
 
@@ -566,6 +566,8 @@ void arapOptimization(Map* pMap){
                 rk->setDelta(thHuber2D);
 
                 eKF1->pCamera = pKF1->getCalibration();
+                Sophus::SE3f kfPose = pKF1->getPose();
+                eKF1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
 
                 optimizer.addEdge(eKF1);
 
@@ -577,7 +579,7 @@ void arapOptimization(Map* pMap){
                 EdgeSE3ProjectXYZKeyFrame* eKF2 = new EdgeSE3ProjectXYZKeyFrame();
 
                 eKF2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                eKF2->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF2])));
+                //eKF2->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF2])));
                 eKF2->setMeasurement(obs);
                 eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave));
 
@@ -586,6 +588,8 @@ void arapOptimization(Map* pMap){
                 rk->setDelta(thHuber2D);
 
                 eKF2->pCamera = pKF2->getCalibration();
+                kfPose = pKF2->getPose();
+                eKF2->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
 
                 optimizer.addEdge(eKF2);
 

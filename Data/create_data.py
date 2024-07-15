@@ -21,7 +21,7 @@ def save_points(filename, points):
 
 # Generate and save original and moved points
 num_points = 200  # Number of points in the dataset
-movement_scale = 0.1  # Scale of movement for the moved points
+movement_scale = 0.02  # Scale of movement for the moved points
 
 # Original points position
 x_mean, x_std = 0.0, 0.125
