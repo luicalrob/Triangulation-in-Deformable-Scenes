@@ -309,23 +309,28 @@ void SLAM::measureErrors() {
     // 3D Error measurement in map points
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
 
+    float total_movement = 0.0f;
     float total_error_original = 0.0f;
     float total_error_moved = 0.0f;
     float total_error = 0.0f;
     int point_count = insertedIndexes_.size()*2;
-    for(size_t i = 0; i < insertedIndexes_.size(); i++){ 
+
+    for(size_t i = 0, j = 0; j < insertedIndexes_.size(); i += 2, j++) {
         std::shared_ptr<MapPoint> mapPoint1 = pMap_->getMapPoint(i);
         std::shared_ptr<MapPoint> mapPoint2 = pMap_->getMapPoint(i+1);
         Eigen::Vector3f opt_original_position = mapPoint1->getWorldPosition();
         Eigen::Vector3f opt_moved_position = mapPoint2->getWorldPosition();
 
-        Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[i]]; 
-        Eigen::Vector3f moved_position = movedPoints_[insertedIndexes_[i]]; 
+        Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[j]];
+        Eigen::Vector3f moved_position = movedPoints_[insertedIndexes_[j]];
 
+        Eigen::Vector3f movement = original_position - moved_position;
         Eigen::Vector3f original_error = opt_original_position - original_position;
         Eigen::Vector3f moved_error = opt_moved_position - moved_position;
+        float error_magnitude_movement = movement.norm();
         float error_magnitude_original = original_error.norm();
         float error_magnitude_moved = moved_error.norm();
+        total_movement += error_magnitude_movement;
         total_error_original += error_magnitude_original;
         total_error_moved += error_magnitude_moved;
         total_error += error_magnitude_moved + error_magnitude_original;
@@ -338,6 +343,9 @@ void SLAM::measureErrors() {
     }
 
     if (point_count > 0) {
+        float average_movement = total_movement / insertedIndexes_.size();
+        std::cout << "\nTotal movement: " << total_movement << std::endl;
+        std::cout << "Average movement: " << average_movement << std::endl;
         float average_error_original = total_error_original / insertedIndexes_.size();
         std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
         std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
@@ -352,7 +360,7 @@ void SLAM::measureErrors() {
     }
 
     // stop
-    //Uncomment for step by step execution (pressing esc key)
+    // Uncomment for step by step execution (pressing esc key)
     std::cout << "Press esc to continue... " << std::endl;
     while((cv::waitKey(10) & 0xEFFFFF) != 27){
         mapVisualizer_->update();
