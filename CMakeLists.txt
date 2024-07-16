@@ -24,5 +24,8 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
   set(OpenCV_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
 endif()
 
+# Add compile definition to use vendored Ceres
+add_definitions(-DG2O_USE_VENDORED_CERES)
+
 add_subdirectory(Modules)
 add_subdirectory(Execution)

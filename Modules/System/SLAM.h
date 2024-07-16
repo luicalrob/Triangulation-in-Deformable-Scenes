@@ -58,6 +58,11 @@ public:
     void setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector3f secondCamera);
 
     /*
+     * Function to see the expected 3D positions of the points and cameras
+     */
+    void viusualizeSolution();
+
+    /*
      * Project 3D points with a gaussian error
      */
     void createKeyPoints(float reprojErrorDesv);

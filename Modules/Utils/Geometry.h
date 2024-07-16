@@ -41,6 +41,12 @@ float cosRayParallax(const Eigen::Vector3f& a, const Eigen::Vector3f& b);
 void triangulate(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
                  const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, Eigen::Vector3f &x3D);
 
+void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
+                 const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
+                 
+void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
+                 const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
+
 /*
  * Squared reprojection error
  */
@@ -50,5 +56,10 @@ float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2);
  * Computes an Essential matrix from a relative camera pose between 2 cameras
  */
 Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12);
+
+/*
+ * Computes cotangent value givem 3 vertex 
+ */
+double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eigen::Vector3d &v2);
 
 #endif //SLAM_GEOMETRY_H

@@ -66,10 +66,16 @@ void MapVisualizer::drawMapPoints() {
 
     glPointSize(2);
     glBegin(GL_POINTS);
-    glColor3f(0.0,0.0,0.0);
+    //glColor3f(0.0,0.0,0.0);
 
     for(auto mp : mapPoints){
+        int id = mp.first;
         Eigen::Vector3f pos = mp.second->getWorldPosition();
+        if(id%2 == 0) {
+            glColor3f(1.0,0.3,0.3);
+        } else {
+            glColor3f(0.0,0.0,0.0);
+        }
         glVertex3f(pos(0),pos(1),pos(2));
     }
 

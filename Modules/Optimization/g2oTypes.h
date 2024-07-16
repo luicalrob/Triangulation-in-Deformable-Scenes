@@ -138,4 +138,97 @@ public:
     std::shared_ptr<CameraModel> pCamera;
 };
 
+class EdgeSE3ProjectXYZPerKeyFrame : public g2o::BaseBinaryEdge<2, Eigen::Vector2d, VertexSBAPointXYZ, g2o::VertexSE3Expmap> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    EdgeSE3ProjectXYZPerKeyFrame();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError() {
+        const g2o::VertexSE3Expmap* v1 = static_cast<const g2o::VertexSE3Expmap*>(_vertices[1]);
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        Eigen::Vector2d obs(_measurement);      //Observed point in the image
+        Eigen::Vector3d p3Dw = v2->estimate();  //Predicted 3D world position  of the point
+        g2o::SE3Quat Tcw = v1->estimate();      //Preficted camera pose
+
+        /*
+         * Your code for Lab 3 - Task 3 here! Example:
+         * _error = Eigen::Vector2d::Ones()*100;
+         */
+        // Project the 3D point onto the image plane using the camera pose
+        Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
+        Eigen::Vector2f projected;
+        pCamera->project(p3Dc.cast<float>(), projected);
+
+        // Compute the reprojection error
+        _error = obs - projected.cast<double>();
+        // std::cout << "Obsevations error: " << _error << std::endl;
+    }
+
+    virtual void linearizeOplus();
+
+    std::shared_ptr<CameraModel> pCamera;
+};
+
+class EdgeSE3ProjectXYZPerKeyFrameOnlyPoints : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexSBAPointXYZ> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    EdgeSE3ProjectXYZPerKeyFrameOnlyPoints();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError() {
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        Eigen::Vector2d obs(_measurement);      //Observed point in the image
+        Eigen::Vector3d p3Dw = v2->estimate();  //Predicted 3D world position  of the point
+        g2o::SE3Quat Tcw = cameraPose;      //Preficted camera pose
+
+        // Project the 3D point onto the image plane using the camera pose
+        Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
+        Eigen::Vector2f projected;
+        pCamera->project(p3Dc.cast<float>(), projected);
+
+        // Compute the reprojection error
+        _error = (obs - projected.cast<double>());
+        //std::cout << "Obsevations error: " << _error << std::endl;
+    }
+
+    virtual void linearizeOplus();
+
+    std::shared_ptr<CameraModel> pCamera;
+    g2o::SE3Quat cameraPose;
+};
+
+class EdgeARAP : public g2o::BaseBinaryEdge<3, Eigen::Vector3d, VertexSBAPointXYZ, VertexSBAPointXYZ> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    EdgeARAP();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError() {
+        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        Eigen::Vector3d obs(_measurement);
+
+        _error = (obs + (v2->estimate() - Xj2world) - (v1->estimate() - Xj1world)); // [DUDA] should i use other two vertex instead of _measurement?
+        // std::cout << "ARAP error: " << _error << std::endl;
+    }
+
+    // virtual void linearizeOplus();
+
+    Eigen::Vector3d Xj1world;
+    Eigen::Vector3d Xj2world;
+};
+
 #endif //MINI_SLAM_G2OTYPES_H
