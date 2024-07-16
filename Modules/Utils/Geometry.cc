@@ -145,27 +145,3 @@ double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eig
     double cosTheta = -e2.dot(e0) / (e2.norm() * e0.norm());
     return cosTheta / sqrt(1.0 - cosTheta * cosTheta);
 }
-
-std::vector<MapPoint*> findNearestNeighbors(MapPoint* mainMP, const std::vector<MapPoint*>& vMPs, int x) {
-    Eigen::Vector3d p3D = mainMP->getWorldPosition().cast<double>();
-
-    std::vector<MapPoint*> nearestNeighbors;
-    for (auto pMP : vMPs) {
-        if (pMP == mainMP)
-            continue;
-
-        double distSq = (pMP->getWorldPosition().cast<double>() - p3D).squaredNorm();
-
-        if (nearestNeighbors.size() < x) {
-            nearestNeighbors.push_back(pMP);
-        } else {
-            double farthestDistSq = (nearestNeighbors.back()->getWorldPosition().cast<double>() - p3D).squaredNorm();
-            if (distSq < farthestDistSq) {
-                nearestNeighbors.pop_back();  // Remove the farthest neighbor
-                nearestNeighbors.push_back(pMP);  // Insert the closer neighbor
-            }
-        }
-    }
-
-    return nearestNeighbors;
-}
