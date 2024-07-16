@@ -113,6 +113,51 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     mapVisualizer_->updateCurrentPose(T2w);
 }
 
+void SLAM::viusualizeSolution() {
+    size_t nTriangulated = 0;
+    size_t nMatches = movedPoints_.size();
+
+    std::cout << "Number of matches: " << nMatches << std::endl;
+
+    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T2w = currFrame_.getPose();
+
+    for(size_t i = 0; i < nMatches; i++){
+        Eigen::Vector3f x3D_1 = originalPoints_[i];
+        Eigen::Vector3f x3D_2 = movedPoints_[i];
+
+        std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
+        std::shared_ptr<MapPoint> map_point_2(new MapPoint(x3D_2));
+
+        pMap_->insertMapPoint(map_point_1);
+        pMap_->insertMapPoint(map_point_2);
+
+        insertedIndexes_.push_back(i);
+
+        pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
+        pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
+
+        prevKeyFrame_->setMapPoint(i, map_point_1); // vMatches[i]?
+        currKeyFrame_->setMapPoint(i, map_point_2);
+
+        nTriangulated++;
+        nTriangulated++;
+    }
+
+    std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
+
+    // stop
+    //Uncomment for step by step execution (pressing esc key)
+    cv::namedWindow("Test Window");
+
+    // visualize
+    // visualizer_->drawCurrentFrame(currFrame_);
+    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
+    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
+    mapVisualizer_->update();
+    mapVisualizer_->updateCurrentPose(Tcw_);
+}
+
 void SLAM::createKeyPoints(float reprojErrorDesv) {
     std::default_random_engine generator;
     std::normal_distribution<float> distribution(0.0f, reprojErrorDesv);
@@ -259,6 +304,7 @@ void SLAM::mapping() {
 
     // correct error
     arapOptimization(pMap_.get());
+    //arapBundleAdjustment(pMap_.get());
     std::cout << "Bundle adjustment completed... fisrt 15 iterations " << std::endl;
 
     // visualize

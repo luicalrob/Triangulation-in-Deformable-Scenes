@@ -134,10 +134,9 @@ void EdgeSE3ProjectXYZOnlyPose::linearizeOplus() {
     _jacobianOplusXi = projectJac * SE3deriv;
 }
 
+EdgeSE3ProjectXYZPerKeyFrame::EdgeSE3ProjectXYZPerKeyFrame(){}
 
-EdgeSE3ProjectXYZKeyFrame::EdgeSE3ProjectXYZKeyFrame(){}
-
-bool EdgeSE3ProjectXYZKeyFrame::read(std::istream& is){
+bool EdgeSE3ProjectXYZPerKeyFrame::read(std::istream& is){
     for (int i=0; i<2; i++){
         is >> _measurement[i];
     }
@@ -150,7 +149,7 @@ bool EdgeSE3ProjectXYZKeyFrame::read(std::istream& is){
     return true;
 }
 
-bool EdgeSE3ProjectXYZKeyFrame::write(std::ostream& os) const {
+bool EdgeSE3ProjectXYZPerKeyFrame::write(std::ostream& os) const {
 
     for (int i=0; i<2; i++){
         os << measurement()[i] << " ";
@@ -163,10 +162,9 @@ bool EdgeSE3ProjectXYZKeyFrame::write(std::ostream& os) const {
     return os.good();
 }
 
-void EdgeSE3ProjectXYZKeyFrame::linearizeOplus() {
-    //g2o::VertexSE3Expmap * vj = static_cast<g2o::VertexSE3Expmap *>(_vertices[1]);
-    // g2o::SE3Quat T(vj->estimate());
-    g2o::SE3Quat T = cameraPose;
+void EdgeSE3ProjectXYZPerKeyFrame::linearizeOplus() {
+    g2o::VertexSE3Expmap * vj = static_cast<g2o::VertexSE3Expmap *>(_vertices[1]);
+    g2o::SE3Quat T(vj->estimate());
     VertexSBAPointXYZ* vi = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
     Eigen::Vector3d xyz = vi->estimate();
     Eigen::Vector3d xyz_trans = T.map(xyz);
@@ -179,16 +177,55 @@ void EdgeSE3ProjectXYZKeyFrame::linearizeOplus() {
 
     _jacobianOplusXi =  projectJac * T.rotation().toRotationMatrix(); //2x3
 
-    // std::cout << "_jacobianOplusXi: (" << _jacobianOplusXi << ")\n";
+    Eigen::Matrix<double,3,6> SE3deriv;
+    SE3deriv << 0.f, z,   -y, 1.f, 0.f, 0.f,
+                 -z , 0.f, x, 0.f, 1.f, 0.f,
+                 y ,  -x , 0.f, 0.f, 0.f, 1.f;
 
-    // Eigen::Matrix<double,3,6> SE3deriv;
-    // SE3deriv << 0.f, z,   -y, 1.f, 0.f, 0.f,
-    //              -z , 0.f, x, 0.f, 1.f, 0.f,
-    //              y ,  -x , 0.f, 0.f, 0.f, 1.f;
+    _jacobianOplusXj = projectJac * SE3deriv; //2x6
+}
 
-    // _jacobianOplusXj = projectJac * SE3deriv; //2x6
+EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::EdgeSE3ProjectXYZPerKeyFrameOnlyPoints(){}
 
-    // std::cout << "_jacobianOplusXj: (" << _jacobianOplusXj << ")\n";
+bool EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::read(std::istream& is){
+    for (int i=0; i<2; i++){
+        is >> _measurement[i];
+    }
+    for (int i=0; i<2; i++)
+        for (int j=i; j<2; j++) {
+            is >> information()(i,j);
+            if (i!=j)
+                information()(j,i)=information()(i,j);
+        }
+    return true;
+}
+
+bool EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::write(std::ostream& os) const {
+
+    for (int i=0; i<2; i++){
+        os << measurement()[i] << " ";
+    }
+
+    for (int i=0; i<2; i++)
+        for (int j=i; j<2; j++){
+            os << " " <<  information()(i,j);
+        }
+    return os.good();
+}
+
+void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
+    g2o::SE3Quat T = cameraPose;
+    VertexSBAPointXYZ* vi = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+    Eigen::Vector3d xyz = vi->estimate();
+    Eigen::Vector3d xyz_trans = T.map(xyz);
+
+    double x = xyz_trans[0];
+    double y = xyz_trans[1];
+    double z = xyz_trans[2];
+
+    Eigen::Matrix<double,2,3> projectJac = -pCamera->projectJac(xyz_trans);
+
+    _jacobianOplusXi =  projectJac * T.rotation().toRotationMatrix(); //2x3
 }
 
 

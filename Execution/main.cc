@@ -35,11 +35,14 @@ int main(){
     SLAM SLAM("Data/Test.yaml");
 
     // maybe first lets try without movement
-    SLAM.loadPoints("Data/original_points.csv", "Data/original_points.csv");
+    SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
 
     SLAM.setCameraPoses(firstCamera, secondCamera);
 
-    SLAM.createKeyPoints(1.0f); // with a desviation in the reprojection error of 1 pixel 
+    SLAM.createKeyPoints(0.0f); // with a desviation in the reprojection error of 1 pixel 
+
+    // To visualize solution
+    // SLAM.viusualizeSolution();
 
     SLAM.mapping();
 
