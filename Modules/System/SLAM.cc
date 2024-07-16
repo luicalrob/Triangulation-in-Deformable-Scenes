@@ -113,17 +113,62 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     mapVisualizer_->updateCurrentPose(T2w);
 }
 
+void SLAM::viusualizeSolution() {
+    size_t nTriangulated = 0;
+    size_t nMatches = movedPoints_.size();
+
+    std::cout << "Number of matches: " << nMatches << std::endl;
+
+    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T2w = currFrame_.getPose();
+
+    for(size_t i = 0; i < nMatches; i++){
+        Eigen::Vector3f x3D_1 = originalPoints_[i];
+        Eigen::Vector3f x3D_2 = movedPoints_[i];
+
+        std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
+        std::shared_ptr<MapPoint> map_point_2(new MapPoint(x3D_2));
+
+        pMap_->insertMapPoint(map_point_1);
+        pMap_->insertMapPoint(map_point_2);
+
+        insertedIndexes_.push_back(i);
+
+        pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
+        pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
+
+        prevKeyFrame_->setMapPoint(i, map_point_1); // vMatches[i]?
+        currKeyFrame_->setMapPoint(i, map_point_2);
+
+        nTriangulated++;
+        nTriangulated++;
+    }
+
+    std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
+
+    // stop
+    //Uncomment for step by step execution (pressing esc key)
+    cv::namedWindow("Test Window");
+
+    // visualize
+    // visualizer_->drawCurrentFrame(currFrame_);
+    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
+    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
+    mapVisualizer_->update();
+    mapVisualizer_->updateCurrentPose(Tcw_);
+}
+
 void SLAM::createKeyPoints(float reprojErrorDesv) {
     std::default_random_engine generator;
     std::normal_distribution<float> distribution(0.0f, reprojErrorDesv);
-    
+
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
 
     for(size_t i = 0; i < movedPoints_.size(); ++i) {
         cv::Point2f original_p2D;
         cv::Point2f moved_p2D;
-        
+
         Eigen::Vector3f p3Dcam1 = T1w * originalPoints_[i];
         Eigen::Vector3f p3Dcam2 = T2w * movedPoints_[i];
 
@@ -166,7 +211,7 @@ void SLAM::mapping() {
     for(size_t i = 0; i < nMatches; i++){ //vMatches.size()
         // if(vMatches[i] != -1){
         auto x1 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
-        auto x2 = currKeyFrame_->getKeyPoint(i).pt; 
+        auto x2 = currKeyFrame_->getKeyPoint(i).pt;
 
         Eigen::Vector3f xn1 = prevCalibration_->unproject(x1).normalized();
         Eigen::Vector3f xn2 = currCalibration_->unproject(x2).normalized();
@@ -206,10 +251,10 @@ void SLAM::mapping() {
 
         // std::cout << "x1 x:" << x1.x << " y: " << x1.y << "\n";
         // std::cout << "cv_p1 x:" << cv_p1.x << " y: " << cv_p1.y << "\n";
-        
+
         auto e1 = squaredReprojectionError(x1, cv_p1);
         auto e2 = squaredReprojectionError(x2, cv_p2);
-        //std::cout << "e1: " << e1 << "e2: " << e2 << "\n";
+        // std::cout << "e1: " << e1 << " e2: " << e2 << "\n";
 
         //if(e1 > 5.991 || e2 > 5.991) continue;
 
@@ -249,14 +294,17 @@ void SLAM::mapping() {
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
-    cv::namedWindow("Test Window"); 
+    cv::namedWindow("Test Window");
     std::cout << "Press esc to continue... " << std::endl;
     while((cv::waitKey(10) & 0xEFFFFF) != 27){
         mapVisualizer_->update();
     }
 
+    measureErrors();
+
     // correct error
     arapOptimization(pMap_.get());
+    //arapBundleAdjustment(pMap_.get());
     std::cout << "Bundle adjustment completed... fisrt 15 iterations " << std::endl;
 
     // visualize
@@ -266,17 +314,17 @@ void SLAM::mapping() {
     mapVisualizer_->update();
     mapVisualizer_->updateCurrentPose(Tcw_);
 
-    measureErrors();
+    // measureErrors();
 
-    arapOptimization(pMap_.get());
-    std::cout << "Bundle adjustment completed... second 15 iterations " << std::endl;
+    // arapOptimization(pMap_.get());
+    // std::cout << "Bundle adjustment completed... second 15 iterations " << std::endl;
 
-    // visualize
-    // visualizer_->drawCurrentFrame(currFrame_);
-    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    mapVisualizer_->update();
-    mapVisualizer_->updateCurrentPose(Tcw_);
+    // // visualize
+    // // visualizer_->drawCurrentFrame(currFrame_);
+    // // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
+    // // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
+    // mapVisualizer_->update();
+    // mapVisualizer_->updateCurrentPose(Tcw_);
 }
 
 
@@ -398,10 +446,10 @@ void SLAM::measureErrors() {
 
 //     float total_error = 0.0f;
 //     int point_count = insertedIndexes_.size();
-//     for(size_t i = 0; i < insertedIndexes_.size(); i++){ 
+//     for(size_t i = 0; i < insertedIndexes_.size(); i++){
 //         std::shared_ptr<MapPoint> mapPoint = pMap_->getMapPoint(i);
 //         Eigen::Vector3f corrected_position = mapPoint->getWorldPosition();
-//         Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[i]]; 
+//         Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[i]];
 
 //         Eigen::Vector3f point_error = corrected_position - original_position;
 //         float error_magnitude = point_error.norm();
@@ -435,11 +483,11 @@ Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vec
     Eigen::Vector3f forward = (target_pos - camera_pos).normalized();
     Eigen::Vector3f right = up_vector.cross(forward).normalized();
     Eigen::Vector3f up = forward.cross(right).normalized();
-    
+
     Eigen::Matrix3f rotation;
     rotation.col(0) = right;
     rotation.col(1) = up;
     rotation.col(2) = forward;
-    
+
     return rotation;
 }
