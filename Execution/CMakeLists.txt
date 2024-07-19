@@ -16,8 +16,3 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Execution)
 set(MAIN_PROGRAM_NAME main)
 add_executable(${MAIN_PROGRAM_NAME} main.cc)
 target_link_libraries(${MAIN_PROGRAM_NAME} ${OpenCV_LIBS} slam)
-
-# Set the name of the cotangent program and add its source file
-set(COTANGENT_PROGRAM_NAME cotangent)
-add_executable(${COTANGENT_PROGRAM_NAME} cotangent.cc)
-target_link_libraries(${COTANGENT_PROGRAM_NAME} ${OpenCV_LIBS} slam)

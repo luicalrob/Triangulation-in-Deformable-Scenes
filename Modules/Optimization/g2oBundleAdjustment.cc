@@ -28,6 +28,12 @@
 
 
 #include <g2o/solvers/dense/linear_solver_dense.h>
+#include "Utils/Geometry.h"
+#include "open3d/Open3D.h"
+#include "open3d/geometry/Qhull.h"
+#include "open3d/geometry/TetraMesh.h"
+
+
 
 using namespace std;
 
@@ -448,7 +454,6 @@ void arapOptimization(Map* pMap){
 
     //Get all KeyFrames from map
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
-    
 
     // Create optimizer
     g2o::SparseOptimizer optimizer;
@@ -478,6 +483,71 @@ void arapOptimization(Map* pMap){
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
             // [DUDA] Primero asumire que todos son diferentes, deberia fusionar una vez hecha la optimización si quedan muy juntos??
+            
+
+            // MESH CREATION
+            std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
+            std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
+
+            std::shared_ptr<open3d::geometry::PointCloud> cloud1 = convertToOpen3DPointCloud(v1Positions);
+            std::shared_ptr<open3d::geometry::PointCloud> cloud2 = convertToOpen3DPointCloud(v2Positions);
+
+            std::vector<double> radii = {0.15, 0.15, 0.15};
+            double alpha = 0.1;
+
+            // OPEN3D LIBRARY
+            std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh1;
+            std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
+            std::vector<size_t> pt_map_1;
+            std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh2;
+            std::shared_ptr<open3d::geometry::TriangleMesh> mesh2;
+            std::vector<size_t> pt_map_2;
+
+            // Perform Delaunay Reconstruction
+            std::tie(tetra_mesh1, pt_map_1) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
+            std::tie(tetra_mesh2, pt_map_2) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v2Positions);
+
+
+            // Perform Alpha Reconstruction
+            mesh1 = open3d::geometry::TriangleMesh::CreateFromPointCloudAlphaShape(*cloud1, alpha, tetra_mesh1, &pt_map_1);
+            mesh2 = open3d::geometry::TriangleMesh::CreateFromPointCloudAlphaShape(*cloud2, alpha, tetra_mesh2, &pt_map_2);
+
+            auto indexMap = createVectorMap(mesh1->vertices_, v1Positions);
+            std::cout << "point mesh: (" << mesh1->vertices_[67] << ")\n";
+            std::cout << "point: (" << v1Positions[indexMap[67]] << ")\n";
+            std::cout << "index: (" << indexMap[67] << ")\n";
+
+            // Perform Ball Pivoting Reconstruction
+            // cloud1->EstimateNormals();
+            // cloud2->EstimateNormals();
+            // std::shared_ptr<open3d::geometry::TriangleMesh> mesh1 = open3d::geometry::TriangleMesh::CreateFromPointCloudBallPivoting(*cloud1, radii);
+            // std::shared_ptr<open3d::geometry::TriangleMesh> mesh2 = open3d::geometry::TriangleMesh::CreateFromPointCloudBallPivoting(*cloud2, radii);
+
+            // Visualize OPEN3D the meshes
+            // open3d::visualization::Visualizer visualizer;
+            // visualizer.CreateVisualizerWindow("Mesh Visualization");
+
+            // Eigen::Vector3d red(1.0, 0.0, 0.0);
+            // mesh1->vertex_colors_.resize(mesh1->vertices_.size(), red);
+
+            // Eigen::Vector3d blue(0.0, 0.0, 1.0);
+            // mesh2->vertex_colors_.resize(mesh2->vertices_.size(), blue);
+
+            std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
+            std::cout << "mesh size 2: (" << mesh2->vertices_.size() << ")\n";
+            std::cout << "pt_map_1 size 1: (" << pt_map_1.size() << ")\n";
+            std::cout << "pt_map_2 size 2: (" << pt_map_2.size() << ")\n";
+            
+            // visualizer.AddGeometry(mesh1);
+            // visualizer.AddGeometry(mesh2);
+
+            // visualizer.Run();
+            // visualizer.DestroyVisualizerWindow();
+
+            // mesh1->ComputeAdjacencyList();
+            // mesh2->ComputeAdjacencyList();
+            // auto edge_weights_1 = ComputeEdgeWeightsCot(mesh1, 0);
+            // auto edge_weights_2 = ComputeEdgeWeightsCot(mesh2, 0);
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];

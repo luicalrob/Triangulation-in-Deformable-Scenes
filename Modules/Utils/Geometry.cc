@@ -137,6 +137,30 @@ Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12){
     return E;
 }
 
+std::vector<Eigen::Vector3d> extractPositions(const std::vector<std::shared_ptr<MapPoint>>& mapPoints) {
+    std::vector<Eigen::Vector3d> positions;
+    positions.reserve(mapPoints.size());
+
+    for (const auto& mp : mapPoints) {
+        if (!mp) continue;
+        Eigen::Vector3d p3D = mp->getWorldPosition().cast<double>();
+        positions.push_back(p3D);
+    }
+
+    return positions;
+}
+
+std::shared_ptr<open3d::geometry::PointCloud> convertToOpen3DPointCloud(const std::vector<Eigen::Vector3d>& positions) {
+    auto pointCloud = std::make_shared<open3d::geometry::PointCloud>();
+    
+    for (const Eigen::Vector3d& pos : positions) {
+        if (pos.isZero()) continue;
+        pointCloud->points_.push_back(pos);
+    }
+
+    return pointCloud;
+}
+
 double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eigen::Vector3d &v2) {
     Eigen::Vector3d e0 = v1 - v0;
     Eigen::Vector3d e1 = v2 - v1;
@@ -144,4 +168,47 @@ double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eig
 
     double cosTheta = -e2.dot(e0) / (e2.norm() * e0.norm());
     return cosTheta / sqrt(1.0 - cosTheta * cosTheta);
+}
+
+std::unordered_map<Eigen::Vector2i, double, open3d::utility::hash_eigen<Eigen::Vector2i>> 
+ComputeEdgeWeightsCot(
+        std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
+        double min_weight) {
+    std::unordered_map<Eigen::Vector2i, double,open3d::utility::hash_eigen<Eigen::Vector2i>> weights;
+    auto edges_to_vertices = mesh->GetEdgeToVerticesMap();
+    auto vertices = mesh->vertices_;
+    for (const auto &edge_v2s : edges_to_vertices) {
+        Eigen::Vector2i edge = edge_v2s.first;
+        double weight_sum = 0;
+        int N = 0;
+        for (int v2 : edge_v2s.second) {
+            Eigen::Vector3d a = vertices[edge(0)] - vertices[v2];
+            Eigen::Vector3d b = vertices[edge(1)] - vertices[v2];
+            double weight = a.dot(b) / (a.cross(b)).norm();
+            weight_sum += weight;
+            N++;
+        }
+        double weight = N > 0 ? weight_sum / N : 0;
+        if (weight < min_weight) {
+            weights[edge] = min_weight;
+        } else {
+            weights[edge] = weight;
+        }
+    }
+    return weights;
+}
+
+std::unordered_map<size_t, size_t> createVectorMap(std::vector<Eigen::Vector3d>& vertices, std::vector<Eigen::Vector3d>& positions) {
+    std::unordered_map<size_t, size_t> indexMap;
+
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        for (size_t j = 0; j < positions.size(); ++j) {
+            if (vertices[i].isApprox(positions[j])) {
+                indexMap[i] = j;
+                break;
+            }
+        }
+    }
+
+    return indexMap;
 }

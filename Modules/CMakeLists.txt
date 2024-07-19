@@ -1,18 +1,17 @@
 # Minimum CMAKE version required
 cmake_minimum_required(VERSION 3.5)
 
-# Add Open3D_ROOT to CMake module path
-if(DEFINED ENV{Open3D_ROOT})
-  set(Open3D_ROOT $ENV{Open3D_ROOT})
-endif()
-
-list(APPEND CMAKE_MODULE_PATH "${Open3D_ROOT}/lib/cmake/Open3D")
-
 # Find required libraries
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(OpenCV 4 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(Open3D REQUIRED)
+
+add_definitions(-DCGAL_USE_BASIC_VIEWER -DQT_NO_KEYWORDS)
+
+if(NOT Open3D_FOUND)
+    message(FATAL_ERROR "Open3D not found, please use -DCMAKE_INSTALL_PREFIX=open3d_install_dir")
+endif()
 
 # Set the name of the Library
 set(LIBRARY_NAME slam)
@@ -66,6 +65,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${CMAKE_SOURCE_DIR}/Thirdparty/g2o
                     ${Pangolin_INCLUDE_DIRS}
                     ${Open3D_INCLUDE_DIRS})
+
 
 # Add the library
 add_library(${LIBRARY_NAME} SHARED

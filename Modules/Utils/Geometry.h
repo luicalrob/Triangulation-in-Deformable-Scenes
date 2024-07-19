@@ -27,6 +27,9 @@
 #include <Eigen/Core>
 #include <sophus/se3.hpp>
 #include <opencv2/opencv.hpp>
+#include "open3d/Open3D.h"
+#include "Map/Map.h"
+
 
 /*
  * Computes the cosine of the parallax angle between 2 rays
@@ -58,8 +61,27 @@ float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2);
 Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12);
 
 /*
+ * Extract the 3D positions as a vector of the entire set of mapPoints
+ */
+std::vector<Eigen::Vector3d> extractPositions(const std::vector<std::shared_ptr<MapPoint>>& mapPoints);
+
+/*
+ * Function to convert std::vector<Eigen::Vector3d> to open3d::geometry::PointCloud
+ */
+std::shared_ptr<open3d::geometry::PointCloud> convertToOpen3DPointCloud(const std::vector<Eigen::Vector3d>& positions);
+
+/*
  * Computes cotangent value givem 3 vertex 
  */
 double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eigen::Vector3d &v2);
+
+
+std::unordered_map<Eigen::Vector2i, double, open3d::utility::hash_eigen<Eigen::Vector2i>> 
+ComputeEdgeWeightsCot(
+        std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
+        double min_weight);
+
+std::unordered_map<size_t, size_t> createVectorMap(std::vector<Eigen::Vector3d>& vertices, std::vector<Eigen::Vector3d>& positions);
+
 
 #endif //SLAM_GEOMETRY_H

@@ -25,10 +25,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
 endif()
 
 # Set Open3D_DIR
-if(NOT DEFINED Open3D_DIR)
-  set(Open3D_DIR "$ENV{HOME}/open3d_install")
+if(EXISTS "$ENV{HOME}/open3d_install")
+  set(Open3D_DIR "$ENV{HOME}/open3d_install/lib/cmake/Open3D")
 endif()
-list(APPEND CMAKE_PREFIX_PATH "${Open3D_DIR}")
+list(APPEND CMAKE_PREFIX_PATH "${$ENV{HOME}/open3d_install/lib/cmake}")
 
 
 # Add compile definition to use vendored Ceres
