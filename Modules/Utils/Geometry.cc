@@ -198,13 +198,16 @@ ComputeEdgeWeightsCot(
     return weights;
 }
 
-std::unordered_map<size_t, size_t> createVectorMap(std::vector<Eigen::Vector3d>& vertices, std::vector<Eigen::Vector3d>& positions) {
-    std::unordered_map<size_t, size_t> indexMap;
 
-    for (size_t i = 0; i < vertices.size(); ++i) {
-        for (size_t j = 0; j < positions.size(); ++j) {
-            if (vertices[i].isApprox(positions[j])) {
-                indexMap[i] = j;
+std::map<size_t, size_t> createVectorMap(const std::vector<Eigen::Vector3d>& vertices, const std::vector<Eigen::Vector3d>& positions, double precision) {
+    std::map<size_t, size_t> indexMap;
+
+    for (size_t vertexIdx = 0; vertexIdx < vertices.size(); ++vertexIdx) {
+        const Eigen::Vector3d& vertex = vertices[vertexIdx];
+        for (size_t positionIdx = 0; positionIdx < positions.size(); ++positionIdx) {
+            const Eigen::Vector3d& position = positions[positionIdx];
+            if (vertex.isApprox(position, precision)) {
+                indexMap[vertexIdx] = positionIdx;
                 break;
             }
         }

@@ -512,10 +512,24 @@ void arapOptimization(Map* pMap){
             mesh1 = open3d::geometry::TriangleMesh::CreateFromPointCloudAlphaShape(*cloud1, alpha, tetra_mesh1, &pt_map_1);
             mesh2 = open3d::geometry::TriangleMesh::CreateFromPointCloudAlphaShape(*cloud2, alpha, tetra_mesh2, &pt_map_2);
 
-            auto indexMap = createVectorMap(mesh1->vertices_, v1Positions);
-            std::cout << "point mesh: (" << mesh1->vertices_[67] << ")\n";
-            std::cout << "point: (" << v1Positions[indexMap[67]] << ")\n";
-            std::cout << "index: (" << indexMap[67] << ")\n";
+            auto indexMap1 = createVectorMap(mesh1->vertices_, v1Positions);
+            auto indexMap2 = createVectorMap(mesh2->vertices_, v2Positions);
+            // std::cout << "point mesh: (" << mesh1->vertices_[67] << ")\n";
+            // std::cout << "point: (" << v1Positions[indexMap1[67]] << ")\n";
+            // std::cout << "index: (" << indexMap1[67] << ")\n";
+            std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
+            std::cout << "mesh size 2: (" << mesh2->vertices_.size() << ")\n";
+            std::cout << "pt_map_1 size 1: (" << pt_map_1.size() << ")\n";
+            std::cout << "pt_map_2 size 2: (" << pt_map_2.size() << ")\n";
+
+            std::map<size_t, size_t> invertedIndexMap1;
+            std::map<size_t, size_t> invertedIndexMap2;
+            for (const auto& pair : indexMap1) {
+                invertedIndexMap1[pair.second] = pair.first;
+            }
+            for (const auto& pair : indexMap2) {
+                invertedIndexMap2[pair.second] = pair.first;
+            }
 
             // Perform Ball Pivoting Reconstruction
             // cloud1->EstimateNormals();
@@ -532,11 +546,6 @@ void arapOptimization(Map* pMap){
 
             // Eigen::Vector3d blue(0.0, 0.0, 1.0);
             // mesh2->vertex_colors_.resize(mesh2->vertices_.size(), blue);
-
-            std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
-            std::cout << "mesh size 2: (" << mesh2->vertices_.size() << ")\n";
-            std::cout << "pt_map_1 size 1: (" << pt_map_1.size() << ")\n";
-            std::cout << "pt_map_2 size 2: (" << pt_map_2.size() << ")\n";
             
             // visualizer.AddGeometry(mesh1);
             // visualizer.AddGeometry(mesh2);
@@ -544,10 +553,10 @@ void arapOptimization(Map* pMap){
             // visualizer.Run();
             // visualizer.DestroyVisualizerWindow();
 
-            // mesh1->ComputeAdjacencyList();
-            // mesh2->ComputeAdjacencyList();
-            // auto edge_weights_1 = ComputeEdgeWeightsCot(mesh1, 0);
-            // auto edge_weights_2 = ComputeEdgeWeightsCot(mesh2, 0);
+            mesh1->ComputeAdjacencyList();
+            mesh2->ComputeAdjacencyList();
+            auto edge_weights_1 = ComputeEdgeWeightsCot(mesh1, 0);
+            auto edge_weights_2 = ComputeEdgeWeightsCot(mesh2, 0);
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];
@@ -628,28 +637,63 @@ void arapOptimization(Map* pMap){
 
                 optimizer.addEdge(eKF2);
 
+                auto it1 = invertedIndexMap1.find(i);
+                size_t meshIndex1 = 0;
+                if (it1 != invertedIndexMap1.end()) {
+                    meshIndex1 = it1->second;
+                    std::cout << "vPosition: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
+                    std::cout << "point mesh: (" << mesh1->vertices_[meshIndex1][0] << ", " << mesh1->vertices_[meshIndex1][1] << ", " << mesh1->vertices_[meshIndex1][2] << ")\n";
+                    std::cout << "index: (" << i << ")\n";
+                } else {
+                    continue;
+                }
+
+                auto it2 = invertedIndexMap2.find(i);
+                size_t meshIndex2 = 0;
+                if (it2 != invertedIndexMap2.end()) {
+                    meshIndex2 = it2->second;
+                    std::cout << "vPosition: (" << v2Positions[i][0] << ", " << v2Positions[i][1] << ", " << v2Positions[i][2] << ")\n";
+                    std::cout << "point mesh: (" << mesh2->vertices_[meshIndex2][0] << ", " << mesh2->vertices_[meshIndex2][1] << ", " << mesh2->vertices_[meshIndex2][2] << ")\n";
+                    std::cout << "index: (" << i << ")\n";
+                } else {
+                    continue;
+                }
+
+                                
+                if (mesh1->adjacency_list_[meshIndex1].empty()) continue;
+                if (mesh2->adjacency_list_[meshIndex2].empty()) continue;
+
                 Eigen::Vector3d distancesInvTipDesv;
                 distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
 
                 Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
 
-                for (size_t j = 0; j < v1MPs.size(); j++) { // [DUDA] Posible error si el segundo mapa es de otro size
-                    MapPoint_ pMPj1 = v1MPs[j];
-                    MapPoint_ pMPj2 = v2MPs[j];
-                    if (!pMPj1) continue;
-                    if (!pMPj2) continue;
-                    if (pMPi1 == pMPj1 || pMPi2 == pMPj2) continue;
+                //for (int j : mesh1->adjacency_list_[i]) {
+                //for (size_t j = 0; j < v1MPs.size(); j++) { // [DUDA] Posible error si el segundo mapa es de otro size
+                for (int j : mesh1->adjacency_list_[meshIndex1]) {
 
+                    // MapPoint_ pMPj1 = v1MPs[j];
+                    // MapPoint_ pMPj2 = v2MPs[j];
+                    // if (!pMPj1) continue;
+                    // if (!pMPj2) continue;
+                    // if (pMPi1 == pMPj1 || pMPi2 == pMPj2) continue;
+
+                    // double w = edge_weights_1[GetOrderedEdge(i, j)];
+                    // Eigen::Vector3d e0 = vertices_[i] - vertices_[j];
+                    // Eigen::Vector3d e1 = prime->vertices_[i] - prime->vertices_[j];
+                    // Eigen::Vector3d diff = e1 - Rs[i] * e0;
+                    // energy += w * diff.squaredNorm();
                     
-                    MapPoint_ firstPointMeasurement = pMPj1;
-                    MapPoint_ secondPointMeasurement = pMPj2;
+                    // MapPoint_ firstPointMeasurement = pMPj1;
+                    // MapPoint_ secondPointMeasurement = pMPj2;
 
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
                     eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                     eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    eArap->Xj1world = firstPointMeasurement->getWorldPosition().cast<double>();
-                    eArap->Xj2world = secondPointMeasurement->getWorldPosition().cast<double>();
+                    eArap->Xj1world = mesh1->vertices_[j];
+                    eArap->Xj2world = mesh2->vertices_[j];
+                    eArap->weight = edge_weights_2[GetOrderedEdge(meshIndex2, j)];
 
                     // coger todas los errores en distancias por cada punto
                     // sacar la desv tipica en x, y, z

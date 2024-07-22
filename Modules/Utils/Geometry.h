@@ -81,7 +81,10 @@ ComputeEdgeWeightsCot(
         std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
         double min_weight);
 
-std::unordered_map<size_t, size_t> createVectorMap(std::vector<Eigen::Vector3d>& vertices, std::vector<Eigen::Vector3d>& positions);
+std::map<size_t, size_t> createVectorMap(const std::vector<Eigen::Vector3d>& vertices, const std::vector<Eigen::Vector3d>& positions, double precision = 1e-6);
 
+static inline Eigen::Vector2i GetOrderedEdge(int vidx0, int vidx1) {
+        return Eigen::Vector2i(std::min(vidx0, vidx1), std::max(vidx0, vidx1));
+}
 
 #endif //SLAM_GEOMETRY_H

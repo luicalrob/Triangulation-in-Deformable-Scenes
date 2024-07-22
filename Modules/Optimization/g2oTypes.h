@@ -197,6 +197,7 @@ public:
 
         // Compute the reprojection error
         _error = (obs - projected.cast<double>());
+        std::cout << "Obsevations error: (" << _error[0] << ", " << _error[1] << ")\n" << std::endl;
         //std::cout << "Obsevations error: " << _error << std::endl;
     }
 
@@ -220,15 +221,21 @@ public:
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
         Eigen::Vector3d obs(_measurement);
+        Eigen::Vector3d diff;
 
-        _error = (obs + (v2->estimate() - Xj2world) - (v1->estimate() - Xj1world)); // [DUDA] should i use other two vertex instead of _measurement?
-        // std::cout << "ARAP error: " << _error << std::endl;
+        diff = (v2->estimate() - Xj2world) - (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
+        Eigen::Vector3d squaredNormComponents = diff.array().square();
+
+        _error = weight * squaredNormComponents;
+        //std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
+                    
     }
 
     // virtual void linearizeOplus();
 
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;
+    double weight;
 };
 
 #endif //MINI_SLAM_G2OTYPES_H
