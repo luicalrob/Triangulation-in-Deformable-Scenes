@@ -197,8 +197,7 @@ public:
 
         // Compute the reprojection error
         _error = (obs - projected.cast<double>());
-        std::cout << "Obsevations error: (" << _error[0] << ", " << _error[1] << ")\n" << std::endl;
-        //std::cout << "Obsevations error: " << _error << std::endl;
+        //std::cout << "Obsevations error: (" << _error[0] << ", " << _error[1] << ")\n" << std::endl;
     }
 
     virtual void linearizeOplus();
@@ -227,7 +226,7 @@ public:
         Eigen::Vector3d squaredNormComponents = diff.array().square();
 
         _error = weight * squaredNormComponents;
-        //std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
+        // std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
                     
     }
 

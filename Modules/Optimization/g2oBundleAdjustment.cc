@@ -666,26 +666,11 @@ void arapOptimization(Map* pMap){
                 Eigen::Vector3d distancesInvTipDesv;
                 distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
 
+                //distancesInvTipDesv << 1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0;
+
                 Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
 
-                //for (int j : mesh1->adjacency_list_[i]) {
-                //for (size_t j = 0; j < v1MPs.size(); j++) { // [DUDA] Posible error si el segundo mapa es de otro size
                 for (int j : mesh1->adjacency_list_[meshIndex1]) {
-
-                    // MapPoint_ pMPj1 = v1MPs[j];
-                    // MapPoint_ pMPj2 = v2MPs[j];
-                    // if (!pMPj1) continue;
-                    // if (!pMPj2) continue;
-                    // if (pMPi1 == pMPj1 || pMPi2 == pMPj2) continue;
-
-                    // double w = edge_weights_1[GetOrderedEdge(i, j)];
-                    // Eigen::Vector3d e0 = vertices_[i] - vertices_[j];
-                    // Eigen::Vector3d e1 = prime->vertices_[i] - prime->vertices_[j];
-                    // Eigen::Vector3d diff = e1 - Rs[i] * e0;
-                    // energy += w * diff.squaredNorm();
-                    
-                    // MapPoint_ firstPointMeasurement = pMPj1;
-                    // MapPoint_ secondPointMeasurement = pMPj2;
 
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
