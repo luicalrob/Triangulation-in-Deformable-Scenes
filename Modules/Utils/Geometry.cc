@@ -16,6 +16,11 @@
 */
 
 #include "Utils/Geometry.h"
+#include "libqhullcpp/PointCoordinates.h"
+#include "libqhullcpp/Qhull.h"
+#include "libqhullcpp/QhullFacet.h"
+#include "libqhullcpp/QhullFacetList.h"
+#include "libqhullcpp/QhullVertexSet.h"
 
 float cosRayParallax(const Eigen::Vector3f& a, const Eigen::Vector3f& b){
     return a.dot(b)/(a.norm()*b.norm());
@@ -198,7 +203,6 @@ ComputeEdgeWeightsCot(
     return weights;
 }
 
-
 std::map<size_t, size_t> createVectorMap(const std::vector<Eigen::Vector3d>& vertices, const std::vector<Eigen::Vector3d>& positions, double precision) {
     std::map<size_t, size_t> indexMap;
 
@@ -214,4 +218,57 @@ std::map<size_t, size_t> createVectorMap(const std::vector<Eigen::Vector3d>& ver
     }
 
     return indexMap;
+}
+
+std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
+        const std::vector<Eigen::Vector3d> &points) {
+    auto triangle_mesh = std::make_shared<open3d::geometry::TriangleMesh>();
+
+    if (points.size() < 3) {
+        open3d::utility::LogError("Not enough points to create a triangular mesh.");
+        return nullptr;
+    }
+
+    std::vector<double> qhull_points_data(points.size() * 2);
+    for (size_t pidx = 0; pidx < points.size(); ++pidx) {
+        const auto &pt = points[pidx];
+        qhull_points_data[pidx * 2 + 0] = pt(0);
+        qhull_points_data[pidx * 2 + 1] = pt(1);
+    }
+
+    orgQhull::PointCoordinates qhull_points(2, "");
+    qhull_points.append(qhull_points_data);
+
+    orgQhull::Qhull qhull;
+    qhull.runQhull(qhull_points.comment().c_str(), qhull_points.dimension(),
+                   qhull_points.count(), qhull_points.coordinates(),
+                   "d Qbb Qt");
+
+    orgQhull::QhullFacetList facets = qhull.facetList();
+    triangle_mesh->vertices_ = points; // Keep the original 3D points
+    triangle_mesh->triangles_.resize(facets.count());
+
+    int tidx = 0;
+    for (orgQhull::QhullFacetList::iterator it = facets.begin();
+         it != facets.end(); ++it) {
+        if (!(*it).isGood()) continue;
+
+        orgQhull::QhullFacet f = *it;
+        orgQhull::QhullVertexSet vSet = f.vertices();
+        std::array<int, 3> triangle_indices;
+        int tri_subscript = 0;
+        for (orgQhull::QhullVertexSet::iterator vIt = vSet.begin();
+             vIt != vSet.end(); ++vIt) {
+            orgQhull::QhullVertex v = *vIt;
+            orgQhull::QhullPoint p = v.point();
+
+            int vidx = p.id();
+            triangle_indices[tri_subscript] = vidx;
+            tri_subscript++;
+        }
+        triangle_mesh->triangles_[tidx] = Eigen::Vector3i(triangle_indices[0], triangle_indices[1], triangle_indices[2]);
+        tidx++;
+    }
+
+    return triangle_mesh;
 }

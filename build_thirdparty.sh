@@ -17,4 +17,15 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 
+cd ../../Qhull
+
+echo "Configuring and building Thirdparty/Qhull ..."
+
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make
+ctest
+sudo make install
+
+
 cd ../../../

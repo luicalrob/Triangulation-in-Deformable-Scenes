@@ -21,12 +21,13 @@
  * Implementation of the types needed by g2o to perform Budnle Adjustemnt
  */
 
-#ifndef MINI_SLAM_G2OTYPES_H
-#define MINI_SLAM_G2OTYPES_H
+#ifndef SLAM_G2OTYPES_H
+#define SLAM_G2OTYPES_H
 
 #include "Calibration/CameraModel.h"
 
 #include <g2o/core/base_unary_edge.h>
+#include <g2o/core/base_multi_edge.h>
 #include <g2o/types/sba/types_sba.h>
 #include <g2o/types/sba/types_six_dof_expmap.h>
 
@@ -50,6 +51,24 @@ public:
     {
         Eigen::Map<const Eigen::Vector3d> v(update);
         _estimate += v;
+    }
+};
+
+class VertexRotationMatrix : public g2o::BaseVertex<3, Eigen::Matrix3d> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    VertexRotationMatrix();
+    virtual bool read(std::istream& is);
+    virtual bool write(std::ostream& os) const;
+
+    virtual void setToOriginImpl() {
+        _estimate.setIdentity();
+    }
+
+    virtual void oplusImpl(const double* update) {
+        Eigen::Vector3d updateVec(update);
+        Eigen::AngleAxisd angleAxis(updateVec.norm(), updateVec.normalized());
+        _estimate = angleAxis.toRotationMatrix() * _estimate;
     }
 };
 
@@ -206,7 +225,7 @@ public:
     g2o::SE3Quat cameraPose;
 };
 
-class EdgeARAP : public g2o::BaseBinaryEdge<3, Eigen::Vector3d, VertexSBAPointXYZ, VertexSBAPointXYZ> {
+class EdgeARAP : public g2o::BaseMultiEdge<1, double> {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -219,15 +238,21 @@ public:
     void computeError() {
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
-        Eigen::Vector3d obs(_measurement);
+        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
+        // Eigen::Vector3d obs(_measurement);
+        double obs(_measurement);
         Eigen::Vector3d diff;
 
-        diff = (v2->estimate() - Xj2world) - (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
-        Eigen::Vector3d squaredNormComponents = diff.array().square();
+        Eigen::Matrix3d R = vR->estimate();
+        diff = (v2->estimate() - Xj2world) - R * (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
+        // Eigen::Vector3d squaredNormComponents = diff.array().square();
+        double energy = diff.squaredNorm();
 
-        _error = weight * squaredNormComponents;
+        // _error = weight * squaredNormComponents;
         // std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
-                    
+
+        _error[0] = weight * energy;
+        // std::cout << "ARAP error: " << _error[0] << "\n" << std::endl;        
     }
 
     // virtual void linearizeOplus();
@@ -237,4 +262,4 @@ public:
     double weight;
 };
 
-#endif //MINI_SLAM_G2OTYPES_H
+#endif //SLAM_G2OTYPES_H
