@@ -25,12 +25,14 @@
 #ifndef SLAM_SLAM_H
 #define SLAM_SLAM_H
 
-#include "Map/Map.h"
-
 #include "System/Settings.h"
 
 #include "Visualization/FrameVisualizer.h"
 #include "Visualization/MapVisualizer.h"
+
+#include "Tracking/Frame.h"
+#include "Map/KeyFrame.h"
+#include "Map/Map.h"
 
 #include "sophus/se3.hpp"
 
@@ -50,6 +52,36 @@ public:
      */
     void loadPoints(const std::string &originalFile, const std::string &movedFile);
 
+    /*
+     * Define simulation poses in the environment
+     */
+    void setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector3f secondCamera);
+
+    /*
+     * Function to see the expected 3D positions of the points and cameras
+     */
+    void viusualizeSolution();
+
+    /*
+     * Project 3D points with a gaussian error
+     */
+    void createKeyPoints(float reprojErrorDesv);
+
+    /*
+     * Mapping of the simulation matches
+     */
+    void mapping();
+
+    /*
+     * Measure the pos & or errors of the poses and the 3D error of the mapPoints
+     */
+    void measureErrors();
+
+    /*
+     * Create camera orientation matrix from two points
+     */
+    Eigen::Matrix3f lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY());
+
 
 private:
 
@@ -62,7 +94,17 @@ private:
      * Map of the SLAM system
      */
     std::shared_ptr<Map> pMap_;
+    cv::Mat currIm_;
 
+    Frame prevFrame_, currFrame_;
+    std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
+
+    Sophus::SE3f Tcw_;
+
+    std::shared_ptr<CameraModel> prevCalibration_;
+    std::shared_ptr<CameraModel> currCalibration_;
+
+    std::vector<int> insertedIndexes_; // 3D points inserted in the map, to compare the positions
     /*
      * Visualizers
      */

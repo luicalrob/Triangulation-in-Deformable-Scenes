@@ -69,6 +69,10 @@ public:
     cv::KeyPoint getKeyPoint(const size_t idx);
 
     /*
+     * Sets a new KeyPoint in the Frame at index idx
+     */
+    void setKeyPoint(cv::KeyPoint pKP, const size_t idx);
+    /*
      * Gets all the MapPoints matched in the Frame
      */
     std::vector<std::shared_ptr<MapPoint>>& getMapPoints();

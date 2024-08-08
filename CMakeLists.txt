@@ -24,5 +24,20 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
   set(OpenCV_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
 endif()
 
+# Set Open3D_DIR
+if(EXISTS "$ENV{HOME}/open3d_install")
+  set(Open3D_DIR "$ENV{HOME}/open3d_install/lib/cmake/Open3D")
+  list(APPEND CMAKE_PREFIX_PATH "${$ENV{HOME}/open3d_install/lib/cmake}")
+endif()
+
+#qhull-8.1-alpha1
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Qhull/build")
+  set(Qhull_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Qhull/build")
+  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Qhull/build")
+endif()
+
+# Add compile definition to use vendored Ceres
+add_definitions(-DG2O_USE_VENDORED_CERES)
+
 add_subdirectory(Modules)
 add_subdirectory(Execution)

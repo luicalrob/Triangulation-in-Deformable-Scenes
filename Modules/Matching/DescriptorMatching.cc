@@ -357,12 +357,12 @@ int fuse(std::shared_ptr<KeyFrame> pKF, int th, std::vector<std::shared_ptr<MapP
         if(!pMP)
             continue;
 
-        // if(pMap->getNumberOfObservations(pMP->getId()) == 0)
-        //     continue;
+        if(pMap->getNumberOfObservations(pMP->getId()) == 0)
+            continue;
 
-        // if(pMap->isMapPointInKeyFrame(pMP->getId(),pKF->getId()) != -1){
-        //     continue;
-        // }
+        if(pMap->isMapPointInKeyFrame(pMP->getId(),pKF->getId()) != -1){
+            continue;
+        }
 
         /*
          * Your code for Lab 4 - Task 3 here!
@@ -419,13 +419,13 @@ int fuse(std::shared_ptr<KeyFrame> pKF, int th, std::vector<std::shared_ptr<MapP
 
             //Fuse
             if(added_MapPoint){ 
-                //pMap->fuseMapPoints(pMP->getId(), vKFMps[bestIdx]->getId());
+                pMap->fuseMapPoints(pMP->getId(), vKFMps[bestIdx]->getId());
                 //pMap->fuseMapPoints(pMP->getId(), vKFMps[bestIdx]->getId());
             }      
             //Add observation
             else{
                 pKF->setMapPoint(bestIdx, pMP);
-                //pMap->addObservation(pKF->getId(), pMP->getId(), bestIdx);
+                pMap->addObservation(pKF->getId(), pMP->getId(), bestIdx);
             }
             
             nFused++;

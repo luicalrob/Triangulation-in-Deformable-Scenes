@@ -28,12 +28,25 @@
 using namespace std;
 
 int main(){
+    Eigen::Vector3f firstCamera(0.0, 0.0, 0.0);
+    Eigen::Vector3f secondCamera(0.25, 0.05, 0.0);
 
     //Create SLAM system
     SLAM SLAM("Data/Test.yaml");
 
+    // maybe first lets try without movement
     SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
 
+    SLAM.setCameraPoses(firstCamera, secondCamera);
+
+    SLAM.createKeyPoints(0.0f); // with a desviation in the reprojection error of 1 pixel 
+
+    // To visualize solution
+    // SLAM.viusualizeSolution();
+
+    SLAM.mapping();
+
+    SLAM.measureErrors();
 
     return 0;
 }
