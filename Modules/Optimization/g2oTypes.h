@@ -21,8 +21,8 @@
  * Implementation of the types needed by g2o to perform Budnle Adjustemnt
  */
 
-#ifndef MINI_SLAM_G2OTYPES_H
-#define MINI_SLAM_G2OTYPES_H
+#ifndef SLAM_G2OTYPES_H
+#define SLAM_G2OTYPES_H
 
 #include "Calibration/CameraModel.h"
 
@@ -231,4 +231,4 @@ public:
     Eigen::Vector3d Xj2world;
 };
 
-#endif //MINI_SLAM_G2OTYPES_H
+#endif //SLAM_G2OTYPES_H

@@ -21,8 +21,8 @@
  * This class represents a KeyFrame: a selected Frame that comes with high visual innovation to the map
  */
 
-#ifndef MINI_SLAM_KEYFRAME_H
-#define MINI_SLAM_KEYFRAME_H
+#ifndef SLAM_KEYFRAME_H
+#define SLAM_KEYFRAME_H
 
 #include "Tracking/Frame.h"
 
@@ -165,4 +165,4 @@ private:
 };
 
 
-#endif //MINI_SLAM_KEYFRAME_H
+#endif //SLAM_KEYFRAME_H

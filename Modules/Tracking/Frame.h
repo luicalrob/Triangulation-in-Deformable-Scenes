@@ -22,8 +22,8 @@
  * to store the visual information of an image
  */
 
-#ifndef MINI_SLAM_FRAME_H
-#define MINI_SLAM_FRAME_H
+#ifndef SLAM_FRAME_H
+#define SLAM_FRAME_H
 
 #include "Calibration/CameraModel.h"
 #include "Map/MapPoint.h"
@@ -244,4 +244,4 @@ private:
 };
 
 
-#endif //MINI_SLAM_FRAME_H
+#endif //SLAM_FRAME_H

@@ -21,8 +21,8 @@
  * Methods for matching binary descriptors (with Hamming distance) between Frames and KeyFrames
  */
 
-#ifndef MINI_SLAM_DESCRIPTORMATCHING_H
-#define MINI_SLAM_DESCRIPTORMATCHING_H
+#ifndef SLAM_DESCRIPTORMATCHING_H
+#define SLAM_DESCRIPTORMATCHING_H
 
 #include "Map/KeyFrame.h"
 #include "Map/Map.h"
@@ -57,5 +57,5 @@ int searchForTriangulation(KeyFrame* kf1, KeyFrame* kf2, int th, float fEpipolar
  */
 int fuse(std::shared_ptr<KeyFrame> pKF, int th, std::vector<std::shared_ptr<MapPoint>>& vMapPoints, Map* pMap);
 
-#endif //MINI_SLAM_DESCRIPTORMATCHING_H
+#endif //SLAM_DESCRIPTORMATCHING_H
 
