@@ -22,8 +22,8 @@
  * matches done or the state of the current Frame
  */
 
-#ifndef MINI_SLAM_FRAMEVISUALIZER_H
-#define MINI_SLAM_FRAMEVISUALIZER_H
+#ifndef SLAM_FRAMEVISUALIZER_H
+#define SLAM_FRAMEVISUALIZER_H
 
 #include "Tracking/Frame.h"
 
@@ -70,4 +70,4 @@ private:
 };
 
 
-#endif //MINI_SLAM_FRAMEVISUALIZER_H
+#endif //SLAM_FRAMEVISUALIZER_H

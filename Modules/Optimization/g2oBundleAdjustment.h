@@ -21,8 +21,8 @@
  * Implementaiton of the Budle Adjustemn problem with the g2o optimization library
  */
 
-#ifndef MINI_SLAM_G2OBUNDLEADJUSTMENT_H
-#define MINI_SLAM_G2OBUNDLEADJUSTMENT_H
+#ifndef SLAM_G2OBUNDLEADJUSTMENT_H
+#define SLAM_G2OBUNDLEADJUSTMENT_H
 
 #include "Map/Map.h"
 
@@ -57,4 +57,4 @@ void arapOptimization(Map* pMap);
  */
 Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions);
 
-#endif //MINI_SLAM_G2OBUNDLEADJUSTMENT_H
+#endif //SLAM_G2OBUNDLEADJUSTMENT_H
