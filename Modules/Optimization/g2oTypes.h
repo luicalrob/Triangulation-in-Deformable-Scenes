@@ -216,7 +216,7 @@ public:
 
         // Compute the reprojection error
         _error = (obs - projected.cast<double>());
-        //std::cout << "Obsevations error: (" << _error[0] << ", " << _error[1] << ")\n" << std::endl;
+        std::cout << "Obsevations error: (" << _error[0] << ", " << _error[1] << ")\n" << std::endl;
     }
 
     virtual void linearizeOplus();

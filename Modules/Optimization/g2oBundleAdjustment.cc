@@ -524,18 +524,18 @@ void arapOptimization(Map* pMap){
             // std::shared_ptr<open3d::geometry::TriangleMesh> mesh2 = open3d::geometry::TriangleMesh::CreateFromPointCloudBallPivoting(*cloud2, radii);
 
 
-            auto indexMap1 = createVectorMap(mesh1->vertices_, v1Positions);
+            auto posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
             // auto indexMap2 = createVectorMap(mesh2->vertices_, v2Positions);
             // std::cout << "point mesh: (" << mesh1->vertices_[67] << ")\n";
-            // std::cout << "point: (" << v1Positions[indexMap1[67]] << ")\n";
-            // std::cout << "index: (" << indexMap1[67] << ")\n";
+            // std::cout << "point: (" << v1Positions[posIndexes1[67]] << ")\n";
+            // std::cout << "index: (" << posIndexes1[67] << ")\n";
             std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
 
-            std::map<size_t, size_t> invertedIndexMap1;
-            std::map<size_t, size_t> invertedIndexMap2;
-            for (const auto& pair : indexMap1) {
-                invertedIndexMap1[pair.second] = pair.first;
-            }
+            std::map<size_t, size_t> invertedPosIndexes1;
+            // std::map<size_t, size_t> invertedIndexMap2;
+            for (const auto& pair : posIndexes1) {
+                invertedPosIndexes1[pair.second] = pair.first;
+            } 
 
             // Visualize OPEN3D the meshes
             // open3d::visualization::Visualizer visualizer;
@@ -637,9 +637,9 @@ void arapOptimization(Map* pMap){
 
                 optimizer.addEdge(eKF2);
 
-                auto it1 = invertedIndexMap1.find(i);
+                auto it1 = invertedPosIndexes1.find(i);
                 size_t meshIndex1 = 0;
-                if (it1 != invertedIndexMap1.end()) {
+                if (it1 != invertedPosIndexes1.end()) {
                     meshIndex1 = it1->second;
                     // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
                     // std::cout << "v2Position: (" << v2Positions[i][0] << ", " << v2Positions[i][1] << ", " << v2Positions[i][2] << ")\n";
@@ -655,7 +655,9 @@ void arapOptimization(Map* pMap){
                 // std::cout << "adjacency_list_ 1: (" << mesh1->adjacency_list_[meshIndex1].size() << ")\n";
 
                 Eigen::Vector3d distancesInvTipDesv;
-                distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
+                // distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
+                std::unordered_set<int> jIndexes = mesh1->adjacency_list_[meshIndex1];
+                distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes1, v1Positions, v2Positions);
                 // distancesInvTipDesv << 1.0 / 400.0, 1.0 / 400.0, 1.0 / 400.0;
 
                 // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
@@ -672,7 +674,7 @@ void arapOptimization(Map* pMap){
                     eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                     eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
                     eArap->Xj1world = mesh1->vertices_[j];
-                    eArap->Xj2world = v2Positions[indexMap1[j]];
+                    eArap->Xj2world = v2Positions[posIndexes1[j]];
                     eArap->weight = edge_weights_1[GetOrderedEdge(meshIndex1, j)];
 
                     eArap->setInformation(informationMatrix);
@@ -717,41 +719,47 @@ void arapOptimization(Map* pMap){
     }
 }
 
-Eigen::Vector3d getInvUncertainty(MapPoint& firstPoint, MapPoint& secondPoint, KeyFrame& pKF1, KeyFrame& pKF2) {
-    vector<shared_ptr<MapPoint>>& v1MPs = pKF1.getMapPoints();
-    vector<shared_ptr<MapPoint>>& v2MPs = pKF2.getMapPoints();
+Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions){
 
-    Eigen::Vector3d distancesErrorSquared = Eigen::Vector3d::Zero();
+    std::vector<Eigen::Vector3d> errors;
+    Eigen::Vector3d meanError = Eigen::Vector3d::Zero();
     size_t validPairs = 0;
 
-    for (size_t j = 0; j < v1MPs.size(); j++) {
-        auto pMPj1 = v1MPs[j];
-        auto pMPj2 = v2MPs[j];
+    // individual errors and mean error
+    for (int j : adjacencyList) {
+        Eigen::Vector3d pi1 = v1Positions[i];
+        Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
+        Eigen::Vector3d pi2 = v2Positions[i];
+        Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
 
-        if (!pMPj1 || !pMPj2) continue;
-        if (firstPoint.getId() == pMPj1->getId() || secondPoint.getId() == pMPj2->getId()) continue;
+        if (!pi1.allFinite() || !pj1.allFinite() || !pi2.allFinite() || !pj2.allFinite()) continue;
 
-        Eigen::Vector3d firstObjectDistance = firstPoint.getWorldPosition().cast<double>() - (pMPj1)->getWorldPosition().cast<double>();
-        Eigen::Vector3d secondObjectDistance = secondPoint.getWorldPosition().cast<double>() - (pMPj2)->getWorldPosition().cast<double>();
+        Eigen::Vector3d d1 = pi1 - pj1;
+        Eigen::Vector3d d2 = pi2 - pj2;
 
-        Eigen::Vector3d diff = secondObjectDistance - firstObjectDistance;
-        distancesErrorSquared += diff.cwiseProduct(diff);
+        Eigen::Vector3d diff = d1 - d2;
+        
+        errors.push_back(diff);      
+        meanError += diff;
         validPairs++;
     }
 
-    if (validPairs > 0) {
-        distancesErrorSquared /= static_cast<double>(validPairs); // Normalize by number of valid pairs
+    if (validPairs > 1) {
+        meanError /= static_cast<double>(validPairs);
 
-        Eigen::Vector3d stddev = distancesErrorSquared.cwiseSqrt();
+        // Calculate the sum of the differences squared
+        Eigen::Vector3d sumSquaredDiffs = Eigen::Vector3d::Zero();
+        for (const Eigen::Vector3d& error : errors) {
+            Eigen::Vector3d diffFromMean = error - meanError;
+            sumSquaredDiffs += diffFromMean.cwiseProduct(diffFromMean); // (e_i - e_mean)^2
+        }
 
-        Eigen::Vector3d invStddev;
-        invStddev << 1.0 / stddev(0), 1.0 / stddev(1), 1.0 / stddev(2);
+        Eigen::Vector3d variance = sumSquaredDiffs / static_cast<double>(validPairs - 1);
 
-        //std::cout << "distancesError: " << invStddev << " of point : " << firstPoint.getId() <<  std::endl;
-
-        return invStddev;
+        Eigen::Vector3d stdDev = variance.cwiseSqrt();
+        
+        return stdDev.cwiseInverse();
     } else {
-        // Handle case where there are no valid pairs
-        return Eigen::Vector3d::Zero(); // Or some other default value
+        return Eigen::Vector3d::Constant(std::numeric_limits<double>::infinity());
     }
 }
