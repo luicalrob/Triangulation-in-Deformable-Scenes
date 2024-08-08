@@ -64,7 +64,7 @@ void MapVisualizer::updateCurrentPose(Sophus::SE3f &currPose) {
 void MapVisualizer::drawMapPoints() {
     auto mapPoints = pMap_->getMapPoints();
 
-    glPointSize(2);
+    glPointSize(2.5);
     glBegin(GL_POINTS);
     //glColor3f(0.0,0.0,0.0);
 

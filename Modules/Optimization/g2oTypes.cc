@@ -34,6 +34,28 @@ bool VertexSBAPointXYZ::write(std::ostream& os) const
     return true;
 }
 
+VertexRotationMatrix::VertexRotationMatrix() : BaseVertex<3, Eigen::Matrix3d>() {
+    _estimate.setIdentity();
+}
+
+bool VertexRotationMatrix::read(std::istream& is) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            is >> _estimate(i, j);
+        }
+    }
+    return true;
+}
+
+bool VertexRotationMatrix::write(std::ostream& os) const {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            os << _estimate(i, j) << " ";
+        }
+    }
+    return true;
+}
+
 EdgeSE3ProjectXYZ::EdgeSE3ProjectXYZ() : BaseBinaryEdge<2, Eigen::Vector2d, VertexSBAPointXYZ, g2o::VertexSE3Expmap>() {
 }
 
@@ -230,33 +252,52 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 
 
-EdgeARAP::EdgeARAP(){}
+EdgeARAP::EdgeARAP(){
+    resize(3);
+}
 
-bool EdgeARAP::read(std::istream& is){
+// bool EdgeARAP::read(std::istream& is){
 
-    for (int i=0; i<3; i++){
-        is >> _measurement[i];
-    }
+//     for (int i=0; i<3; i++){
+//         is >> _measurement[i];
+//     }
 
-    for (int i=0; i<3; i++)
-        for (int j=i; j<3; j++) {
-            is >> information()(i,j);
-            if (i!=j)
-                information()(j,i)=information()(i,j);
-        }
+//     for (int i=0; i<3; i++)
+//         for (int j=i; j<3; j++) {
+//             is >> information()(i,j);
+//             if (i!=j)
+//                 information()(j,i)=information()(i,j);
+//         }
+//     return true;
+// }
+
+// bool EdgeARAP::write(std::ostream& os) const {
+
+//     for (int i=0; i<3; i++){
+//         os << measurement()[i] << " ";
+//     }
+
+//     for (int i=0; i<3; i++)
+//         for (int j=i; j<3; j++){
+//             os << " " <<  information()(i,j);
+//         }
+//     return os.good();
+// }
+
+bool EdgeARAP::read(std::istream& is) {
+    is >> _measurement;
+
+    double info;
+    is >> info;
+    information()(0, 0) = info;
+
     return true;
 }
 
 bool EdgeARAP::write(std::ostream& os) const {
+    os << _measurement << " ";
 
-    for (int i=0; i<3; i++){
-        os << measurement()[i] << " ";
-    }
-
-    for (int i=0; i<3; i++)
-        for (int j=i; j<3; j++){
-            os << " " <<  information()(i,j);
-        }
+    os << information()(0, 0);
     return os.good();
 }
 

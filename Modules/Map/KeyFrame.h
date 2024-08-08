@@ -74,6 +74,10 @@ public:
     void setMapPoint(size_t idx, std::shared_ptr<MapPoint> pMP);
 
     /*
+     * Gets the MapPoint at index idx in the KeyFrame
+     */
+    std::shared_ptr<MapPoint> getMapPoint(size_t idx);
+    /*
      * Retrieves the calibration of the KeyFrame
      */
     std::shared_ptr<CameraModel> getCalibration();

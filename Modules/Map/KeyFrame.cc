@@ -108,6 +108,10 @@ void KeyFrame::setMapPoint(size_t idx, std::shared_ptr<MapPoint> pMP) {
     vMapPoints_[idx] = pMP;
 }
 
+std::shared_ptr<MapPoint> KeyFrame::getMapPoint(size_t idx) {
+    return vMapPoints_[idx];
+}
+
 std::shared_ptr<CameraModel> KeyFrame::getCalibration() {
     return calibration_;
 }

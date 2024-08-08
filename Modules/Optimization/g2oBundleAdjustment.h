@@ -50,11 +50,11 @@ void arapOptimization(Map* pMap);
 /*
  * Performs a As-Rigid-As-Possible optimization joined with a bundle adjustment optimization (optimizes 3D poses of the cameras and 3D points positions in the space)
  */
-void arapBundleAdjustment(Map* pMap);
+// void arapBundleAdjustment(Map* pMap);
 
 /*
  * Compute the tipical desviation of the distances between two objects given two mappoints to compare
  */
-Eigen::Vector3d getInvUncertainty(MapPoint& firstPoint, MapPoint& secondPoint, KeyFrame& pKF1, KeyFrame& pKF2);
+Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions);
 
 #endif //SLAM_G2OBUNDLEADJUSTMENT_H

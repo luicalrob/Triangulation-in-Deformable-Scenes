@@ -28,11 +28,18 @@
 
 
 #include <g2o/solvers/dense/linear_solver_dense.h>
+#include "Utils/Geometry.h"
+#include "open3d/Open3D.h"
+#include "open3d/geometry/Qhull.h"
+#include "open3d/geometry/TetraMesh.h"
+
+
 
 using namespace std;
 
 typedef shared_ptr<MapPoint> MapPoint_;
 typedef shared_ptr<KeyFrame> KeyFrame_;
+typedef shared_ptr<Eigen::Matrix3d> RotationMatrix_;
 
 void bundleAdjustment(Map* pMap){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
@@ -445,10 +452,10 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
 void arapOptimization(Map* pMap){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
+    unordered_map<RotationMatrix_,size_t> mRotId;
 
     //Get all KeyFrames from map
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
-    
 
     // Create optimizer
     g2o::SparseOptimizer optimizer;
@@ -478,6 +485,69 @@ void arapOptimization(Map* pMap){
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
             // [DUDA] Primero asumire que todos son diferentes, deberia fusionar una vez hecha la optimización si quedan muy juntos??
+            
+
+            // MESH CREATION
+            std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
+            std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
+
+            // std::shared_ptr<open3d::geometry::PointCloud> cloud1 = convertToOpen3DPointCloud(v1Positions);
+            // std::shared_ptr<open3d::geometry::PointCloud> cloud2 = convertToOpen3DPointCloud(v2Positions);
+
+            std::vector<double> radii = {0.15, 0.15, 0.15};
+            double alpha = 0.1;
+
+            // OPEN3D LIBRARY
+            std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh1;
+            std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
+            std::vector<size_t> pt_map_1;
+            std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh2;
+            std::shared_ptr<open3d::geometry::TriangleMesh> mesh2;
+            std::vector<size_t> pt_map_2;
+
+            std::vector<Eigen::Matrix3d> Rs(v1Positions.size(), Eigen::Matrix3d::Identity());
+
+            // Perform Delaunay Reconstruction
+            mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
+            // mesh2 = ComputeDelaunayTriangulation3D(v2Positions);
+
+            // // Perform Alpha Reconstruction
+            // std::tie(tetra_mesh1, pt_map_1) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
+            // std::tie(tetra_mesh2, pt_map_2) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v2Positions);
+            // mesh1 = open3d::geometry::TriangleMesh::CreateFromPointCloudAlphaShape(*cloud1, alpha, tetra_mesh1, &pt_map_1);
+            // mesh2 = open3d::geometry::TriangleMesh::CreateFromPointCloudAlphaShape(*cloud2, alpha, tetra_mesh2, &pt_map_2);
+            
+            // Perform Ball Pivoting Reconstruction
+            // cloud1->EstimateNormals();
+            // cloud2->EstimateNormals();
+            // std::shared_ptr<open3d::geometry::TriangleMesh> mesh1 = open3d::geometry::TriangleMesh::CreateFromPointCloudBallPivoting(*cloud1, radii);
+            // std::shared_ptr<open3d::geometry::TriangleMesh> mesh2 = open3d::geometry::TriangleMesh::CreateFromPointCloudBallPivoting(*cloud2, radii);
+
+
+            auto posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
+            // auto indexMap2 = createVectorMap(mesh2->vertices_, v2Positions);
+            // std::cout << "point mesh: (" << mesh1->vertices_[67] << ")\n";
+            // std::cout << "point: (" << v1Positions[posIndexes1[67]] << ")\n";
+            // std::cout << "index: (" << posIndexes1[67] << ")\n";
+            std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
+
+            std::map<size_t, size_t> invertedPosIndexes1;
+            // std::map<size_t, size_t> invertedIndexMap2;
+            for (const auto& pair : posIndexes1) {
+                invertedPosIndexes1[pair.second] = pair.first;
+            } 
+
+            // Visualize OPEN3D the meshes
+            // open3d::visualization::Visualizer visualizer;
+            // visualizer.CreateVisualizerWindow("Mesh Visualization");
+            // Eigen::Vector3d red(1.0, 0.0, 0.0);
+            // mesh1->vertex_colors_.resize(mesh1->vertices_.size(), red);
+            // visualizer.AddGeometry(mesh1);
+            // visualizer.Run();
+            // visualizer.DestroyVisualizerWindow();
+
+            mesh1->ComputeAdjacencyList();
+            auto edge_weights_1 = ComputeEdgeWeightsCot(mesh1, 0);
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];
@@ -486,6 +556,7 @@ void arapOptimization(Map* pMap){
                 if (!pMPi2) continue;
 
                 MapPoint_ firstPointToOptimize = pMPi1;
+                RotationMatrix_ Rot = std::make_shared<Eigen::Matrix<double, 3, 3>>(Rs[i]);
                 MapPoint_ secondPointToOptimize = pMPi2;
 
                 //Check if this MapPoint has been already added to the optimization
@@ -500,8 +571,16 @@ void arapOptimization(Map* pMap){
                     mMapPointId[firstPointToOptimize] = currId;
                     //std::cout << "Id: (" << currId << ")\n";
                     currId++;
+
+                    VertexRotationMatrix* rotVertex = new VertexRotationMatrix();
+                    rotVertex->setId(currId); // unique ID
+                    rotVertex->setEstimate(Rs[i]);
+                    optimizer.addVertex(rotVertex);
+                    mRotId[Rot] = currId;
+                    currId++;
                 }
 
+                
                 if (mMapPointId.count(secondPointToOptimize) == 0) {
                     VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
                     Eigen::Vector3d p3D = secondPointToOptimize->getWorldPosition().cast<double>();
@@ -558,35 +637,50 @@ void arapOptimization(Map* pMap){
 
                 optimizer.addEdge(eKF2);
 
+                auto it1 = invertedPosIndexes1.find(i);
+                size_t meshIndex1 = 0;
+                if (it1 != invertedPosIndexes1.end()) {
+                    meshIndex1 = it1->second;
+                    // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
+                    // std::cout << "v2Position: (" << v2Positions[i][0] << ", " << v2Positions[i][1] << ", " << v2Positions[i][2] << ")\n";
+                    // std::cout << "point mesh: (" << mesh1->vertices_[meshIndex1][0] << ", " << mesh1->vertices_[meshIndex1][1] << ", " << mesh1->vertices_[meshIndex1][2] << ")\n";
+                    // std::cout << "index: (" << i << ")\n";
+                } else {
+                    continue;
+                }
+
+                                
+                if (mesh1->adjacency_list_[meshIndex1].empty()) continue;
+
+                // std::cout << "adjacency_list_ 1: (" << mesh1->adjacency_list_[meshIndex1].size() << ")\n";
+
                 Eigen::Vector3d distancesInvTipDesv;
-                distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
+                // distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
+                std::unordered_set<int> jIndexes = mesh1->adjacency_list_[meshIndex1];
+                distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes1, v1Positions, v2Positions);
+                // distancesInvTipDesv << 1.0 / 400.0, 1.0 / 400.0, 1.0 / 400.0;
 
-                Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
+                // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
+                
+                double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
+                Eigen::Matrix<double, 1, 1> informationMatrix;
+                informationMatrix(0, 0) = scalarInformation;
 
-                for (size_t j = 0; j < v1MPs.size(); j++) { // [DUDA] Posible error si el segundo mapa es de otro size
-                    MapPoint_ pMPj1 = v1MPs[j];
-                    MapPoint_ pMPj2 = v2MPs[j];
-                    if (!pMPj1) continue;
-                    if (!pMPj2) continue;
-                    if (pMPi1 == pMPj1 || pMPi2 == pMPj2) continue;
-
-                    
-                    MapPoint_ firstPointMeasurement = pMPj1;
-                    MapPoint_ secondPointMeasurement = pMPj2;
-
+                for (int j : mesh1->adjacency_list_[meshIndex1]) {
+                    // std::cout << "adjacency_list_ 1: (" << j << ")\n";
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
                     eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                     eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    eArap->Xj1world = firstPointMeasurement->getWorldPosition().cast<double>();
-                    eArap->Xj2world = secondPointMeasurement->getWorldPosition().cast<double>();
-
-                    // coger todas los errores en distancias por cada punto
-                    // sacar la desv tipica en x, y, z
-                    // invertirlo y usarlo
+                    eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
+                    eArap->Xj1world = mesh1->vertices_[j];
+                    eArap->Xj2world = v2Positions[posIndexes1[j]];
+                    eArap->weight = edge_weights_1[GetOrderedEdge(meshIndex1, j)];
 
                     eArap->setInformation(informationMatrix);
-                    eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
+                    //eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
+                    double measurement = 0.0;
+                    eArap->setMeasurement(measurement);
 
                     optimizer.addEdge(eArap);
                 }
@@ -616,248 +710,56 @@ void arapOptimization(Map* pMap){
         Eigen::Vector3f p3D = vPoint->estimate().cast<float>();
         pMP->setWorldPosition(p3D);
     }
-}
 
-void arapBundleAdjustment(Map* pMap){
-    unordered_map<KeyFrame_,size_t> mKeyFrameId;
-    unordered_map<MapPoint_,size_t> mMapPointId;
-
-    //Get all KeyFrames from map
-    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
-    
-
-    // Create optimizer
-    g2o::SparseOptimizer optimizer;
-
-    std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>();
-
-    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
-            g2o::make_unique<g2o::BlockSolverX>(std::move(linearSolver))
-    );
-
-    optimizer.setAlgorithm(solver);
-    optimizer.setVerbose(false);
-
-    const float thHuber2D = sqrt(5.99);
-
-    size_t currId = 0;
-
-    //Set optimization
-
-    // Add ARAP edges
-    for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) { // [DUDA] deberia hacerlo diferente?
-        for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
-            KeyFrame_ pKF1 = k1->second;
-            KeyFrame_ pKF2 = k2->second;
-            std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
-
-            //Check if this KeyFrame has been already added to the optimization
-            if (mKeyFrameId.count(pKF1) == 0) {
-                //Set KeyFrame data
-                Sophus::SE3f kfPose = pKF1->getPose();
-                g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-                vSE3->setEstimate(g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>()));
-                vSE3->setId(currId);
-                if(pKF1->getId()==0){
-                    vSE3->setFixed(true);
-                }
-                optimizer.addVertex(vSE3);
-
-                mKeyFrameId[pKF1] = currId;
-                currId++;
-            }
-
-            if (mKeyFrameId.count(pKF2) == 0) {
-                //Set KeyFrame data
-                Sophus::SE3f kfPose = pKF2->getPose();
-                g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-                vSE3->setEstimate(g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>()));
-                vSE3->setId(currId);
-                if(pKF2->getId()==0){
-                    vSE3->setFixed(true);
-                }
-                optimizer.addVertex(vSE3);
-
-                mKeyFrameId[pKF2] = currId;
-                currId++;
-            }
-
-            vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
-            vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
-            // [DUDA] Primero asumire que todos son diferentes, deberia fusionar una vez hecha la optimización si quedan muy juntos??
-
-            for (size_t i = 0; i < v1MPs.size(); i++) {
-                MapPoint_ pMPi1 = v1MPs[i];
-                MapPoint_ pMPi2 = v2MPs[i];
-                if (!pMPi1) continue;
-                if (!pMPi2) continue;
-
-                MapPoint_ firstPointToOptimize = pMPi1;
-                MapPoint_ secondPointToOptimize = pMPi2;
-
-                //Check if this MapPoint has been already added to the optimization
-                if (mMapPointId.count(firstPointToOptimize) == 0) {
-                    VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
-                    Eigen::Vector3d p3D = firstPointToOptimize->getWorldPosition().cast<double>();
-                    vPoint->setEstimate(p3D);
-                    vPoint->setId(currId);
-                    //vPoint->setMarginalized(true);
-                    optimizer.addVertex(vPoint);
-
-                    mMapPointId[firstPointToOptimize] = currId;
-                    //std::cout << "Id: (" << currId << ")\n";
-                    currId++;
-                }
-
-                if (mMapPointId.count(secondPointToOptimize) == 0) {
-                    VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
-                    Eigen::Vector3d p3D = secondPointToOptimize->getWorldPosition().cast<double>();
-                    vPoint->setEstimate(p3D);
-                    vPoint->setId(currId);
-                    //vPoint->setMarginalized(true);
-                    optimizer.addVertex(vPoint);
-
-                    mMapPointId[secondPointToOptimize] = currId;
-                    //std::cout << "ID: (" << currId << ")\n";
-                    currId++;
-                }
-
-                //Set fisrt projection edge
-                cv::Point2f uv = pKF1->getKeyPoint(i).pt;
-                int octave = pKF1->getKeyPoint(i).octave;
-                Eigen::Matrix<double,2,1> obs;
-                obs << uv.x, uv.y;
-
-                EdgeSE3ProjectXYZPerKeyFrame* eKF1 = new EdgeSE3ProjectXYZPerKeyFrame();
-
-                eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                eKF1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
-                eKF1->setMeasurement(obs);
-                eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave));
-
-                g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-                eKF1->setRobustKernel(rk);
-                rk->setDelta(thHuber2D);
-
-                eKF1->pCamera = pKF1->getCalibration();
-
-                optimizer.addEdge(eKF1);
-
-                //Set second projection edge
-                uv = pKF2->getKeyPoint(i).pt;
-                octave = pKF2->getKeyPoint(i).octave;
-                obs << uv.x, uv.y;
-
-                EdgeSE3ProjectXYZPerKeyFrame* eKF2 = new EdgeSE3ProjectXYZPerKeyFrame();
-
-                eKF2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                eKF2->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF2])));
-                eKF2->setMeasurement(obs);
-                eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave));
-
-                rk = new g2o::RobustKernelHuber;
-                eKF2->setRobustKernel(rk);
-                rk->setDelta(thHuber2D);
-
-                eKF2->pCamera = pKF2->getCalibration();
-
-                optimizer.addEdge(eKF2);
-
-                Eigen::Vector3d distancesInvTipDesv;
-                distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
-
-                Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
-
-                for (size_t j = 0; j < v1MPs.size(); j++) { // [DUDA] Posible error si el segundo mapa es de otro size
-                    MapPoint_ pMPj1 = v1MPs[j];
-                    MapPoint_ pMPj2 = v2MPs[j];
-                    if (!pMPj1) continue;
-                    if (!pMPj2) continue;
-                    if (pMPi1 == pMPj1 || pMPi2 == pMPj2) continue;
-
-                    
-                    MapPoint_ firstPointMeasurement = pMPj1;
-                    MapPoint_ secondPointMeasurement = pMPj2;
-
-                    //Set ARAP edge
-                    EdgeARAP* eArap = new EdgeARAP();
-                    eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    eArap->Xj1world = firstPointMeasurement->getWorldPosition().cast<double>();
-                    eArap->Xj2world = secondPointMeasurement->getWorldPosition().cast<double>();
-
-                    // coger todas los errores en distancias por cada punto
-                    // sacar la desv tipica en x, y, z
-                    // invertirlo y usarlo
-
-                    eArap->setInformation(informationMatrix);
-                    eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
-
-                    optimizer.addEdge(eArap);
-                }
-            }
-        }
-    }
-
-    //Run optimization
-    optimizer.initializeOptimization();
-
-    std::cout << "Starting... \n";
-    optimizer.optimize(15);
-    // tras unas iteraciones con las soluciones o modificando lo que tienes
-
-    std::cout << "Optimizado \n";
-
-    for(pair<KeyFrame_,ID> pairKeyFrameId : mKeyFrameId){
-        KeyFrame_ pKF = pairKeyFrameId.first;
-        g2o::VertexSE3Expmap* vertex = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pairKeyFrameId.second));
-        Sophus::SE3f sophusPose(vertex->estimate().to_homogeneous_matrix().cast<float>());
-        pKF->setPose(sophusPose);
-    }
-
-    for(pair<MapPoint_,ID> pairMapPointId : mMapPointId){
-        MapPoint_ pMP = pairMapPointId.first;
-        VertexSBAPointXYZ* vPoint = static_cast<VertexSBAPointXYZ*>(optimizer.vertex(pairMapPointId.second));
-        Eigen::Vector3f p3D = vPoint->estimate().cast<float>();
-        pMP->setWorldPosition(p3D);
+    for(pair<RotationMatrix_,ID> pairRotationMatrixId : mRotId){
+        RotationMatrix_ Rots = pairRotationMatrixId.first;
+        VertexRotationMatrix* mRot = static_cast<VertexRotationMatrix*>(optimizer.vertex(pairRotationMatrixId.second));
+        Eigen::Matrix3d Rotation = mRot->estimate();
+        // std::cout << "Rotation matrix:\n" << Rotation << std::endl;
     }
 }
 
-Eigen::Vector3d getInvUncertainty(MapPoint& firstPoint, MapPoint& secondPoint, KeyFrame& pKF1, KeyFrame& pKF2) {
-    vector<shared_ptr<MapPoint>>& v1MPs = pKF1.getMapPoints();
-    vector<shared_ptr<MapPoint>>& v2MPs = pKF2.getMapPoints();
+Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions){
 
-    Eigen::Vector3d distancesErrorSquared = Eigen::Vector3d::Zero();
+    std::vector<Eigen::Vector3d> errors;
+    Eigen::Vector3d meanError = Eigen::Vector3d::Zero();
     size_t validPairs = 0;
 
-    for (size_t j = 0; j < v1MPs.size(); j++) {
-        auto pMPj1 = v1MPs[j];
-        auto pMPj2 = v2MPs[j];
+    // individual errors and mean error
+    for (int j : adjacencyList) {
+        Eigen::Vector3d pi1 = v1Positions[i];
+        Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
+        Eigen::Vector3d pi2 = v2Positions[i];
+        Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
 
-        if (!pMPj1 || !pMPj2) continue;
-        if (firstPoint.getId() == pMPj1->getId() || secondPoint.getId() == pMPj2->getId()) continue;
+        if (!pi1.allFinite() || !pj1.allFinite() || !pi2.allFinite() || !pj2.allFinite()) continue;
 
-        Eigen::Vector3d firstObjectDistance = firstPoint.getWorldPosition().cast<double>() - (pMPj1)->getWorldPosition().cast<double>();
-        Eigen::Vector3d secondObjectDistance = secondPoint.getWorldPosition().cast<double>() - (pMPj2)->getWorldPosition().cast<double>();
+        Eigen::Vector3d d1 = pi1 - pj1;
+        Eigen::Vector3d d2 = pi2 - pj2;
 
-        Eigen::Vector3d diff = secondObjectDistance - firstObjectDistance;
-        distancesErrorSquared += diff.cwiseProduct(diff);
+        Eigen::Vector3d diff = d1 - d2;
+        
+        errors.push_back(diff);      
+        meanError += diff;
         validPairs++;
     }
 
-    if (validPairs > 0) {
-        distancesErrorSquared /= static_cast<double>(validPairs); // Normalize by number of valid pairs
+    if (validPairs > 1) {
+        meanError /= static_cast<double>(validPairs);
 
-        Eigen::Vector3d stddev = distancesErrorSquared.cwiseSqrt();
+        // Calculate the sum of the differences squared
+        Eigen::Vector3d sumSquaredDiffs = Eigen::Vector3d::Zero();
+        for (const Eigen::Vector3d& error : errors) {
+            Eigen::Vector3d diffFromMean = error - meanError;
+            sumSquaredDiffs += diffFromMean.cwiseProduct(diffFromMean); // (e_i - e_mean)^2
+        }
 
-        Eigen::Vector3d invStddev;
-        invStddev << 1.0 / stddev(0), 1.0 / stddev(1), 1.0 / stddev(2);
+        Eigen::Vector3d variance = sumSquaredDiffs / static_cast<double>(validPairs - 1);
 
-        //std::cout << "distancesError: " << invStddev << " of point : " << firstPoint.getId() <<  std::endl;
-
-        return invStddev;
+        Eigen::Vector3d stdDev = variance.cwiseSqrt();
+        
+        return stdDev.cwiseInverse();
     } else {
-        // Handle case where there are no valid pairs
-        return Eigen::Vector3d::Zero(); // Or some other default value
+        return Eigen::Vector3d::Constant(std::numeric_limits<double>::infinity());
     }
 }

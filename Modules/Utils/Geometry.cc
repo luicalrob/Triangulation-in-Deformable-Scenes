@@ -16,6 +16,11 @@
 */
 
 #include "Utils/Geometry.h"
+#include "libqhullcpp/PointCoordinates.h"
+#include "libqhullcpp/Qhull.h"
+#include "libqhullcpp/QhullFacet.h"
+#include "libqhullcpp/QhullFacetList.h"
+#include "libqhullcpp/QhullVertexSet.h"
 
 float cosRayParallax(const Eigen::Vector3f& a, const Eigen::Vector3f& b){
     return a.dot(b)/(a.norm()*b.norm());
@@ -137,6 +142,30 @@ Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12){
     return E;
 }
 
+std::vector<Eigen::Vector3d> extractPositions(const std::vector<std::shared_ptr<MapPoint>>& mapPoints) {
+    std::vector<Eigen::Vector3d> positions;
+    positions.reserve(mapPoints.size());
+
+    for (const auto& mp : mapPoints) {
+        if (!mp) continue;
+        Eigen::Vector3d p3D = mp->getWorldPosition().cast<double>();
+        positions.push_back(p3D);
+    }
+
+    return positions;
+}
+
+std::shared_ptr<open3d::geometry::PointCloud> convertToOpen3DPointCloud(const std::vector<Eigen::Vector3d>& positions) {
+    auto pointCloud = std::make_shared<open3d::geometry::PointCloud>();
+    
+    for (const Eigen::Vector3d& pos : positions) {
+        if (pos.isZero()) continue;
+        pointCloud->points_.push_back(pos);
+    }
+
+    return pointCloud;
+}
+
 double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eigen::Vector3d &v2) {
     Eigen::Vector3d e0 = v1 - v0;
     Eigen::Vector3d e1 = v2 - v1;
@@ -144,4 +173,102 @@ double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eig
 
     double cosTheta = -e2.dot(e0) / (e2.norm() * e0.norm());
     return cosTheta / sqrt(1.0 - cosTheta * cosTheta);
+}
+
+std::unordered_map<Eigen::Vector2i, double, open3d::utility::hash_eigen<Eigen::Vector2i>> 
+ComputeEdgeWeightsCot(
+        std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
+        double min_weight) {
+    std::unordered_map<Eigen::Vector2i, double,open3d::utility::hash_eigen<Eigen::Vector2i>> weights;
+    auto edges_to_vertices = mesh->GetEdgeToVerticesMap();
+    auto vertices = mesh->vertices_;
+    for (const auto &edge_v2s : edges_to_vertices) {
+        Eigen::Vector2i edge = edge_v2s.first;
+        double weight_sum = 0;
+        int N = 0;
+        for (int v2 : edge_v2s.second) {
+            Eigen::Vector3d a = vertices[edge(0)] - vertices[v2];
+            Eigen::Vector3d b = vertices[edge(1)] - vertices[v2];
+            double weight = a.dot(b) / (a.cross(b)).norm();
+            weight_sum += weight;
+            N++;
+        }
+        double weight = N > 0 ? weight_sum / N : 0;
+        if (weight < min_weight) {
+            weights[edge] = min_weight;
+        } else {
+            weights[edge] = weight;
+        }
+    }
+    return weights;
+}
+
+std::map<size_t, size_t> createVectorMap(const std::vector<Eigen::Vector3d>& vertices, const std::vector<Eigen::Vector3d>& positions, double precision) {
+    std::map<size_t, size_t> indexMap;
+
+    for (size_t vertexIdx = 0; vertexIdx < vertices.size(); ++vertexIdx) {
+        const Eigen::Vector3d& vertex = vertices[vertexIdx];
+        for (size_t positionIdx = 0; positionIdx < positions.size(); ++positionIdx) {
+            const Eigen::Vector3d& position = positions[positionIdx];
+            if (vertex.isApprox(position, precision)) {
+                indexMap[vertexIdx] = positionIdx;
+                break;
+            }
+        }
+    }
+
+    return indexMap;
+}
+
+std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
+        const std::vector<Eigen::Vector3d> &points) {
+    auto triangle_mesh = std::make_shared<open3d::geometry::TriangleMesh>();
+
+    if (points.size() < 3) {
+        open3d::utility::LogError("Not enough points to create a triangular mesh.");
+        return nullptr;
+    }
+
+    std::vector<double> qhull_points_data(points.size() * 2);
+    for (size_t pidx = 0; pidx < points.size(); ++pidx) {
+        const auto &pt = points[pidx];
+        qhull_points_data[pidx * 2 + 0] = pt(0);
+        qhull_points_data[pidx * 2 + 1] = pt(1);
+    }
+
+    orgQhull::PointCoordinates qhull_points(2, "");
+    qhull_points.append(qhull_points_data);
+
+    orgQhull::Qhull qhull;
+    qhull.runQhull(qhull_points.comment().c_str(), qhull_points.dimension(),
+                   qhull_points.count(), qhull_points.coordinates(),
+                   "d Qbb Qt");
+
+    orgQhull::QhullFacetList facets = qhull.facetList();
+    triangle_mesh->vertices_ = points; // Keep the original 3D points
+    triangle_mesh->triangles_.resize(facets.count());
+
+    int tidx = 0;
+    for (orgQhull::QhullFacetList::iterator it = facets.begin();
+         it != facets.end(); ++it) {
+        if (!(*it).isGood()) continue;
+
+        orgQhull::QhullFacet f = *it;
+        orgQhull::QhullVertexSet vSet = f.vertices();
+        std::array<int, 3> triangle_indices;
+        int tri_subscript = 0;
+        for (orgQhull::QhullVertexSet::iterator vIt = vSet.begin();
+             vIt != vSet.end(); ++vIt) {
+            orgQhull::QhullVertex v = *vIt;
+            orgQhull::QhullPoint p = v.point();
+
+            int vidx = p.id();
+            triangle_indices[tri_subscript] = vidx;
+            tri_subscript++;
+        }
+        triangle_mesh->triangles_[tidx] = Eigen::Vector3i(triangle_indices[0], triangle_indices[1], triangle_indices[2]);
+        tidx++;
+    }
+
+    return triangle_mesh;
 }

@@ -27,6 +27,11 @@
 #include <Eigen/Core>
 #include <sophus/se3.hpp>
 #include <opencv2/opencv.hpp>
+#include "Map/Map.h"
+
+#include "open3d/Open3D.h"
+#include "open3d/geometry/Qhull.h"
+#include "open3d/geometry/TetraMesh.h"
 
 /*
  * Computes the cosine of the parallax angle between 2 rays
@@ -58,8 +63,43 @@ float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2);
 Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12);
 
 /*
+ * Extract the 3D positions as a vector of the entire set of mapPoints
+ */
+std::vector<Eigen::Vector3d> extractPositions(const std::vector<std::shared_ptr<MapPoint>>& mapPoints);
+
+/*
+ * Function to convert std::vector<Eigen::Vector3d> to open3d::geometry::PointCloud
+ */
+std::shared_ptr<open3d::geometry::PointCloud> convertToOpen3DPointCloud(const std::vector<Eigen::Vector3d>& positions);
+
+/*
  * Computes cotangent value givem 3 vertex 
  */
 double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eigen::Vector3d &v2);
+
+/*
+ * Computes edge weights cotangent values as an unordered map
+ */
+std::unordered_map<Eigen::Vector2i, double, open3d::utility::hash_eigen<Eigen::Vector2i>> 
+ComputeEdgeWeightsCot(
+        std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
+        double min_weight);
+
+/*
+ * Create a indexes map between two pairs of 3d vectors 
+ */
+std::map<size_t, size_t> createVectorMap(const std::vector<Eigen::Vector3d>& vertices, const std::vector<Eigen::Vector3d>& positions, double precision = 1e-6);
+
+/*
+ * Create a 3D mesh using 2D Delaunay algorithm and adding the z coordinate
+ */
+std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
+        const std::vector<Eigen::Vector3d> &points);
+/*
+ * Get ordered indexes
+ */
+static inline Eigen::Vector2i GetOrderedEdge(int vidx0, int vidx1) {
+        return Eigen::Vector2i(std::min(vidx0, vidx1), std::max(vidx0, vidx1));
+}
 
 #endif //SLAM_GEOMETRY_H

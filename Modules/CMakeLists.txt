@@ -5,6 +5,14 @@ cmake_minimum_required(VERSION 3.5)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(OpenCV 4 REQUIRED)
 find_package(Pangolin REQUIRED)
+find_package(Open3D REQUIRED)
+find_package(Qhull REQUIRED)
+
+add_definitions(-DCGAL_USE_BASIC_VIEWER -DQT_NO_KEYWORDS)
+
+if(NOT Open3D_FOUND)
+    message(FATAL_ERROR "Open3D not found, please use -DCMAKE_INSTALL_PREFIX=open3d_install_dir")
+endif()
 
 # Set the name of the Library
 set(LIBRARY_NAME slam)
@@ -56,7 +64,9 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${EIGEN3_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/Thirdparty/Sophus
                     ${CMAKE_SOURCE_DIR}/Thirdparty/g2o
-                    ${Pangolin_INCLUDE_DIRS})
+                    ${Pangolin_INCLUDE_DIRS}
+                    ${Open3D_INCLUDE_DIRS}
+                    ${CMAKE_SOURCE_DIR}/Thirdparty/Qhull)
 
 # Add the library
 add_library(${LIBRARY_NAME} SHARED
@@ -68,6 +78,11 @@ target_link_libraries(${LIBRARY_NAME}
                       ${OpenCV_LIBS}
                       ${EIGEN3_LIBS}
                       ${Pangolin_LIBRARIES}
+                      ${Open3D_LIBRARIES}
                       ${CMAKE_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o_core.so
                       ${CMAKE_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o_stuff.so
-                      ${CMAKE_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o_types_sba.so)
+                      ${CMAKE_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o_types_sba.so
+                      ${CMAKE_SOURCE_DIR}/Thirdparty/Qhull/build/libqhullcpp.a
+                      ${CMAKE_SOURCE_DIR}/Thirdparty/Qhull/build/libqhull_r.so)
+
+
