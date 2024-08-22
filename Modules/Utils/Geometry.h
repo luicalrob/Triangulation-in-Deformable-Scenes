@@ -52,6 +52,9 @@ void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, c
 void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
                  const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
 
+void triangulateBerkeley(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
+                         Frame &F1, Frame &F2,
+                         Eigen::Vector3f& point1, Eigen::Vector3f& point2);
 /*
  * Squared reprojection error
  */
@@ -101,5 +104,7 @@ std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
 static inline Eigen::Vector2i GetOrderedEdge(int vidx0, int vidx1) {
         return Eigen::Vector2i(std::min(vidx0, vidx1), std::max(vidx0, vidx1));
 }
+
+Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &p3D1, const Eigen::Vector3f &rayOrigin, const Eigen::Vector3f &rayDir);
 
 #endif //SLAM_GEOMETRY_H

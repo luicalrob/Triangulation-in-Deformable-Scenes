@@ -52,6 +52,7 @@ void MapVisualizer::update() {
 
     drawMapPoints();
     drawKeyFrames();
+    drawRays();
     drawCurrentPose();
 
     pangolin::FinishFrame();
@@ -64,7 +65,7 @@ void MapVisualizer::updateCurrentPose(Sophus::SE3f &currPose) {
 void MapVisualizer::drawMapPoints() {
     auto mapPoints = pMap_->getMapPoints();
 
-    glPointSize(2.5);
+    glPointSize(6);
     glBegin(GL_POINTS);
     //glColor3f(0.0,0.0,0.0);
 
@@ -77,6 +78,43 @@ void MapVisualizer::drawMapPoints() {
             glColor3f(0.0,0.0,0.0);
         }
         glVertex3f(pos(0),pos(1),pos(2));
+    }
+
+    glEnd();
+}
+
+void MapVisualizer::drawRays() {
+    auto keyFrames = pMap_->getKeyFrames();
+
+    glLineWidth(0.5);
+    glBegin(GL_LINES);
+
+    for(auto kf : keyFrames){
+        auto kps = kf.second->getKeyPoints();   
+        if(kf.second->getId()%2 == 0){
+            glColor3f(1.0f,0.0f,0.0f);
+        }
+        else{
+            glColor3f(0.0f,0.0f,1.0f);
+        }
+
+        Sophus::SE3f Twc = kf.second->getPose().inverse();
+        Eigen::Vector3f cameraPos = Twc.translation();    
+
+        std::shared_ptr<CameraModel> calib = kf.second->getCalibration();
+
+        for (auto& kp : kps) {
+            if (kp.pt.x <= 0 || kp.pt.y <= 0) continue;
+
+            Eigen::Vector3f xn = calib->unproject(kp.pt).normalized();
+
+            Eigen::Vector3f xnWorld = Twc.so3() * xn;
+
+            Eigen::Vector3f endPoint = cameraPos + xnWorld * 10.0f;
+
+            glVertex3f(cameraPos(0), cameraPos(1), cameraPos(2));  // Start point (camera position)
+            glVertex3f(endPoint(0), endPoint(1), endPoint(2));      // End point (in direction of keypoint)
+        }
     }
 
     glEnd();

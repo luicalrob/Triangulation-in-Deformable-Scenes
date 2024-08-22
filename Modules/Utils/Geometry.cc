@@ -67,6 +67,7 @@ void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
 
     Eigen::Matrix<float,2,3> A = M.transpose() * (Eigen::Matrix3f::Identity() - t*t.transpose());
     Eigen::JacobiSVD<Eigen::Matrix<float,2,3>> svd(A, Eigen::ComputeFullV);
+    // std::cout << "A:" << A << "\n";
     Eigen::Vector3f n = svd.matrixV().col(1);
 
     Eigen::Vector3f m0_ = m0 - (m0.dot(n)) * n;
@@ -79,10 +80,16 @@ void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
     float lambda1 = z.dot(T21.translation().cross(m0_))/(z.squaredNorm());
     Eigen::Vector3f p3D2 = lambda1 * m1;
 
-    x3D_1 = T2w.inverse() * p3D1;
-    //std::cout << "x3D_1: x:" << x3D_1.x() << " y: " << x3D_1.y() << " z: " << x3D_1.z() << "\n";
-    x3D_2 = T2w.inverse() * p3D2;
-    //std::cout << "x3D_2: x:" << x3D_2.x() << " y: " << x3D_2.y() << " z: " << x3D_2.z() << "\n";
+    Eigen::Vector3f x3D_w = T2w.inverse() * p3D1;
+    // std::cout << "x3D_1: x:" << x3D_w.x() << " y: " << x3D_w.y() << " z: " << x3D_w.z() << "\n";
+    Eigen::Vector3f x3D_w_test = T2w.inverse() * p3D2;
+    // std::cout << "x3D_2: x:" << x3D_w_test.x() << " y: " << x3D_w_test.y() << " z: " << x3D_w_test.z() << "\n";
+
+    // point, rayOrigin, rayDir
+    x3D_1 = x3D_w;
+    x3D_2 = x3D_w_test;
+    // x3D_1 = findClosestPointOnRay(x3D_w, T1w.translation(), T1w.rotationMatrix() * xn1);
+    // x3D_2 = findClosestPointOnRay(x3D_w_test, T2w.translation(), T2w.rotationMatrix() * xn2);
 }
 
 void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
@@ -98,6 +105,8 @@ void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2
 
     Eigen::Matrix<float,2,3> A = M.transpose() * (Eigen::Matrix3f::Identity() - t*t.transpose());
     Eigen::JacobiSVD<Eigen::Matrix<float,2,3>> svd(A, Eigen::ComputeFullV);
+    std::cout << "A:" << A << "\n";
+
     Eigen::Vector3f n = svd.matrixV().col(1);
 
     Eigen::Vector3f m0_ = m0 - (m0.dot(n)) * n;
@@ -111,9 +120,85 @@ void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2
     Eigen::Vector3f p3D2 = lambda1 * m1_;
 
     x3D_1 = T2w.inverse() * p3D1;
-    // std::cout << "x3D_1: x:" << x3D_1.x() << " y: " << x3D_1.y() << " z: " << x3D_1.z() << "\n";
+    std::cout << "x3D_1: x:" << x3D_1.x() << " y: " << x3D_1.y() << " z: " << x3D_1.z() << "\n";
     x3D_2 = T2w.inverse() * p3D2; // same 3D point
-    // std::cout << "x3D_2: x:" << x3D_2.x() << " y: " << x3D_2.y() << " z: " << x3D_2.z() << "\n";
+    std::cout << "x3D_2: x:" << x3D_2.x() << " y: " << x3D_2.y() << " z: " << x3D_2.z() << "\n";
+}
+
+void triangulateBerkeley(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
+                        Frame &F1, Frame &F2,
+                        Eigen::Vector3f& point1, Eigen::Vector3f& point2) {
+    // Retrieve intrinsic camera matrices for F1 and F2
+    Eigen::Matrix3f K1 = F1.getCalibration()->getCalibrationMatrix();
+    Eigen::Matrix3f K2 = F2.getCalibration()->getCalibrationMatrix();
+
+    // Retrieve the poses (Tcw) of the frames F1 and F2, where Tcw is the transformation
+    // from world coordinates to camera coordinates.
+    Sophus::SE3f T1w = F1.getPose();
+    Sophus::SE3f T2w = F2.getPose();
+
+    // Compute the projection matrices P1 and P2
+    // Extract the rotation and translation from Tcw
+    Eigen::Matrix3f R1w = T1w.rotationMatrix();
+    Eigen::Vector3f t1w = T1w.translation();
+
+    Eigen::Matrix3f R2w = T2w.rotationMatrix();
+    Eigen::Vector3f t2w = T2w.translation();
+
+    // std::cout << "R1w:" << R1w << "\n";
+    // std::cout << "t1w:" << t1w << "\n";
+    // std::cout << "R1w:" << R2w << "\n";
+    // std::cout << "t1w:" << t2w << "\n";
+    // std::cout << "K1:" << K1 << "\n";
+    // std::cout << "K2:" << K2 << "\n";
+
+    // std::cout << "xn1 u:" << xn1[0] << "\n";
+    // std::cout << "xn1 v:" << xn1[1] << "\n";
+    // std::cout << "xn2 u:" << xn2[0] << "\n";
+    // std::cout << "xn2 v:" << xn2[1] << "\n";
+
+    // Construct the 3x4 projection matrices
+    Eigen::Matrix<float, 3, 4> P1;
+    P1.block<3,3>(0,0) = R1w;
+    P1.block<3,1>(0,3) = t1w;
+    P1 = K1 * P1;  // P1 = K1 * [R1 | t1]
+
+    Eigen::Matrix<float, 3, 4> P2;
+    P2.block<3,3>(0,0) = R2w;
+    P2.block<3,1>(0,3) = t2w;
+    P2 = K2 * P2;  // P2 = K2 * [R2 | t2]
+    
+    // Prepare matrix A for triangulation
+    Eigen::MatrixXf A(4, 4);
+
+    P1 /= P1.norm();
+    P2 /= P2.norm();
+
+    Eigen::Vector3f m0 = xn1.normalized();
+    Eigen::Vector3f m1 = xn2.normalized();
+
+    // Fill A with the rows corresponding to each view
+    A.row(0) = m0[0] * P1.row(2) - P1.row(0);
+    A.row(1) = m0[1] * P1.row(2) - P1.row(1);
+    A.row(2) = m1[0] * P2.row(2) - P2.row(0);
+    A.row(3) = m1[1] * P2.row(2) - P2.row(1);
+
+    std::cout << "A:" << A << "\n";
+
+
+    // Compute the SVD of A
+    Eigen::JacobiSVD<Eigen::MatrixXf> svd;
+    svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeFullV);
+
+    // Check if the SVD was successful
+    if (!svd.computeV()) {
+         std::cerr << "Failed to compute a singular value decomposition of A matrix.";
+        return;
+    }
+
+    // The 3D point is the eigenvector corresponding to the minimum eigenvalue.
+    point1 = (svd.matrixV().block(0, 3, 3, 1) / svd.matrixV()(3,3)).cast<float>();
+    point2 = point1;
 }
 
 float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2){
@@ -271,4 +356,20 @@ std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
     }
 
     return triangle_mesh;
+}
+
+Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &point, const Eigen::Vector3f &rayOrigin, const Eigen::Vector3f &rayDir) {
+    Eigen::Vector3f originToPoint = point - rayOrigin;
+    
+    // Calculate the projection of the originToPoint vector onto the ray direction vector
+    float t = rayDir.dot(originToPoint) / rayDir.dot(rayDir);
+    
+    // Ensure that t >= 0, since we're only interested in points on the ray (not behind the origin)
+    if (t < 0.0f) {
+        return rayOrigin;
+    }
+    
+    Eigen::Vector3f closestPoint = rayOrigin + t * rayDir;
+    
+    return closestPoint;
 }

@@ -49,6 +49,11 @@ public:
     cv::KeyPoint getKeyPoint(size_t idx);
 
     /*
+     * Gets all the KeyPoints of the Frame
+     */
+    std::vector<cv::KeyPoint>& getKeyPoints();
+
+    /*
      * Gets all the MapPoint matches of the KeyFrame. They are associated with the KeyPoint at the same index
      */
     std::vector<std::shared_ptr<MapPoint>>& getMapPoints();

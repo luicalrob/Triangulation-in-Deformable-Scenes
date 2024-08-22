@@ -68,6 +68,10 @@ cv::KeyPoint KeyFrame::getKeyPoint(size_t idx) {
     return vKeys_[idx];
 }
 
+std::vector<cv::KeyPoint>& KeyFrame::getKeyPoints() {
+    return vKeys_;
+}
+
 std::vector<std::shared_ptr<MapPoint> > & KeyFrame::getMapPoints() {
     return vMapPoints_;
 }

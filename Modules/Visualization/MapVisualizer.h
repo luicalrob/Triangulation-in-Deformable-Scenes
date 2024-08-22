@@ -50,6 +50,7 @@ private:
 
     void drawMapPoints();
     void drawKeyFrames();
+    void drawRays();
     void drawCurrentPose();
 
     pangolin::View d_cam;

@@ -64,6 +64,9 @@ public:
      * Implementation of the jacobian matrix of the pinhole unprojection function
      */
     void unprojectJac(const Eigen::Vector2f& p2D, Eigen::Matrix<float,3,2>& Jac);
+
+
+    Eigen::Matrix3f getCalibrationMatrix() const;
 };
 
 

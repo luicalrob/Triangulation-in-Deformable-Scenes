@@ -64,3 +64,12 @@ void PinHole::unprojectJac(const Eigen::Vector2f& p2D, Eigen::Matrix<float,3,2>&
     Jac(2,0) = 0.f;
     Jac(2,1) = 0.f;
 }
+
+Eigen::Matrix3f PinHole::getCalibrationMatrix() const {
+    Eigen::Matrix3f K = Eigen::Matrix3f::Identity();
+    K(0, 0) = fx;
+    K(0, 2) = cx;
+    K(1, 1) = fy;
+    K(1, 2) = cy;
+    return K;
+}
