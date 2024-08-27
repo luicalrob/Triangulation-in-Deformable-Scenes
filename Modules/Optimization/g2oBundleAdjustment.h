@@ -47,6 +47,9 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
  */
 void arapOptimization(Map* pMap);
 
+
+void arapOpen3DOptimization(Map* pMap);
+
 /*
  * Performs a As-Rigid-As-Possible optimization joined with a bundle adjustment optimization (optimizes 3D poses of the cameras and 3D points positions in the space)
  */

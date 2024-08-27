@@ -33,6 +33,7 @@
 #include "open3d/geometry/Qhull.h"
 #include "open3d/geometry/TetraMesh.h"
 
+#include <random> 
 
 
 using namespace std;
@@ -478,8 +479,8 @@ void arapOptimization(Map* pMap){
     // Add ARAP edges
     for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) { // [DUDA] deberia hacerlo diferente?
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
-            KeyFrame_ pKF1 = k1->second;
-            KeyFrame_ pKF2 = k2->second;
+            KeyFrame_ pKF1 = k2->second;
+            KeyFrame_ pKF2 = k1->second;
             std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
@@ -491,38 +492,14 @@ void arapOptimization(Map* pMap){
             std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
             std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
 
-            // std::shared_ptr<open3d::geometry::PointCloud> cloud1 = convertToOpen3DPointCloud(v1Positions);
-            // std::shared_ptr<open3d::geometry::PointCloud> cloud2 = convertToOpen3DPointCloud(v2Positions);
-
-            std::vector<double> radii = {0.15, 0.15, 0.15};
-            double alpha = 0.1;
-
             // OPEN3D LIBRARY
-            std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh1;
             std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
-            std::vector<size_t> pt_map_1;
-            std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh2;
-            std::shared_ptr<open3d::geometry::TriangleMesh> mesh2;
-            std::vector<size_t> pt_map_2;
 
             std::vector<Eigen::Matrix3d> Rs(v1Positions.size(), Eigen::Matrix3d::Identity());
 
             // Perform Delaunay Reconstruction
             mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
             // mesh2 = ComputeDelaunayTriangulation3D(v2Positions);
-
-            // // Perform Alpha Reconstruction
-            // std::tie(tetra_mesh1, pt_map_1) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
-            // std::tie(tetra_mesh2, pt_map_2) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v2Positions);
-            // mesh1 = open3d::geometry::TriangleMesh::CreateFromPointCloudAlphaShape(*cloud1, alpha, tetra_mesh1, &pt_map_1);
-            // mesh2 = open3d::geometry::TriangleMesh::CreateFromPointCloudAlphaShape(*cloud2, alpha, tetra_mesh2, &pt_map_2);
-            
-            // Perform Ball Pivoting Reconstruction
-            // cloud1->EstimateNormals();
-            // cloud2->EstimateNormals();
-            // std::shared_ptr<open3d::geometry::TriangleMesh> mesh1 = open3d::geometry::TriangleMesh::CreateFromPointCloudBallPivoting(*cloud1, radii);
-            // std::shared_ptr<open3d::geometry::TriangleMesh> mesh2 = open3d::geometry::TriangleMesh::CreateFromPointCloudBallPivoting(*cloud2, radii);
-
 
             auto posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
             // auto indexMap2 = createVectorMap(mesh2->vertices_, v2Positions);
@@ -716,6 +693,83 @@ void arapOptimization(Map* pMap){
         VertexRotationMatrix* mRot = static_cast<VertexRotationMatrix*>(optimizer.vertex(pairRotationMatrixId.second));
         Eigen::Matrix3d Rotation = mRot->estimate();
         // std::cout << "Rotation matrix:\n" << Rotation << std::endl;
+    }
+}
+
+void arapOpen3DOptimization(Map* pMap){
+    unordered_map<KeyFrame_,size_t> mKeyFrameId;
+    unordered_map<MapPoint_,size_t> mMapPointId;
+    unordered_map<RotationMatrix_,size_t> mRotId;
+
+    //Get all KeyFrames from map
+    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(0, 9);
+
+    for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) { // [DUDA] deberia hacerlo diferente?
+        for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
+            KeyFrame_ pKF1 = k2->second;
+            KeyFrame_ pKF2 = k1->second;
+            std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
+
+            vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
+            vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
+            // [DUDA] Primero asumire que todos son diferentes, deberia fusionar una vez hecha la optimización si quedan muy juntos??
+            
+
+            // MESH CREATION
+            std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
+            std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
+
+            std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
+
+            // Perform Delaunay Reconstruction
+            mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
+
+            auto posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
+            std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
+
+            std::map<size_t, size_t> invertedPosIndexes1;
+            for (const auto& pair : posIndexes1) {
+                invertedPosIndexes1[pair.second] = pair.first;
+            } 
+
+            std::vector<int> constraint_vertex_indices(10);  // Initialize vector with 200 elements
+
+            for (int i = 0; i < 10; ++i) {
+                //constraint_vertex_indices[i] = distrib(gen);  // Assign values from 0 to 199
+                constraint_vertex_indices[i] = i;
+            }
+
+            std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh1->DeformAsRigidAsPossible(
+                constraint_vertex_indices, v2Positions, 500,  // max_iter = 50
+                open3d::geometry::TriangleMesh::DeformAsRigidAsPossibleEnergy::Smoothed, 0.01
+            );
+            // std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh1->DeformAsRigidAsPossible();
+
+            for (size_t i = 0; i < v1MPs.size(); i++) {
+                MapPoint_ pMPi1 = v1MPs[i];
+                MapPoint_ pMPi2 = v2MPs[i];
+
+                auto it1 = invertedPosIndexes1.find(i);
+                size_t meshIndex1 = 0;
+                if (it1 != invertedPosIndexes1.end()) {
+                    meshIndex1 = it1->second;
+                    // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
+                    // std::cout << "point mesh: (" << mesh1->vertices_[meshIndex1][0] << ", " << mesh1->vertices_[meshIndex1][1] << ", " << mesh1->vertices_[meshIndex1][2] << ")\n";
+                    // std::cout << "index: (" << i << ")\n";
+                } else {
+                    continue;
+                }
+
+                Eigen::Vector3f p3D1 = mesh1->vertices_[meshIndex1].cast<float>();
+                Eigen::Vector3f p3D2 = deformed_mesh->vertices_[meshIndex1].cast<float>();
+                pMPi1->setWorldPosition(p3D1);
+                pMPi2->setWorldPosition(p3D2);
+            }
+        }
     }
 }
 

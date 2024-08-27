@@ -251,7 +251,7 @@ public:
         // _error = weight * squaredNormComponents;
         // std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
 
-        _error[0] = weight * energy * 2000;
+        _error[0] = weight * energy *1000;
         // std::cout << "ARAP error: " << _error[0] << "\n" << std::endl;        
     }
 

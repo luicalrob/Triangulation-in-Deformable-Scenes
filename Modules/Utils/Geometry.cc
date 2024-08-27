@@ -128,76 +128,62 @@ void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2
 void triangulateBerkeley(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
                         Frame &F1, Frame &F2,
                         Eigen::Vector3f& point1, Eigen::Vector3f& point2) {
-    // Retrieve intrinsic camera matrices for F1 and F2
     Eigen::Matrix3f K1 = F1.getCalibration()->getCalibrationMatrix();
     Eigen::Matrix3f K2 = F2.getCalibration()->getCalibrationMatrix();
 
-    // Retrieve the poses (Tcw) of the frames F1 and F2, where Tcw is the transformation
-    // from world coordinates to camera coordinates.
     Sophus::SE3f T1w = F1.getPose();
     Sophus::SE3f T2w = F2.getPose();
 
     // Compute the projection matrices P1 and P2
-    // Extract the rotation and translation from Tcw
     Eigen::Matrix3f R1w = T1w.rotationMatrix();
     Eigen::Vector3f t1w = T1w.translation();
 
     Eigen::Matrix3f R2w = T2w.rotationMatrix();
     Eigen::Vector3f t2w = T2w.translation();
 
-    // std::cout << "R1w:" << R1w << "\n";
-    // std::cout << "t1w:" << t1w << "\n";
-    // std::cout << "R1w:" << R2w << "\n";
-    // std::cout << "t1w:" << t2w << "\n";
-    // std::cout << "K1:" << K1 << "\n";
-    // std::cout << "K2:" << K2 << "\n";
+    // Convert rotation matrices and translation vectors to cv::Mat
+    cv::Mat Rcw1(3, 3, CV_32F, R1w.data());
+    cv::Mat tcw1(3, 1, CV_32F, t1w.data());
+    cv::Mat Tcw1(3, 4, CV_32F);
+    Rcw1.copyTo(Tcw1.colRange(0, 3));
+    tcw1.copyTo(Tcw1.col(3));
 
-    // std::cout << "xn1 u:" << xn1[0] << "\n";
-    // std::cout << "xn1 v:" << xn1[1] << "\n";
-    // std::cout << "xn2 u:" << xn2[0] << "\n";
-    // std::cout << "xn2 v:" << xn2[1] << "\n";
+    cv::Mat Rcw2(3, 3, CV_32F, R2w.data());
+    cv::Mat tcw2(3, 1, CV_32F, t2w.data());
+    cv::Mat Tcw2(3, 4, CV_32F);
+    Rcw2.copyTo(Tcw2.colRange(0, 3));
+    tcw2.copyTo(Tcw2.col(3));
 
-    // Construct the 3x4 projection matrices
-    Eigen::Matrix<float, 3, 4> P1;
-    P1.block<3,3>(0,0) = R1w;
-    P1.block<3,1>(0,3) = t1w;
-    P1 = K1 * P1;  // P1 = K1 * [R1 | t1]
+    cv::Mat xn1_cv(3, 1, CV_32F, const_cast<float*>(xn1.data()));
+    cv::Mat xn2_cv(3, 1, CV_32F, const_cast<float*>(xn2.data()));
 
-    Eigen::Matrix<float, 3, 4> P2;
-    P2.block<3,3>(0,0) = R2w;
-    P2.block<3,1>(0,3) = t2w;
-    P2 = K2 * P2;  // P2 = K2 * [R2 | t2]
-    
-    // Prepare matrix A for triangulation
-    Eigen::MatrixXf A(4, 4);
+    cv::Mat A(4,4,CV_32F);
+    A.row(0) = xn1_cv.at<float>(0)*Tcw1.row(2)-Tcw1.row(0);
+    A.row(1) = xn1_cv.at<float>(1)*Tcw1.row(2)-Tcw1.row(1);
+    A.row(2) = xn2_cv.at<float>(0)*Tcw2.row(2)-Tcw2.row(0);
+    A.row(3) = xn2_cv.at<float>(1)*Tcw2.row(2)-Tcw2.row(1);
 
-    P1 /= P1.norm();
-    P2 /= P2.norm();
-
-    Eigen::Vector3f m0 = xn1.normalized();
-    Eigen::Vector3f m1 = xn2.normalized();
-
-    // Fill A with the rows corresponding to each view
-    A.row(0) = m0[0] * P1.row(2) - P1.row(0);
-    A.row(1) = m0[1] * P1.row(2) - P1.row(1);
-    A.row(2) = m1[0] * P2.row(2) - P2.row(0);
-    A.row(3) = m1[1] * P2.row(2) - P2.row(1);
-
-    std::cout << "A:" << A << "\n";
-
+    // std::cout << "xn2:" << xn2 << "\n";
+    // std::cout << "Rcw2:" << Rcw2 << "\n";
+    // std::cout << "tcw2:" << tcw2 << "\n";
+    // std::cout << "Tcw2:" << Tcw2 << "\n";
 
     // Compute the SVD of A
-    Eigen::JacobiSVD<Eigen::MatrixXf> svd;
-    svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeFullV);
+    cv::Mat x3D;
+    cv::Mat w,u,vt;
+    cv::SVD::compute(A,w,u,vt,cv::SVD::FULL_UV);
 
-    // Check if the SVD was successful
-    if (!svd.computeV()) {
-         std::cerr << "Failed to compute a singular value decomposition of A matrix.";
-        return;
-    }
+    x3D = vt.row(3).t();
+    if(x3D.at<float>(3)==0)
+    return;
 
-    // The 3D point is the eigenvector corresponding to the minimum eigenvalue.
-    point1 = (svd.matrixV().block(0, 3, 3, 1) / svd.matrixV()(3,3)).cast<float>();
+    // Euclidean coordinates
+    x3D = x3D.rowRange(0,3)/x3D.at<float>(3);
+    // std::cout << "x3D:" << x3D << "\n";
+
+    point1[0] = x3D.at<float>(0, 0); // x-coordinate
+    point1[1] = x3D.at<float>(1, 0); // y-coordinate
+    point1[2] = x3D.at<float>(2, 0); // z-coordinate
     point2 = point1;
 }
 

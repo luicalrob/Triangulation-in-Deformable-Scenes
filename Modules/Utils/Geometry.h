@@ -53,8 +53,8 @@ void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2
                  const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
 
 void triangulateBerkeley(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
-                         Frame &F1, Frame &F2,
-                         Eigen::Vector3f& point1, Eigen::Vector3f& point2);
+                        Frame &F1, Frame &F2,
+                        Eigen::Vector3f& point1, Eigen::Vector3f& point2);
 /*
  * Squared reprojection error
  */

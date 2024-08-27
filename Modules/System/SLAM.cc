@@ -213,14 +213,18 @@ void SLAM::mapping() {
         // if(vMatches[i] != -1){
         auto x1 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
         auto x2 = currKeyFrame_->getKeyPoint(i).pt;
+        // std::cout << "x1 x:" << x1.x << " y: " << x1.y << "\n";
+        // std::cout << "x2 x:" << x2.x << " y: " << x2.y << "\n";
 
         Eigen::Vector3f xn1 = prevCalibration_->unproject(x1).normalized();
         Eigen::Vector3f xn2 = currCalibration_->unproject(x2).normalized();
+        // std::cout << "xn1 x:" << xn1.x << " y: " << xn1.y << "\n";
+        // std::cout << "xn2 x:" << xn2 <<"\n";
         // Eigen::Vector3f x3D;
         Eigen::Vector3f x3D_1;
         Eigen::Vector3f x3D_2;
 
-        // triangulateBerkeley(xn1, xn2, prevFrame_, currFrame_, x3D_1, x3D_2);
+        //triangulateBerkeley(xn1, xn2, prevFrame_, currFrame_, x3D_1, x3D_2);
         triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         // triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         // triangulate(xn1, xn2, T1w, T2w, x3D);
@@ -264,6 +268,7 @@ void SLAM::mapping() {
 
         // std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
         std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
+        // std::shared_ptr<MapPoint> map_point_1(new MapPoint(originalPoints_[i]));
         std::shared_ptr<MapPoint> map_point_2(new MapPoint(x3D_2));
 
         // pMap_->insertMapPoint(map_point);
@@ -308,6 +313,7 @@ void SLAM::mapping() {
 
     // correct error
     arapOptimization(pMap_.get());
+    //arapOpen3DOptimization(pMap_.get());
     //arapBundleAdjustment(pMap_.get());
     std::cout << "Bundle adjustment completed... fisrt 15 iterations " << std::endl;
 
@@ -387,12 +393,12 @@ void SLAM::measureErrors() {
         total_error_moved += error_magnitude_moved;
         total_error += error_magnitude_moved + error_magnitude_original;
 
-        std::cout << "\nError for point: " << mapPoint1->getId() << " and " << mapPoint2->getId() << "\n";
-        std::cout << "Position " << insertedIndexes_[j] << "\n";
-        std::cout << "Mappoint x: " << opt_original_position.x() << " y: " << opt_original_position.y() << " z: " << opt_original_position.z() << std::endl;
-        std::cout << "point x: " << original_position.x() << " y: " << original_position.y() << " z: " << original_position.z() << std::endl;
-        std::cout << "moved Mappoint x: " << opt_moved_position.x() << " y: " << opt_moved_position.y() << " z: " << opt_moved_position.z() << std::endl;
-        std::cout << "moved point x: " << moved_position.x() << " y: " << moved_position.y() << " z: " << moved_position.z() << std::endl;
+        // std::cout << "\nError for point: " << mapPoint1->getId() << " and " << mapPoint2->getId() << "\n";
+        // std::cout << "Position " << insertedIndexes_[j] << "\n";
+        // std::cout << "Mappoint x: " << opt_original_position.x() << " y: " << opt_original_position.y() << " z: " << opt_original_position.z() << std::endl;
+        // std::cout << "point x: " << original_position.x() << " y: " << original_position.y() << " z: " << original_position.z() << std::endl;
+        // std::cout << "moved Mappoint x: " << opt_moved_position.x() << " y: " << opt_moved_position.y() << " z: " << opt_moved_position.z() << std::endl;
+        // std::cout << "moved point x: " << moved_position.x() << " y: " << moved_position.y() << " z: " << moved_position.z() << std::endl;
         // std::cout << "x: " << point_error.x() << " y: " << point_error.y() << " z: " << point_error.z() << std::endl;
     }
 
