@@ -70,6 +70,19 @@ public:
 
     float getMinCos();
 
+    float getSimulatedRepError();
+
+    float getOptArapWeight();
+    float getOptReprojectionWeight();
+
+    std::string getOptSelection();
+    std::string getTrianSelection();
+
+    int getnOptimizations();
+    int getnOptIterations();
+
+    bool getDrawRaysSelection();
+
 private:
     //Camera parameters
     std::shared_ptr<CameraModel> calibration_;  //Geometric calibration with projection and unprojection functions
@@ -95,6 +108,19 @@ private:
     int nMinCommonObs_;
 
     float fMinCos_;
+
+    float SimulatedRepError_;
+
+    float OptArapWeight_;
+    float OptReprojectionWeight_;
+
+    std::string OptSelection_;
+    std::string TrianSelection_;
+
+    int nOptimizations_;
+    int nOptIterations_;
+
+    bool drawRaysSelection_;
 };
 
 

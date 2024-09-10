@@ -83,6 +83,26 @@ Settings::Settings(const std::string& configFile) {
 
     nMinCommonObs_ = fSettings["Map.minObs"];
     fMinCos_ = fSettings["Triangulation.minCos"];
+
+    SimulatedRepError_ = fSettings["Keypoints.RepError"];
+
+    OptArapWeight_ = fSettings["Optimization.arap"];
+    OptReprojectionWeight_ = fSettings["Optimization.reprojection"];
+
+    fSettings["Optimization.selection"] >> OptSelection_;
+    fSettings["Triangulation.selection"] >> TrianSelection_;
+
+    nOptimizations_ = fSettings["Optimization.numberOfOptimizations"];
+    nOptIterations_ = fSettings["Optimization.numberOfIterations"];
+
+    std::string drawRaysString;
+    fSettings["MapVisualizer.drawRays"] >> drawRaysString;
+
+    if (drawRaysString == "true") {
+        drawRaysSelection_ = true;
+    } else {
+        drawRaysSelection_ = false;
+    }
 }
 
 ostream &operator<<(std::ostream& output, const Settings& settings){
@@ -183,4 +203,36 @@ int Settings::getMinCommonObs(){
 
 float Settings::getMinCos(){
     return fMinCos_;
+}
+
+float Settings::getSimulatedRepError(){
+    return SimulatedRepError_;
+}
+
+float Settings::getOptArapWeight(){
+    return OptArapWeight_;
+}
+
+float Settings::getOptReprojectionWeight(){
+    return OptReprojectionWeight_;
+}
+
+std::string Settings::getOptSelection(){
+    return OptSelection_;
+}
+
+std::string Settings::getTrianSelection(){
+    return TrianSelection_;
+}
+
+int Settings::getnOptimizations(){
+    return nOptimizations_;
+}
+
+int Settings::getnOptIterations(){
+    return nOptIterations_;
+}
+
+bool Settings::getDrawRaysSelection(){
+    return drawRaysSelection_;
 }

@@ -22,8 +22,12 @@
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
 
+#include <memory>
 
 using namespace std;
+typedef shared_ptr<MapPoint> MapPoint_;
+typedef shared_ptr<KeyFrame> KeyFrame_;
+typedef shared_ptr<Eigen::Matrix3d> RotationMatrix_;
 
 SLAM::SLAM(const std::string &settingsFile) {
     //Load settings from file
@@ -47,6 +51,19 @@ SLAM::SLAM(const std::string &settingsFile) {
 
     prevCalibration_ = prevFrame_.getCalibration();
     currCalibration_ = currFrame_.getCalibration();
+
+    simulatedRepError_ = settings_.getSimulatedRepError();
+
+    arapBalanceWeight_ = settings_.getOptArapWeight();
+    reprojectionBalanceWeight_ = settings_.getOptReprojectionWeight();
+
+    OptSelection_ = settings_.getOptSelection();
+    TrianSelection_ = settings_.getTrianSelection();
+
+    nOptimizations_ = settings_.getnOptimizations();
+    nOptIterations_ = settings_.getnOptIterations();
+
+    drawRaysSelection_ = settings_.getDrawRaysSelection();
 }
 
 
@@ -154,13 +171,13 @@ void SLAM::viusualizeSolution() {
     // visualizer_->drawCurrentFrame(currFrame_);
     // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
     // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    mapVisualizer_->update();
+    mapVisualizer_->update(drawRaysSelection_);
     mapVisualizer_->updateCurrentPose(Tcw_);
 }
 
-void SLAM::createKeyPoints(float reprojErrorDesv) {
+void SLAM::createKeyPoints() {
     std::default_random_engine generator;
-    std::normal_distribution<float> distribution(0.0f, reprojErrorDesv);
+    std::normal_distribution<float> distribution(0.0f, simulatedRepError_);
 
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
@@ -223,10 +240,18 @@ void SLAM::mapping() {
         // Eigen::Vector3f x3D;
         Eigen::Vector3f x3D_1;
         Eigen::Vector3f x3D_2;
+        Eigen::Vector3f x3D_prev;
 
-        //triangulateBerkeley(xn1, xn2, prevFrame_, currFrame_, x3D_1, x3D_2);
-        triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-        // triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+        x3D_prev = originalPoints_[i];
+
+        if (TrianSelection_ == "TwoPoints") {
+            triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+        } else if (TrianSelection_ == "InRaysNearPrevSolution") {
+            triangulateInRaysNearPrevSolution(xn1, xn2, T1w, T2w, x3D_1, x3D_2, x3D_prev);
+        } else {
+            triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+        }
+        //triangulateBerkeley(xn1, xn2, prevFrame_, currFrame_, x3D_1, x3D_2); 
         // triangulate(xn1, xn2, T1w, T2w, x3D);
         // x3D_1 = x3D;
         // x3D_2 = x3D;
@@ -268,7 +293,7 @@ void SLAM::mapping() {
 
         // std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
         std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
-        // std::shared_ptr<MapPoint> map_point_1(new MapPoint(originalPoints_[i]));
+        //std::shared_ptr<MapPoint> map_point_1(new MapPoint(originalPoints_[i]));
         std::shared_ptr<MapPoint> map_point_2(new MapPoint(x3D_2));
 
         // pMap_->insertMapPoint(map_point);
@@ -306,25 +331,47 @@ void SLAM::mapping() {
     cv::namedWindow("Test Window");
     std::cout << "Press esc to continue... " << std::endl;
     while((cv::waitKey(10) & 0xEFFFFF) != 27){
-        mapVisualizer_->update();
+        mapVisualizer_->update(drawRaysSelection_);
     }
 
-    measureErrors();
+
+    measureRelativeErrors();
+    measureAbsoluteErrors();
 
     // correct error
-    arapOptimization(pMap_.get());
-    //arapOpen3DOptimization(pMap_.get());
+    if (OptSelection_ == "open3DArap") {
+        arapOpen3DOptimization(pMap_.get());
+    } else {
+        arapOptimization(pMap_.get(), reprojectionBalanceWeight_, arapBalanceWeight_, nOptIterations_);
+    }
+
     //arapBundleAdjustment(pMap_.get());
-    std::cout << "Bundle adjustment completed... fisrt 15 iterations " << std::endl;
+
+    std::cout << "\nBundle adjustment completed... fisrt 15 iterations " << std::endl;
+
+    if (nOptimizations_ > 1) {
+        for(int i = 1; i < nOptimizations_; i++){ 
+            measureRelativeErrors();
+            measureAbsoluteErrors();
+
+            mapVisualizer_->update(drawRaysSelection_);
+            mapVisualizer_->updateCurrentPose(Tcw_);
+
+            arapOptimization(pMap_.get(), reprojectionBalanceWeight_, arapBalanceWeight_, nOptIterations_);
+            
+            std::cout << "\nBundle adjustment completed... other 15 iterations: (" << i + 1 << " time)" << std::endl;
+        }
+    }
 
     // visualize
     // visualizer_->drawCurrentFrame(currFrame_);
     // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
     // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    mapVisualizer_->update();
+    std::cout << "\ndrawRaysSelection_ HOOOOO" << drawRaysSelection_  << std::endl;
+    mapVisualizer_->update(drawRaysSelection_);
     mapVisualizer_->updateCurrentPose(Tcw_);
 
-    // measureErrors();
+    // measureAbsoluteErrors();
 
     // arapOptimization(pMap_.get());
     // std::cout << "Bundle adjustment completed... second 15 iterations " << std::endl;
@@ -333,12 +380,12 @@ void SLAM::mapping() {
     // // visualizer_->drawCurrentFrame(currFrame_);
     // // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
     // // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    // mapVisualizer_->update();
+    // mapVisualizer_->update(drawRaysSelection_);
     // mapVisualizer_->updateCurrentPose(Tcw_);
 }
 
 
-void SLAM::measureErrors() {
+void SLAM::measureAbsoluteErrors() {
 
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
@@ -350,19 +397,19 @@ void SLAM::measureErrors() {
     Eigen::Vector3f position_error1 = T1w_corrected.translation() - T1w.translation();
     Eigen::Vector3f orientation_error1 = (T1w_corrected.so3().inverse() * T1w.so3()).log();
 
-    std::cout << "\nError in position 1:\n";
-    std::cout << "x: " << position_error1.x() << " y: " << position_error1.y() << " z: " << position_error1.z() << std::endl;
-    std::cout << "Error in orientation 1:\n";
-    std::cout << "x: " << orientation_error1.x() << " y: " << orientation_error1.y() << " z: " << orientation_error1.z() << std::endl;
+    // std::cout << "\nError in position 1:\n";
+    // std::cout << "x: " << position_error1.x() << " y: " << position_error1.y() << " z: " << position_error1.z() << std::endl;
+    // std::cout << "Error in orientation 1:\n";
+    // std::cout << "x: " << orientation_error1.x() << " y: " << orientation_error1.y() << " z: " << orientation_error1.z() << std::endl;
 
     // Show position and orientation errors in pose 2
     Eigen::Vector3f position_error2 = T2w_corrected.translation() - T2w.translation();
     Eigen::Vector3f orientation_error2 = (T2w_corrected.so3().inverse() * T2w.so3()).log();
 
-    std::cout << "\nError in position 2:\n";
-    std::cout << "x: " << position_error2.x() << " y: " << position_error2.y() << " z: " << position_error2.z() << std::endl;
-    std::cout << "Error in orientation 2:\n";
-    std::cout << "x: " << orientation_error2.x() << " y: " << orientation_error2.y() << " z: " << orientation_error2.z() << std::endl;
+    // std::cout << "\nError in position 2:\n";
+    // std::cout << "x: " << position_error2.x() << " y: " << position_error2.y() << " z: " << position_error2.z() << std::endl;
+    // std::cout << "Error in orientation 2:\n";
+    // std::cout << "x: " << orientation_error2.x() << " y: " << orientation_error2.y() << " z: " << orientation_error2.z() << std::endl;
 
     // 3D Error measurement in map points
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
@@ -403,17 +450,19 @@ void SLAM::measureErrors() {
     }
 
     if (point_count > 0) {
+        std::cout << "\n ABSOLUTE MEASUREMENTS: \n";
+
         float average_movement = total_movement / insertedIndexes_.size();
-        std::cout << "\nTotal movement: " << total_movement << std::endl;
+        //std::cout << "\nTotal movement: " << total_movement << std::endl;
         std::cout << "Average movement: " << average_movement << std::endl;
         float average_error_original = total_error_original / insertedIndexes_.size();
-        std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
+        //std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
         std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
         float average_error_moved = total_error_moved / insertedIndexes_.size();
-        std::cout << "\nTotal error in MOVED 3D: " << total_error_moved << std::endl;
+        //std::cout << "\nTotal error in MOVED 3D: " << total_error_moved << std::endl;
         std::cout << "Average error in MOVED 3D: " << average_error_moved << std::endl;
         float average_error = total_error / point_count;
-        std::cout << "\nTotal error in 3D: " << total_error << std::endl;
+        //std::cout << "\nTotal error in 3D: " << total_error << std::endl;
         std::cout << "Average error in 3D: " << average_error << std::endl;
     } else {
         std::cout << "No points to compare." << std::endl;
@@ -423,7 +472,101 @@ void SLAM::measureErrors() {
     // Uncomment for step by step execution (pressing esc key)
     std::cout << "Press esc to continue... " << std::endl;
     while((cv::waitKey(10) & 0xEFFFFF) != 27){
-        mapVisualizer_->update();
+        mapVisualizer_->update(drawRaysSelection_);
+    }
+}
+
+void SLAM::measureRelativeErrors(){
+    std::vector<Eigen::Vector3d> errors;
+    std::vector<double> squaredNormErrors;
+    Eigen::Vector3d meanError = Eigen::Vector3d::Zero();
+    double meanSquaredNormError = 0;
+    
+    size_t validPairs = 0;
+
+    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap_->getKeyFrames();
+
+    std::cout << "\nRELATIVE MEASUREMENTS: \n";
+    for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
+        for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
+            KeyFrame_ pKF1 = k2->second;
+            KeyFrame_ pKF2 = k1->second;
+            std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
+
+            vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
+            vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
+            
+            // MESH CREATION
+            std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
+            std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
+
+            std::shared_ptr<open3d::geometry::TriangleMesh> mesh;
+
+            std::vector<Eigen::Matrix3d> Rs(v1Positions.size(), Eigen::Matrix3d::Identity());
+
+            // Perform Delaunay Reconstruction
+            mesh = ComputeDelaunayTriangulation3D(v1Positions);
+            mesh->ComputeAdjacencyList();
+
+            auto posIndexes = createVectorMap(mesh->vertices_, v1Positions);
+
+            std::map<size_t, size_t> invertedPosIndexes;
+            for (const auto& pair : posIndexes) {
+                invertedPosIndexes[pair.second] = pair.first;
+            } 
+
+            for (size_t i = 0; i < v1MPs.size(); i++) {
+                MapPoint_ pMPi1 = v1MPs[i];
+                MapPoint_ pMPi2 = v2MPs[i];
+                if (!pMPi1) continue;
+                if (!pMPi2) continue;
+
+                auto it = invertedPosIndexes.find(i);
+                size_t meshIndex = 0;
+                if (it != invertedPosIndexes.end()) {
+                    meshIndex = it->second;
+                } else {
+                    continue;
+                }
+
+                if (mesh->adjacency_list_[meshIndex].empty()) continue;
+
+                std::unordered_set<int> jIndexes = mesh->adjacency_list_[meshIndex];
+
+                for (int j : jIndexes) {
+                    Eigen::Vector3d pi1 = v1Positions[i];
+                    Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
+                    Eigen::Vector3d pi2 = v2Positions[i];
+                    Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
+
+                    if (!pi1.allFinite() || !pj1.allFinite() || !pi2.allFinite() || !pj2.allFinite()) continue;
+
+                    Eigen::Vector3d d1 = pi1 - pj1;
+                    Eigen::Vector3d d2 = pi2 - pj2;
+                    Eigen::Vector3d diff = d2 - d1;
+                    double squaredNorm = diff.squaredNorm();
+                    
+                    errors.push_back(diff);   
+                    squaredNormErrors.push_back(squaredNorm);    
+                    meanError += diff;
+                    meanSquaredNormError += squaredNorm;
+                    validPairs++;
+                }
+            }
+
+            if (validPairs > 1) {
+                meanError /= static_cast<double>(validPairs);
+                meanSquaredNormError /= static_cast<double>(validPairs);
+                
+                //std::cout << "\nTotal movement: " << total_movement << std::endl;
+                std::cout << std::fixed << std::setprecision(10);
+                //std::cout << "Average relative error: " << meanError[0] << ", " << meanError[1] << ", " << meanError[2] << std::endl;
+                //std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
+                std::cout << "Average squared norm relative error: " << meanSquaredNormError << std::endl;
+            } else {
+                std::cout << "No points to compare." << std::endl;
+            }
+        }
     }
 }
 

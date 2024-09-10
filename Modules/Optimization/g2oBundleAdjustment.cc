@@ -450,7 +450,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     }
 }
 
-void arapOptimization(Map* pMap){
+void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight, int nOptIterations){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
     unordered_map<RotationMatrix_,size_t> mRotId;
@@ -481,7 +481,7 @@ void arapOptimization(Map* pMap){
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
             KeyFrame_ pKF1 = k2->second;
             KeyFrame_ pKF2 = k1->second;
-            std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
+            std::cout << "\nPair: (" << k1->first << ", " << k2->first<< ")\n";
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
@@ -581,7 +581,7 @@ void arapOptimization(Map* pMap){
 
                 eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                 eKF1->setMeasurement(obs);
-                eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave));
+                eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave) * repBalanceWeight);
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
                 eKF1->setRobustKernel(rk);
@@ -635,13 +635,13 @@ void arapOptimization(Map* pMap){
                 // distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
                 std::unordered_set<int> jIndexes = mesh1->adjacency_list_[meshIndex1];
                 distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes1, v1Positions, v2Positions);
-                // distancesInvTipDesv << 1.0 / 400.0, 1.0 / 400.0, 1.0 / 400.0;
+                //distancesInvTipDesv << 1.0 / 10.0, 1.0 / 10.0, 1.0 / 10.0;
 
                 // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
                 
                 double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
                 Eigen::Matrix<double, 1, 1> informationMatrix;
-                informationMatrix(0, 0) = scalarInformation;
+                informationMatrix(0, 0) = scalarInformation * arapBalanceWeight;
 
                 for (int j : mesh1->adjacency_list_[meshIndex1]) {
                     // std::cout << "adjacency_list_ 1: (" << j << ")\n";
@@ -669,10 +669,10 @@ void arapOptimization(Map* pMap){
     optimizer.initializeOptimization();
 
     std::cout << "Starting... \n";
-    optimizer.optimize(15);
+    optimizer.optimize(nOptIterations);
     // tras unas iteraciones con las soluciones o modificando lo que tienes
 
-    std::cout << "Optimizado \n";
+    std::cout << "Optimized \n";
 
     for(pair<KeyFrame_,ID> pairKeyFrameId : mKeyFrameId){
         KeyFrame_ pKF = pairKeyFrameId.first;
@@ -712,7 +712,7 @@ void arapOpen3DOptimization(Map* pMap){
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
             KeyFrame_ pKF1 = k2->second;
             KeyFrame_ pKF2 = k1->second;
-            std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
+            std::cout << "\n Pair: (" << k1->first << ", " << k2->first<< ")\n";
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
@@ -727,6 +727,7 @@ void arapOpen3DOptimization(Map* pMap){
 
             // Perform Delaunay Reconstruction
             mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
+            mesh1->ComputeAdjacencyList();
 
             auto posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
             std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
@@ -738,14 +739,14 @@ void arapOpen3DOptimization(Map* pMap){
 
             std::vector<int> constraint_vertex_indices(10);  // Initialize vector with 200 elements
 
-            for (int i = 0; i < 10; ++i) {
-                //constraint_vertex_indices[i] = distrib(gen);  // Assign values from 0 to 199
-                constraint_vertex_indices[i] = i;
-            }
+            // for (int i = 0; i < 10; ++i) {
+            //     //constraint_vertex_indices[i] = distrib(gen);  // Assign values from 0 to 199
+            //     constraint_vertex_indices[i] = i;
+            // }
 
             std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh1->DeformAsRigidAsPossible(
                 constraint_vertex_indices, v2Positions, 500,  // max_iter = 50
-                open3d::geometry::TriangleMesh::DeformAsRigidAsPossibleEnergy::Smoothed, 0.01
+                open3d::geometry::TriangleMesh::DeformAsRigidAsPossibleEnergy::Spokes, 0.01
             );
             // std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh1->DeformAsRigidAsPossible();
 
@@ -769,6 +770,24 @@ void arapOpen3DOptimization(Map* pMap){
                 pMPi1->setWorldPosition(p3D1);
                 pMPi2->setWorldPosition(p3D2);
             }
+
+            std::cout << "DeformAsRigidAsPossible completed!\n";
+
+            v1MPs = pKF1->getMapPoints();
+            v2MPs = pKF2->getMapPoints(); 
+            
+            v1Positions = extractPositions(v1MPs);
+            v2Positions = extractPositions(v2MPs);
+
+            // Perform Delaunay Reconstruction
+            mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
+            mesh1->ComputeAdjacencyList();
+
+            posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
+
+            for (const auto& pair : posIndexes1) {
+                invertedPosIndexes1[pair.second] = pair.first;
+            } 
         }
     }
 }
@@ -779,7 +798,6 @@ Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, 
     Eigen::Vector3d meanError = Eigen::Vector3d::Zero();
     size_t validPairs = 0;
 
-    // individual errors and mean error
     for (int j : adjacencyList) {
         Eigen::Vector3d pi1 = v1Positions[i];
         Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
@@ -816,4 +834,5 @@ Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, 
     } else {
         return Eigen::Vector3d::Constant(std::numeric_limits<double>::infinity());
     }
+        size_t meshIndex1 = 0;
 }

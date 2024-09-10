@@ -223,6 +223,7 @@ public:
 
     std::shared_ptr<CameraModel> pCamera;
     g2o::SE3Quat cameraPose;
+    //float balance;
 };
 
 class EdgeARAP : public g2o::BaseMultiEdge<1, double> {
@@ -251,7 +252,7 @@ public:
         // _error = weight * squaredNormComponents;
         // std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
 
-        _error[0] = weight * energy *1000;
+        _error[0] = weight * energy;
         // std::cout << "ARAP error: " << _error[0] << "\n" << std::endl;        
     }
 

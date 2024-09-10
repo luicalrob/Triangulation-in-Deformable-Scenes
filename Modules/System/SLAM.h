@@ -65,7 +65,7 @@ public:
     /*
      * Project 3D points with a gaussian error
      */
-    void createKeyPoints(float reprojErrorDesv);
+    void createKeyPoints();
 
     /*
      * Mapping of the simulation matches
@@ -75,7 +75,12 @@ public:
     /*
      * Measure the pos & or errors of the poses and the 3D error of the mapPoints
      */
-    void measureErrors();
+    void measureAbsoluteErrors();
+
+    /*
+     * Measure the relative distances errors of the mapPoints
+     */
+    void measureRelativeErrors();
 
     /*
      * Create camera orientation matrix from two points
@@ -117,6 +122,18 @@ private:
     std::vector<Eigen::Vector3f> originalPoints_;
     std::vector<Eigen::Vector3f> movedPoints_;
 
+    float simulatedRepError_;
+
+    float arapBalanceWeight_;
+    float reprojectionBalanceWeight_;
+
+    std::string OptSelection_;
+    std::string TrianSelection_;
+
+    int nOptimizations_;
+    int nOptIterations_;
+
+    bool drawRaysSelection_;
 };
 
 

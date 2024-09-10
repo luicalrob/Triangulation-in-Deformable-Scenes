@@ -48,7 +48,10 @@ void triangulate(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
 
 void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
                  const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
-                 
+
+void triangulateInRaysNearPrevSolution(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
+                        const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2, Eigen::Vector3f &x3D_prev);
+
 void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
                  const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
 

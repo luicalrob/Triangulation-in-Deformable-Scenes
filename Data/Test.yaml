@@ -43,3 +43,29 @@ Map.minObs: 15
 
 #Min cos parallax to triangulate
 Triangulation.minCos: 0.9998
+
+
+# LUIS
+
+#Simulated typical desviation reprojection error for keypoints
+Keypoints.RepError: 0.75
+
+#Weights for optimization
+Optimization.arap: 10.0
+Optimization.reprojection: 1.0
+
+#Optimization values
+Optimization.numberOfOptimizations: 2
+Optimization.numberOfIterations: 15
+
+Optimization.selection: "g2oArap" # g2oArap or open3DArap
+
+#Method selection
+Triangulation.selection: "TwoPoints" # InRays TwoPoints or InRaysNearPrevSolution
+# inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
+# TwoPoints: SVD triangulation method, choosing both points as the solution
+# InRaysNearPrevSolution: use prev solution to ge the nearest 3D points in both rays
+
+
+# Visualization
+MapVisualizer.drawRays: "true"

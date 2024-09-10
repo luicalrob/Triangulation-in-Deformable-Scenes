@@ -22,6 +22,10 @@
 #include "libqhullcpp/QhullFacetList.h"
 #include "libqhullcpp/QhullVertexSet.h"
 
+#include <random> 
+
+using namespace std;
+
 float cosRayParallax(const Eigen::Vector3f& a, const Eigen::Vector3f& b){
     return a.dot(b)/(a.norm()*b.norm());
 }
@@ -92,6 +96,23 @@ void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
     // x3D_2 = findClosestPointOnRay(x3D_w_test, T2w.translation(), T2w.rotationMatrix() * xn2);
 }
 
+void triangulateInRaysNearPrevSolution(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
+                        const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2, Eigen::Vector3f &x3D_prev){
+    Sophus::SE3f T21 = T2w * T1w.inverse();
+    // Step 1: Transform previous 3D point into the local frames of the two cameras.
+    Eigen::Vector3f x3D_prev_cam1 = T1w * x3D_prev; // Previous solution in camera 1 frame
+    Eigen::Vector3f x3D_prev_cam2 = T2w * x3D_prev; // Previous solution in camera 2 frame
+
+    // Step 2: Find the closest point on the first ray to the previous solution in camera 1 frame.
+    float lambda1 = xn1.dot(x3D_prev_cam1); // Projection of x3D_prev_cam1 onto the direction of xn1
+    x3D_1 = T1w.inverse() * (lambda1 * xn1);          // Closest point on ray 1 in world frame
+
+    // Step 3: Find the closest point on the second ray to x3D_1.
+    Eigen::Vector3f x3D_1_cam2 = T2w * x3D_1;  // Transform x3D_1 to camera 2 frame
+    float lambda2 = xn2.dot(x3D_prev_cam2);                 // Projection of x3D_1_cam2 onto the direction of xn2
+    x3D_2 = T2w.inverse() * (lambda2 * xn2);                       // Closest point on ray 2 in world frame
+}
+
 void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
                  const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2){
     Sophus::SE3f T21 = T2w * T1w.inverse();
@@ -105,7 +126,7 @@ void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2
 
     Eigen::Matrix<float,2,3> A = M.transpose() * (Eigen::Matrix3f::Identity() - t*t.transpose());
     Eigen::JacobiSVD<Eigen::Matrix<float,2,3>> svd(A, Eigen::ComputeFullV);
-    std::cout << "A:" << A << "\n";
+    //std::cout << "A:" << A << "\n";
 
     Eigen::Vector3f n = svd.matrixV().col(1);
 
@@ -120,9 +141,9 @@ void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2
     Eigen::Vector3f p3D2 = lambda1 * m1_;
 
     x3D_1 = T2w.inverse() * p3D1;
-    std::cout << "x3D_1: x:" << x3D_1.x() << " y: " << x3D_1.y() << " z: " << x3D_1.z() << "\n";
+    //std::cout << "x3D_1: x:" << x3D_1.x() << " y: " << x3D_1.y() << " z: " << x3D_1.z() << "\n";
     x3D_2 = T2w.inverse() * p3D2; // same 3D point
-    std::cout << "x3D_2: x:" << x3D_2.x() << " y: " << x3D_2.y() << " z: " << x3D_2.z() << "\n";
+    //std::cout << "x3D_2: x:" << x3D_2.x() << " y: " << x3D_2.y() << " z: " << x3D_2.z() << "\n";
 }
 
 void triangulateBerkeley(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,

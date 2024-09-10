@@ -44,7 +44,7 @@ MapVisualizer::MapVisualizer(shared_ptr<Map> pMap) : pMap_(pMap){
             .SetHandler(new pangolin::Handler3D(s_cam));
 }
 
-void MapVisualizer::update() {
+void MapVisualizer::update(bool drawRaysSelection) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     d_cam.Activate(s_cam);
@@ -52,7 +52,7 @@ void MapVisualizer::update() {
 
     drawMapPoints();
     drawKeyFrames();
-    drawRays();
+    if (drawRaysSelection) drawRays();
     drawCurrentPose();
 
     pangolin::FinishFrame();

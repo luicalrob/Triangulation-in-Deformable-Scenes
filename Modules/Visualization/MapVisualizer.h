@@ -38,7 +38,7 @@ public:
     /*
      * Updates the visualization of the map
      */
-    void update();
+    void update(bool drawRaysSelection = false);
 
     /*
      * Updates the current pose

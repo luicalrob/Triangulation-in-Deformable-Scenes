@@ -25,6 +25,9 @@
 #define SLAM_G2OBUNDLEADJUSTMENT_H
 
 #include "Map/Map.h"
+#include "open3d/Open3D.h"
+#include "open3d/geometry/Qhull.h"
+#include "open3d/geometry/TetraMesh.h"
 
 /*
  * Performs a full Bundle Adjustment (optimizes both camera poses and 3D points)
@@ -45,7 +48,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
 /*
  * Performs a As-Rigid-As-Possible optimization joined with a reprojection error minimization (optimizes 3D points positions in the space)
  */
-void arapOptimization(Map* pMap);
+void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight, int nOptIterations);
 
 
 void arapOpen3DOptimization(Map* pMap);
