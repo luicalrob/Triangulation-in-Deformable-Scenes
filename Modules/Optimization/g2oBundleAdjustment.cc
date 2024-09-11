@@ -41,6 +41,7 @@ using namespace std;
 typedef shared_ptr<MapPoint> MapPoint_;
 typedef shared_ptr<KeyFrame> KeyFrame_;
 typedef shared_ptr<Eigen::Matrix3d> RotationMatrix_;
+typedef shared_ptr<Eigen::Vector3d> TranslationVector_;
 
 void bundleAdjustment(Map* pMap){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
@@ -454,6 +455,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
     unordered_map<RotationMatrix_,size_t> mRotId;
+    unordered_map<TranslationVector_,size_t> mTransId;
 
     //Get all KeyFrames from map
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
@@ -496,6 +498,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
             std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
 
             std::vector<Eigen::Matrix3d> Rs(v1Positions.size(), Eigen::Matrix3d::Identity());
+            std::vector<Eigen::Vector3d> Ts(v1Positions.size(), Eigen::Vector3d::Zero());
 
             // Perform Delaunay Reconstruction
             mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
@@ -534,6 +537,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
 
                 MapPoint_ firstPointToOptimize = pMPi1;
                 RotationMatrix_ Rot = std::make_shared<Eigen::Matrix<double, 3, 3>>(Rs[i]);
+                TranslationVector_ T = std::make_shared<Eigen::Matrix<double, 3, 1>>(Ts[i]);
                 MapPoint_ secondPointToOptimize = pMPi2;
 
                 //Check if this MapPoint has been already added to the optimization
@@ -568,6 +572,13 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                     rotVertex->setEstimate(Rs[i]);
                     optimizer.addVertex(rotVertex);
                     mRotId[Rot] = currId;
+                    currId++;
+
+                    VertexTranslationVector* tVertex = new VertexTranslationVector();
+                    tVertex->setId(currId); // unique ID
+                    tVertex->setEstimate(Ts[i]);
+                    optimizer.addVertex(tVertex);
+                    mTransId[T] = currId;
                     currId++;
                 }
 
@@ -643,15 +654,25 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                 Eigen::Matrix<double, 1, 1> informationMatrix;
                 informationMatrix(0, 0) = scalarInformation * arapBalanceWeight;
 
+
                 for (int j : mesh1->adjacency_list_[meshIndex1]) {
                     // std::cout << "adjacency_list_ 1: (" << j << ")\n";
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
+                    // NORMAL
+                    // eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                    // eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                    // eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
+                    // eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTransId[T])));
+                    // eArap->Xj1world = mesh1->vertices_[j];
+                    // eArap->Xj2world = v2Positions[posIndexes1[j]];
+                    // eArap->weight = edge_weights_1[GetOrderedEdge(meshIndex1, j)];
 
-                    eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
-                    
+                    // ONLY ONE POINT AND R
+                    eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                    eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
+                    // eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTransId[T])));
+                    eArap->Xi1world = mesh1->vertices_[meshIndex1]; // or v1Positions[i] or v1Positions[posIndexes1[meshIndex1]]
                     eArap->Xj1world = mesh1->vertices_[j];
                     eArap->Xj2world = v2Positions[posIndexes1[j]];
                     eArap->weight = edge_weights_1[GetOrderedEdge(meshIndex1, j)];

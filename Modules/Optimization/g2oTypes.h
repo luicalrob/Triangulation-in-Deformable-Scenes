@@ -74,6 +74,26 @@ public:
     }
 };
 
+class VertexTranslationVector : public g2o::BaseVertex<3, Eigen::Vector3d> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    
+    VertexTranslationVector();
+    
+    virtual bool read(std::istream& is);
+    virtual bool write(std::ostream& os) const;
+
+    virtual void setToOriginImpl() {
+        _estimate.setZero();
+    }
+
+    virtual void oplusImpl(const double* update) {
+        Eigen::Map<const Eigen::Vector3d> updateVec(update);
+        _estimate += updateVec;
+    }
+};
+
+
 /*
  * Error function for geometric (reprojection error) Bundle Adjustment with analytic derivatives. Both
  * camera pose and 3D point are optimizable parameters
@@ -240,17 +260,29 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
-        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
+        // NORMAL
+        // const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        // const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        // const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
+        // const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[3]);
+
+        // ONLY ONE POINT AND R
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[1]);
 
         //Eigen::Vector3d obs(_measurement);
         double obs(_measurement);
         Eigen::Vector3d diff;
 
         Eigen::Matrix3d R = vR->estimate();
+        // Eigen::Vector3d t = vT->estimate();
+        //diff = (v2->estimate() - Xj2world) - ( R * (v1->estimate() - Xj1world) + t ); // [DUDA] should i use other two vertex instead of _measurement?
 
-        diff = (v1->estimate() - Xj1world) - (R * (v2->estimate() - Xj2world));
+        // NORMAL
+        // diff = (v1->estimate() - Xj1world) - ( R * (v2->estimate() - Xj2world));
+
+        // ONLY ONE POINT AND R
+        diff = (Xi1world - Xj1world) - (R * (v2->estimate() - Xj2world));
 
         //Eigen::Vector3d squaredNormComponents = diff.array().square();
         double energy = diff.squaredNorm();
@@ -260,9 +292,15 @@ public:
 
         _error[0] = weight * energy;
         // std::cout << "ARAP error: " << _error[0] << "\n" << std::endl;   
+        // Eigen::Vector3d error = obs - (v2->estimate() - Xj2world) - R * (v1->estimate() - Xj1world);
+        // Eigen::Vector3d squaredNormComponents = error.array().square();
+        // _error = weight * squaredNormComponents;     
     }
 
     // virtual void linearizeOplus();
+
+    // ONLY ONE POINT AND R
+    Eigen::Vector3d Xi1world;
 
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;

@@ -56,6 +56,24 @@ bool VertexRotationMatrix::write(std::ostream& os) const {
     return true;
 }
 
+
+VertexTranslationVector::VertexTranslationVector() : BaseVertex<3, Eigen::Vector3d>() {
+    _estimate.setZero();
+}
+
+bool VertexTranslationVector::read(std::istream& is) {
+    for (int i = 0; i < 3; ++i)
+        is >> _estimate[i];
+    return true;
+}
+
+bool VertexTranslationVector::write(std::ostream& os) const {
+    for (int i = 0; i < 3; ++i)
+        os << _estimate[i] << " ";
+    return os.good();
+}
+
+
 EdgeSE3ProjectXYZ::EdgeSE3ProjectXYZ() : BaseBinaryEdge<2, Eigen::Vector2d, VertexSBAPointXYZ, g2o::VertexSE3Expmap>() {
 }
 
@@ -251,10 +269,13 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 }
 
 
+// NORMAL
+// EdgeARAP::EdgeARAP(){
+//     resize(4);
+// }
 
-EdgeARAP::EdgeARAP(){
-    resize(3);
-}
+// ONLY ONE POINT AND R
+EdgeARAP::EdgeARAP(){}
 
 // bool EdgeARAP::read(std::istream& is){
 
