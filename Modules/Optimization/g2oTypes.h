@@ -58,6 +58,7 @@ class VertexRotationMatrix : public g2o::BaseVertex<3, Eigen::Matrix3d> {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     VertexRotationMatrix();
+
     virtual bool read(std::istream& is);
     virtual bool write(std::ostream& os) const;
 
@@ -68,7 +69,8 @@ public:
     virtual void oplusImpl(const double* update) {
         Eigen::Vector3d updateVec(update);
         Eigen::AngleAxisd angleAxis(updateVec.norm(), updateVec.normalized());
-        _estimate = angleAxis.toRotationMatrix() * _estimate;
+        Eigen::Matrix3d updateMatrix = angleAxis.toRotationMatrix();
+        _estimate = updateMatrix * _estimate;
     }
 };
 
@@ -226,7 +228,8 @@ public:
     //float balance;
 };
 
-class EdgeARAP : public g2o::BaseMultiEdge<1, double> {
+//class EdgeARAP : public g2o::BaseMultiEdge<1, double> {
+class EdgeARAP : public g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexRotationMatrix> {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -240,20 +243,23 @@ public:
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
         const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
-        // Eigen::Vector3d obs(_measurement);
+
+        //Eigen::Vector3d obs(_measurement);
         double obs(_measurement);
         Eigen::Vector3d diff;
 
         Eigen::Matrix3d R = vR->estimate();
-        diff = (v2->estimate() - Xj2world) - R * (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
-        // Eigen::Vector3d squaredNormComponents = diff.array().square();
+
+        diff = (v1->estimate() - Xj1world) - (R * (v2->estimate() - Xj2world));
+
+        //Eigen::Vector3d squaredNormComponents = diff.array().square();
         double energy = diff.squaredNorm();
 
         // _error = weight * squaredNormComponents;
         // std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
 
         _error[0] = weight * energy;
-        // std::cout << "ARAP error: " << _error[0] << "\n" << std::endl;        
+        // std::cout << "ARAP error: " << _error[0] << "\n" << std::endl;   
     }
 
     // virtual void linearizeOplus();

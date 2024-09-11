@@ -334,7 +334,7 @@ void SLAM::mapping() {
         mapVisualizer_->update(drawRaysSelection_);
     }
 
-
+    std::cout << "\nINITIAL MEASUREMENTS: \n";
     measureRelativeErrors();
     measureAbsoluteErrors();
 
@@ -347,7 +347,7 @@ void SLAM::mapping() {
 
     //arapBundleAdjustment(pMap_.get());
 
-    std::cout << "\nBundle adjustment completed... fisrt 15 iterations " << std::endl;
+    std::cout << "\nBundle adjustment completed... fisrt " << nOptIterations_ << " iterations." << std::endl;
 
     if (nOptimizations_ > 1) {
         for(int i = 1; i < nOptimizations_; i++){ 
@@ -359,7 +359,7 @@ void SLAM::mapping() {
 
             arapOptimization(pMap_.get(), reprojectionBalanceWeight_, arapBalanceWeight_, nOptIterations_);
             
-            std::cout << "\nBundle adjustment completed... other 15 iterations: (" << i + 1 << " time)" << std::endl;
+            std::cout << "\nBundle adjustment completed... other " << nOptIterations_ << " iterations: (" << i + 1 << " time)" << std::endl;
         }
     }
 
@@ -367,7 +367,6 @@ void SLAM::mapping() {
     // visualizer_->drawCurrentFrame(currFrame_);
     // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
     // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    std::cout << "\ndrawRaysSelection_ HOOOOO" << drawRaysSelection_  << std::endl;
     mapVisualizer_->update(drawRaysSelection_);
     mapVisualizer_->updateCurrentPose(Tcw_);
 
@@ -450,17 +449,17 @@ void SLAM::measureAbsoluteErrors() {
     }
 
     if (point_count > 0) {
-        std::cout << "\n ABSOLUTE MEASUREMENTS: \n";
+        std::cout << "\nABSOLUTE MEASUREMENTS: \n";
 
         float average_movement = total_movement / insertedIndexes_.size();
         //std::cout << "\nTotal movement: " << total_movement << std::endl;
         std::cout << "Average movement: " << average_movement << std::endl;
         float average_error_original = total_error_original / insertedIndexes_.size();
         //std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
-        std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
+        //std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
         float average_error_moved = total_error_moved / insertedIndexes_.size();
         //std::cout << "\nTotal error in MOVED 3D: " << total_error_moved << std::endl;
-        std::cout << "Average error in MOVED 3D: " << average_error_moved << std::endl;
+        //std::cout << "Average error in MOVED 3D: " << average_error_moved << std::endl;
         float average_error = total_error / point_count;
         //std::cout << "\nTotal error in 3D: " << total_error << std::endl;
         std::cout << "Average error in 3D: " << average_error << std::endl;

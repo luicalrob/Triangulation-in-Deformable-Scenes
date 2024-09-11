@@ -51,21 +51,21 @@ Triangulation.minCos: 0.9998
 Keypoints.RepError: 0.75
 
 #Weights for optimization
-Optimization.arap: 10.0
+Optimization.arap: 10000.0
 Optimization.reprojection: 1.0
 
 #Optimization values
-Optimization.numberOfOptimizations: 2
-Optimization.numberOfIterations: 15
+Optimization.numberOfOptimizations: 1
+Optimization.numberOfIterations: 20
 
 Optimization.selection: "g2oArap" # g2oArap or open3DArap
 
 #Method selection
-Triangulation.selection: "TwoPoints" # InRays TwoPoints or InRaysNearPrevSolution
+Triangulation.selection: "InRays" # InRays TwoPoints or InRaysNearPrevSolution
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # InRaysNearPrevSolution: use prev solution to ge the nearest 3D points in both rays
 
 
 # Visualization
-MapVisualizer.drawRays: "true"
+MapVisualizer.drawRays: "false"

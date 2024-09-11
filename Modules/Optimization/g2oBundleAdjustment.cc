@@ -548,13 +548,6 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                     mMapPointId[firstPointToOptimize] = currId;
                     //std::cout << "Id: (" << currId << ")\n";
                     currId++;
-
-                    VertexRotationMatrix* rotVertex = new VertexRotationMatrix();
-                    rotVertex->setId(currId); // unique ID
-                    rotVertex->setEstimate(Rs[i]);
-                    optimizer.addVertex(rotVertex);
-                    mRotId[Rot] = currId;
-                    currId++;
                 }
 
                 
@@ -568,6 +561,13 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
 
                     mMapPointId[secondPointToOptimize] = currId;
                     //std::cout << "ID: (" << currId << ")\n";
+                    currId++;
+
+                    VertexRotationMatrix* rotVertex = new VertexRotationMatrix();
+                    rotVertex->setId(currId); // unique ID
+                    rotVertex->setEstimate(Rs[i]);
+                    optimizer.addVertex(rotVertex);
+                    mRotId[Rot] = currId;
                     currId++;
                 }
 
@@ -637,7 +637,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                 distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes1, v1Positions, v2Positions);
                 //distancesInvTipDesv << 1.0 / 10.0, 1.0 / 10.0, 1.0 / 10.0;
 
-                // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal();
+                // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal() * arapBalanceWeight;
                 
                 double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
                 Eigen::Matrix<double, 1, 1> informationMatrix;
@@ -647,15 +647,17 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                     // std::cout << "adjacency_list_ 1: (" << j << ")\n";
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
+
                     eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                     eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                     eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
+                    
                     eArap->Xj1world = mesh1->vertices_[j];
                     eArap->Xj2world = v2Positions[posIndexes1[j]];
                     eArap->weight = edge_weights_1[GetOrderedEdge(meshIndex1, j)];
 
                     eArap->setInformation(informationMatrix);
-                    //eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
+                    // eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
                     double measurement = 0.0;
                     eArap->setMeasurement(measurement);
 
