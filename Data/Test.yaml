@@ -51,7 +51,7 @@ Triangulation.minCos: 0.9998
 Keypoints.RepError: 0.5
 
 #Weights for optimization
-Optimization.arap: 10.0
+Optimization.arap: 20.0
 Optimization.reprojection: 0.5
 
 #Optimization values
