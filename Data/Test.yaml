@@ -48,11 +48,11 @@ Triangulation.minCos: 0.9998
 # LUIS
 
 #Simulated typical desviation reprojection error for keypoints
-Keypoints.RepError: 0.75
+Keypoints.RepError: 0.5
 
 #Weights for optimization
-Optimization.arap: 10000.0
-Optimization.reprojection: 1.0
+Optimization.arap: 10.0
+Optimization.reprojection: 0.5
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
@@ -69,3 +69,4 @@ Triangulation.selection: "InRays" # InRays TwoPoints or InRaysNearPrevSolution
 
 # Visualization
 MapVisualizer.drawRays: "false"
+Visualizer.showSolution: "false"

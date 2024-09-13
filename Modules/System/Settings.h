@@ -82,6 +82,7 @@ public:
     int getnOptIterations();
 
     bool getDrawRaysSelection();
+    bool getShowSolution();
 
 private:
     //Camera parameters
@@ -121,6 +122,7 @@ private:
     int nOptIterations_;
 
     bool drawRaysSelection_;
+    bool showSolution_;
 };
 
 

@@ -42,10 +42,14 @@ int main(){
 
     SLAM.createKeyPoints(); // with a desviation in the reprojection error of 1 pixel 
 
-    // To visualize solution
-    //SLAM.viusualizeSolution();
+    bool showSolution = SLAM.getShowSolution();
 
-    SLAM.mapping();
+    // To visualize solution
+    if(showSolution) {
+        SLAM.viusualizeSolution();
+    } else {
+        SLAM.mapping();
+    }
 
     SLAM.measureRelativeErrors();
     SLAM.measureAbsoluteErrors();

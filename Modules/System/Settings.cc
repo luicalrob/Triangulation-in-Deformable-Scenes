@@ -103,6 +103,15 @@ Settings::Settings(const std::string& configFile) {
     } else {
         drawRaysSelection_ = false;
     }
+
+    std::string showSolutionString;
+    fSettings["Visualizer.showSolution"] >> showSolutionString;
+
+    if (showSolutionString == "true") {
+        showSolution_ = true;
+    } else {
+        showSolution_ = false;
+    }
 }
 
 ostream &operator<<(std::ostream& output, const Settings& settings){
@@ -235,4 +244,8 @@ int Settings::getnOptIterations(){
 
 bool Settings::getDrawRaysSelection(){
     return drawRaysSelection_;
+}
+
+bool Settings::getShowSolution(){
+    return showSolution_;
 }

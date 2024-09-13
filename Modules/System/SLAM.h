@@ -87,6 +87,11 @@ public:
      */
     Eigen::Matrix3f lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY());
 
+    /*
+     * Get "show solution" setting parameter
+     */
+    bool getShowSolution();
+
 
 private:
 
@@ -134,6 +139,7 @@ private:
     int nOptIterations_;
 
     bool drawRaysSelection_;
+    bool showSolution_;
 };
 
 
