@@ -18,16 +18,6 @@
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Optimization/g2oTypes.h"
 
-#include <g2o/core/block_solver.h>
-#include <g2o/core/optimization_algorithm_levenberg.h>
-#include <g2o/solvers/eigen/linear_solver_eigen.h>
-#include <g2o/types/sba/types_sba.h>
-#include <g2o/types/sba/types_six_dof_expmap.h>
-#include <g2o/core/robust_kernel_impl.h>
-#include <g2o/solvers/csparse/linear_solver_csparse.h>
-
-
-#include <g2o/solvers/dense/linear_solver_dense.h>
 #include "Utils/Geometry.h"
 #include "open3d/Open3D.h"
 #include "open3d/geometry/Qhull.h"
@@ -541,18 +531,18 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                 MapPoint_ secondPointToOptimize = pMPi2;
 
                 //Check if this MapPoint has been already added to the optimization
-                if (mMapPointId.count(firstPointToOptimize) == 0) {
-                    VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
-                    Eigen::Vector3d p3D = firstPointToOptimize->getWorldPosition().cast<double>();
-                    vPoint->setEstimate(p3D);
-                    vPoint->setId(currId);
-                    //vPoint->setMarginalized(true);
-                    optimizer.addVertex(vPoint);
+                // if (mMapPointId.count(firstPointToOptimize) == 0) {
+                //     VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
+                //     Eigen::Vector3d p3D = firstPointToOptimize->getWorldPosition().cast<double>();
+                //     vPoint->setEstimate(p3D);
+                //     vPoint->setId(currId);
+                //     //vPoint->setMarginalized(true);
+                //     optimizer.addVertex(vPoint);
 
-                    mMapPointId[firstPointToOptimize] = currId;
-                    //std::cout << "Id: (" << currId << ")\n";
-                    currId++;
-                }
+                //     mMapPointId[firstPointToOptimize] = currId;
+                //     //std::cout << "Id: (" << currId << ")\n";
+                //     currId++;
+                // }
 
                 
                 if (mMapPointId.count(secondPointToOptimize) == 0) {
@@ -586,23 +576,23 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                 cv::Point2f uv = pKF1->getKeyPoint(i).pt;
                 int octave = pKF1->getKeyPoint(i).octave;
                 Eigen::Matrix<double,2,1> obs;
-                obs << uv.x, uv.y;
+                // obs << uv.x, uv.y;
 
-                EdgeSE3ProjectXYZPerKeyFrameOnlyPoints* eKF1 = new EdgeSE3ProjectXYZPerKeyFrameOnlyPoints();
+                // EdgeSE3ProjectXYZPerKeyFrameOnlyPoints* eKF1 = new EdgeSE3ProjectXYZPerKeyFrameOnlyPoints();
 
-                eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                eKF1->setMeasurement(obs);
-                eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave) * repBalanceWeight);
+                // eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                // eKF1->setMeasurement(obs);
+                // eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave) * repBalanceWeight);
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-                eKF1->setRobustKernel(rk);
-                rk->setDelta(thHuber2D);
+                // eKF1->setRobustKernel(rk);
+                // rk->setDelta(thHuber2D);
 
-                eKF1->pCamera = pKF1->getCalibration();
+                // eKF1->pCamera = pKF1->getCalibration();
                 Sophus::SE3f kfPose = pKF1->getPose();
-                eKF1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
+                // eKF1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
 
-                optimizer.addEdge(eKF1);
+                // optimizer.addEdge(eKF1);
 
                 //Set second projection edge
                 uv = pKF2->getKeyPoint(i).pt;
@@ -613,7 +603,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
 
                 eKF2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                 eKF2->setMeasurement(obs);
-                eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave));
+                eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave) * repBalanceWeight);
 
                 rk = new g2o::RobustKernelHuber;
                 eKF2->setRobustKernel(rk);
@@ -669,6 +659,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                     // eArap->weight = edge_weights_1[GetOrderedEdge(meshIndex1, j)];
 
                     // ONLY ONE POINT AND R
+                    //eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                     eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                     eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
                     // eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTransId[T])));

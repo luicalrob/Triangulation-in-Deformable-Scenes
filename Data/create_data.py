@@ -17,6 +17,8 @@ def generate_points(num_points, rigid_movement, gaussian_movement, x_mean, x_std
     
     # Move along yz-axis
     moved_points = original_points.copy()
+    moved_points[:, 0] += rigid_movement
+    moved_points[:, 0] += np.random.normal(scale=gaussian_movement, size=num_points)
     moved_points[:, 1] += rigid_movement
     moved_points[:, 1] += np.random.normal(scale=gaussian_movement, size=num_points)
     moved_points[:, 2] -= rigid_movement
@@ -54,7 +56,7 @@ def rotate_points(points, angle_x, angle_y, angle_z):
 def save_points(filename, points):
     np.savetxt(filename, points, delimiter=' ')
 
-num_points = 100  # Number of points in the dataset
+num_points = 250  # Number of points in the dataset
 
 # Original points position
 x_mean, x_std = 0.0, 0.2
