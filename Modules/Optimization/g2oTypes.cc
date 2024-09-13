@@ -270,12 +270,12 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 
 // NORMAL
-// EdgeARAP::EdgeARAP(){
-//     resize(4);
-// }
+EdgeARAP::EdgeARAP(){
+    resize(3);
+}
 
 // ONLY ONE POINT AND R
-EdgeARAP::EdgeARAP(){}
+// EdgeARAP::EdgeARAP(){}
 
 // bool EdgeARAP::read(std::istream& is){
 

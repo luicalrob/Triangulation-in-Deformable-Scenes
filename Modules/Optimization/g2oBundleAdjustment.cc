@@ -662,7 +662,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
                     //eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                     eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                     eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
-                    // eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTransId[T])));
+                    eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTransId[T])));
                     eArap->Xi1world = mesh1->vertices_[meshIndex1]; // or v1Positions[i] or v1Positions[posIndexes1[meshIndex1]]
                     eArap->Xj1world = mesh1->vertices_[j];
                     eArap->Xj2world = v2Positions[posIndexes1[j]];
@@ -707,6 +707,13 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
         VertexRotationMatrix* mRot = static_cast<VertexRotationMatrix*>(optimizer.vertex(pairRotationMatrixId.second));
         Eigen::Matrix3d Rotation = mRot->estimate();
         // std::cout << "Rotation matrix:\n" << Rotation << std::endl;
+    }
+
+    for(pair<TranslationVector_,ID> pairTranslationVectorId : mTransId){
+        TranslationVector_ Ts = pairTranslationVectorId.first;
+        VertexTranslationVector* mT = static_cast<VertexTranslationVector*>(optimizer.vertex(pairTranslationVectorId.second));
+        Eigen::Vector3d t = mT->estimate();
+        //std::cout << "translation vector:\n" << t << std::endl;
     }
 }
 

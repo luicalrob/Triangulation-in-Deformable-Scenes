@@ -248,8 +248,8 @@ public:
     //float balance;
 };
 
-//class EdgeARAP : public g2o::BaseMultiEdge<1, double> {
-class EdgeARAP : public g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexRotationMatrix> {
+class EdgeARAP : public g2o::BaseMultiEdge<1, double> {
+//class EdgeARAP : public g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexRotationMatrix> {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -269,20 +269,21 @@ public:
         // ONLY ONE POINT AND R
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[1]);
+        const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[2]);
 
         //Eigen::Vector3d obs(_measurement);
         double obs(_measurement);
         Eigen::Vector3d diff;
 
         Eigen::Matrix3d R = vR->estimate();
-        // Eigen::Vector3d t = vT->estimate();
+        Eigen::Vector3d t = vT->estimate();
         //diff = (v2->estimate() - Xj2world) - ( R * (v1->estimate() - Xj1world) + t ); // [DUDA] should i use other two vertex instead of _measurement?
 
         // NORMAL
         // diff = (v1->estimate() - Xj1world) - ( R * (v2->estimate() - Xj2world));
 
         // ONLY ONE POINT AND R
-        diff = (Xi1world - Xj1world) - (R * (v2->estimate() - Xj2world));
+        diff = (Xi1world - Xj1world) - (R * (v2->estimate() - Xj2world) + t);
 
         //Eigen::Vector3d squaredNormComponents = diff.array().square();
         double energy = diff.squaredNorm();
