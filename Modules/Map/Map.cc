@@ -290,3 +290,29 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
     cv::Mat bestDesc = mAllDescriptors.row(obsIdx);
     mMapPoints_[mpId]->setDescriptor(bestDesc);
 }
+
+void Map::insertGlobalKeyFramesTransformation(ID kf1, ID kf2, const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation) {
+    assert(mKeyFrames_.count(kf1) != 0);
+    assert(mKeyFrames_.count(kf2) != 0);
+    
+    mGRotations_[kf1][kf2] = rotation;
+    mGTranslations_[kf1][kf2] = translation;
+
+    mGRotations_[kf2][kf1] = rotation.transpose();
+    mGTranslations_[kf2][kf1] = -rotation.transpose() * translation;
+}
+
+std::pair<Eigen::Matrix3d, Eigen::Vector3d> Map::getGlobalKeyFramesTransformation(ID kf1, ID kf2) {
+    assert(mKeyFrames_.count(kf1) != 0);
+    assert(mKeyFrames_.count(kf2) != 0);
+
+    Eigen::Matrix3d globalRotation = Eigen::Matrix3d::Identity();
+    Eigen::Vector3d globalTranslation = Eigen::Vector3d::Zero();
+    
+    if (mGRotations_.count(kf1) && mGRotations_[kf1].count(kf2)) {
+        globalRotation = mGRotations_[kf1][kf2];
+        globalTranslation = mGTranslations_[kf1][kf2];
+    }
+
+    return std::make_pair(globalRotation, globalTranslation);
+}

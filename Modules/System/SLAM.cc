@@ -21,6 +21,9 @@
 #include "Map/MapPoint.h"
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
+#include "Optimization/nloptOptimization.h"
+
+#include <nlopt.hpp>
 
 #include <memory>
 
@@ -343,6 +346,36 @@ void SLAM::mapping() {
     // correct error
     if (OptSelection_ == "open3DArap") {
         arapOpen3DOptimization(pMap_.get());
+    } else if(OptSelection_ == "twoOptimizations") {
+        nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
+
+        std::vector<double> lb = {0.0, 0.0};
+        std::vector<double> ub = {10.0, 100.0};
+        opt.set_lower_bounds(lb);
+        opt.set_upper_bounds(ub);
+
+        OptimizationData optData;
+        optData.pMap = pMap_.get();
+        optData.originalPoints = originalPoints_; 
+        optData.movedPoints = movedPoints_;  
+        optData.insertedIndexes = insertedIndexes_;
+        optData.nOptIterations = nOptIterations_;
+
+        opt.set_min_objective(outerObjective, &optData);
+
+        std::vector<double> x = {reprojectionBalanceWeight_, arapBalanceWeight_};
+
+        // Set the optimization stopping criteria
+        opt.set_xtol_rel(1e-1);
+        opt.set_xtol_abs(1e-1);
+
+        double minf;
+        nlopt::result result = opt.optimize(x, minf);
+
+        std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
+        std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
+        std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+        std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
     } else {
         arapOptimization(pMap_.get(), reprojectionBalanceWeight_, arapBalanceWeight_, nOptIterations_);
     }
@@ -384,7 +417,6 @@ void SLAM::mapping() {
     // mapVisualizer_->update(drawRaysSelection_);
     // mapVisualizer_->updateCurrentPose(Tcw_);
 }
-
 
 void SLAM::measureAbsoluteErrors() {
 
@@ -502,6 +534,16 @@ void SLAM::measureRelativeErrors(){
             KeyFrame_ pKF1 = k2->second;
             KeyFrame_ pKF2 = k1->second;
             std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
+
+            Eigen::Matrix3d Rs_global = Eigen::Matrix3d::Identity();
+            Eigen::Vector3d Ts = Eigen::Vector3d::Zero();
+            std::pair<Eigen::Matrix3d, Eigen::Vector3d> transformation = pMap_->getGlobalKeyFramesTransformation(k2->first, k1->first);
+
+            Rs_global = transformation.first;
+            Ts = transformation.second;
+
+            std::cout << "Global rotation: " << Rs_global<< "\n";
+            std::cout << "Global translation: " << Ts<< "\n";
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
@@ -628,7 +670,6 @@ void SLAM::measureRelativeErrors(){
     }
 }
 
-
 Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector) {
     Eigen::Vector3f forward = (target_pos - camera_pos).normalized();
     Eigen::Vector3f right = up_vector.cross(forward).normalized();
@@ -645,3 +686,4 @@ Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vec
 bool SLAM::getShowSolution(){
     return showSolution_;
 }
+

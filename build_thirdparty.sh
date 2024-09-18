@@ -27,5 +27,13 @@ make
 ctest
 sudo make install
 
+cd ../../Nlopt
+
+echo "Configuring and building Thirdparty/Nlopt ..."
+
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make
+sudo make install
 
 cd ../../../

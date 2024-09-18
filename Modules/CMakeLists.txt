@@ -7,6 +7,7 @@ find_package(OpenCV 4 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(Open3D REQUIRED)
 find_package(Qhull REQUIRED)
+find_package(NLopt REQUIRED)
 
 add_definitions(-DCGAL_USE_BASIC_VIEWER -DQT_NO_KEYWORDS)
 
@@ -28,6 +29,7 @@ set(HEADER_FILES
         ${root}/Map/Map.h
         ${root}/Map/MapPoint.h
         ${root}/Matching/DescriptorMatching.h
+        ${root}/Optimization/nloptOptimization.h
         ${root}/Optimization/g2oBundleAdjustment.h
         ${root}/Optimization/g2oTypes.h
         ${root}/System/Settings.h
@@ -43,6 +45,7 @@ set(SOURCE_FILES
         ${root}/Map/Map.cc
         ${root}/Map/MapPoint.cc
         ${root}/Matching/DescriptorMatching.cc
+        ${root}/Optimization/nloptOptimization.cc
         ${root}/Optimization/g2oBundleAdjustment.cc
         ${root}/Optimization/g2oTypes.cc
         ${root}/System/Settings.cc
@@ -66,7 +69,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${CMAKE_SOURCE_DIR}/Thirdparty/g2o
                     ${Pangolin_INCLUDE_DIRS}
                     ${Open3D_INCLUDE_DIRS}
-                    ${CMAKE_SOURCE_DIR}/Thirdparty/Qhull)
+                    ${CMAKE_SOURCE_DIR}/Thirdparty/Qhull
+                    ${CMAKE_SOURCE_DIR}/Thirdparty/NLopt)
 
 # Add the library
 add_library(${LIBRARY_NAME} SHARED
@@ -83,6 +87,7 @@ target_link_libraries(${LIBRARY_NAME}
                       ${CMAKE_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o_stuff.so
                       ${CMAKE_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o_types_sba.so
                       ${CMAKE_SOURCE_DIR}/Thirdparty/Qhull/build/libqhullcpp.a
-                      ${CMAKE_SOURCE_DIR}/Thirdparty/Qhull/build/libqhull_r.so)
+                      ${CMAKE_SOURCE_DIR}/Thirdparty/Qhull/build/libqhull_r.so
+                      ${CMAKE_SOURCE_DIR}/Thirdparty/NLopt/build/libnlopt.so)
 
 

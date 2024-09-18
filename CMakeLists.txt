@@ -36,6 +36,12 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Qhull/build")
   list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Qhull/build")
 endif()
 
+#Nlopt
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/NLopt/build")
+  set(NLopt_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/NLopt/build")
+  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/NLopt/build")
+endif()
+
 # Add compile definition to use vendored Ceres
 add_definitions(-DG2O_USE_VENDORED_CERES)
 

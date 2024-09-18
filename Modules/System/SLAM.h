@@ -92,6 +92,12 @@ public:
      */
     bool getShowSolution();
 
+    std::vector<Eigen::Vector3f> getOriginalPoints();
+
+    std::vector<Eigen::Vector3f> getMovedPoints();
+
+    std::vector<int> getInsertedIndexes();
+
 
 private:
 

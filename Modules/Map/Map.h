@@ -126,6 +126,16 @@ public:
     int getNumberOfObservations(ID mp);
 
     /*
+     * Insert Global rotation and translation calculated between the mappoints of two keyframes
+     */
+    void insertGlobalKeyFramesTransformation(ID kf1, ID kf2, const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation);
+
+    /*
+     * Gets the global rotation and translation calculated between the mappoints of two keyframes
+     */
+    std::pair<Eigen::Matrix3d, Eigen::Vector3d> getGlobalKeyFramesTransformation(ID kf1, ID kf2);
+
+    /*
      * Checks that the KeyFrame with the given ID is consistent with the information
      * in the graph. FOR DEBUG PURPOSES ONLY
      */
@@ -200,7 +210,12 @@ private:
     std::unordered_map<ID,GraphNode_> mKeyFrameGraph_;
     std::unordered_map<ID,GraphNode_> mMapPointGraph_;
 
+    std::unordered_map<ID, std::unordered_map<ID, Eigen::Matrix3d>> mGRotations_;
+    std::unordered_map<ID, std::unordered_map<ID, Eigen::Vector3d>> mGTranslations_;
+
     float minCommonObs_;
+
+
 };
 
 #endif //SLAM_MAP_H

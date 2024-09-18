@@ -474,7 +474,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
             KeyFrame_ pKF1 = k2->second;
             KeyFrame_ pKF2 = k1->second;
-            std::cout << "\nPair: (" << k1->first << ", " << k2->first<< ")\n";
+            // std::cout << "\nPair: (" << k1->first << ", " << k2->first<< ")\n";
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints(); // [DUDA] Deben darse como puntos 3D diferentes porque los optimizo como diferentes
@@ -489,8 +489,12 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
             std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
 
             std::vector<Eigen::Matrix3d> Rs(v1Positions.size(), Eigen::Matrix3d::Identity());
-            std::vector<Eigen::Matrix3d> Rs_global = { Eigen::Matrix3d::Identity() };
-            std::vector<Eigen::Vector3d> Ts = { Eigen::Vector3d::Zero() };
+            Eigen::Matrix3d Rs_global = Eigen::Matrix3d::Identity();
+            Eigen::Vector3d Ts = Eigen::Vector3d::Zero();
+            std::pair<Eigen::Matrix3d, Eigen::Vector3d> transformation = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
+
+            Rs_global = transformation.first;
+            Ts = transformation.second;
 
             // Perform Delaunay Reconstruction
             mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
@@ -501,7 +505,7 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
             // std::cout << "point mesh: (" << mesh1->vertices_[67] << ")\n";
             // std::cout << "point: (" << v1Positions[posIndexes1[67]] << ")\n";
             // std::cout << "index: (" << posIndexes1[67] << ")\n";
-            std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
+            // std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
 
             std::map<size_t, size_t> invertedPosIndexes1;
             // std::map<size_t, size_t> invertedIndexMap2;
@@ -721,12 +725,23 @@ void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight
         // std::cout << "Rotation matrix:\n" << Rotation << std::endl;
     }
 
+    Eigen::Matrix3d RotGlobal = Eigen::Matrix3d::Identity();
+    Eigen::Vector3d TGlobal = Eigen::Vector3d::Zero();
+
+    for(pair<RotationMatrix_,ID> pairRotationGlobalMatrixId : mRotGlobalId){
+        RotationMatrix_ Rots = pairRotationGlobalMatrixId.first;
+        VertexRotationMatrix* mRot = static_cast<VertexRotationMatrix*>(optimizer.vertex(pairRotationGlobalMatrixId.second));
+        RotGlobal = mRot->estimate();
+        //std::cout << "Global Rotation matrix:\n" << Rotation << std::endl;
+    }
+
     for(pair<TranslationVector_,ID> pairTranslationVectorId : mTransId){
         TranslationVector_ Ts = pairTranslationVectorId.first;
         VertexTranslationVector* mT = static_cast<VertexTranslationVector*>(optimizer.vertex(pairTranslationVectorId.second));
-        Eigen::Vector3d t = mT->estimate();
-        //std::cout << "translation vector:\n" << t << std::endl;
+        TGlobal = mT->estimate();
+        //std::cout << "Global translation vector:\n" << t << std::endl;
     }
+    pMap->insertGlobalKeyFramesTransformation(0, 1, RotGlobal, TGlobal);
 }
 
 void arapOpen3DOptimization(Map* pMap){
