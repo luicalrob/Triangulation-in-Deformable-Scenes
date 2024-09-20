@@ -57,7 +57,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
 /*
  * Performs a As-Rigid-As-Possible optimization joined with a reprojection error minimization (optimizes 3D points positions in the space)
  */
-void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight, int nOptIterations);
+void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeight, int nOptIterations);
 
 
 void arapOpen3DOptimization(Map* pMap);

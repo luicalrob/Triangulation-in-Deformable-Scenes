@@ -72,10 +72,11 @@ public:
 
     float getSimulatedRepError();
 
-    float getOptArapWeight();
-    float getOptReprojectionWeight();
+    double getOptArapWeight();
+    double getOptReprojectionWeight();
 
     std::string getOptSelection();
+    std::string getOptWeightsSelection();
     std::string getTrianSelection();
 
     int getnOptimizations();
@@ -112,10 +113,11 @@ private:
 
     float SimulatedRepError_;
 
-    float OptArapWeight_;
-    float OptReprojectionWeight_;
+    double OptArapWeight_;
+    double OptReprojectionWeight_;
 
     std::string OptSelection_;
+    std::string OptWeightsSelection_;
     std::string TrianSelection_;
 
     int nOptimizations_;

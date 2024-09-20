@@ -90,6 +90,7 @@ Settings::Settings(const std::string& configFile) {
     OptReprojectionWeight_ = fSettings["Optimization.reprojection"];
 
     fSettings["Optimization.selection"] >> OptSelection_;
+    fSettings["Optimization.weightsSelection"] >> OptWeightsSelection_;
     fSettings["Triangulation.selection"] >> TrianSelection_;
 
     nOptimizations_ = fSettings["Optimization.numberOfOptimizations"];
@@ -218,16 +219,20 @@ float Settings::getSimulatedRepError(){
     return SimulatedRepError_;
 }
 
-float Settings::getOptArapWeight(){
+double Settings::getOptArapWeight(){
     return OptArapWeight_;
 }
 
-float Settings::getOptReprojectionWeight(){
+double Settings::getOptReprojectionWeight(){
     return OptReprojectionWeight_;
 }
 
 std::string Settings::getOptSelection(){
     return OptSelection_;
+}
+
+std::string Settings::getOptWeightsSelection(){
+    return OptWeightsSelection_;
 }
 
 std::string Settings::getTrianSelection(){

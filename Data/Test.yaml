@@ -48,7 +48,7 @@ Triangulation.minCos: 0.9998
 # LUIS
 
 #Simulated typical desviation reprojection error for keypoints
-Keypoints.RepError: 0.5
+Keypoints.RepError: 1.0
 
 #Weights for optimization
 Optimization.arap: 30.0
@@ -59,6 +59,7 @@ Optimization.numberOfOptimizations: 1
 Optimization.numberOfIterations: 10
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
+Optimization.weightsSelection: "eigen" # nlopt or eigen
 
 #Method selection
 Triangulation.selection: "InRays" # InRays TwoPoints or InRaysNearPrevSolution

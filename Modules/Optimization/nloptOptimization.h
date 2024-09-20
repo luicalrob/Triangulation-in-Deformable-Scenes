@@ -1,5 +1,5 @@
-#ifndef SLAM_NLOPTOPTIMIZATION
-#define SLAM_NLOPTOPTIMIZATION
+#ifndef SLAM_NLOPTOPTIMIZATION_H
+#define SLAM_NLOPTOPTIMIZATION_H
 
 #include "System/Settings.h"
 
@@ -21,10 +21,11 @@ struct OptimizationData {
     std::vector<Eigen::Vector3f> movedPoints;
     std::vector<int> insertedIndexes;
     int nOptIterations;
+    float repErrorStanDesv;
 };
 
 double outerObjective(const std::vector<double>& x, std::vector<double>& grad, void* data);
 
-double calculateTotalError(Map* Map, std::vector<Eigen::Vector3f> originalPoints, std::vector<Eigen::Vector3f> movedPoints, std::vector<int> insertedIndexes) ;
+double calculateTotalError(Map* Map, std::vector<Eigen::Vector3f> originalPoints, std::vector<Eigen::Vector3f> movedPoints, std::vector<int> insertedIndexes);
 
-#endif //SLAM_NLOPTOPTIMIZATION
+#endif //SLAM_NLOPTOPTIMIZATION_H

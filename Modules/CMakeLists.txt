@@ -30,6 +30,7 @@ set(HEADER_FILES
         ${root}/Map/MapPoint.h
         ${root}/Matching/DescriptorMatching.h
         ${root}/Optimization/nloptOptimization.h
+        ${root}/Optimization/EigenOptimization.h
         ${root}/Optimization/g2oBundleAdjustment.h
         ${root}/Optimization/g2oTypes.h
         ${root}/System/Settings.h
@@ -37,7 +38,8 @@ set(HEADER_FILES
         ${root}/Tracking/Frame.h
         ${root}/Visualization/FrameVisualizer.h
         ${root}/Visualization/MapVisualizer.h
-        ${root}/Utils/Geometry.h)
+        ${root}/Utils/Geometry.h
+        ${root}/Utils/CommonTypes.h)
 
 set(SOURCE_FILES
         ${root}/Calibration/PinHole.cc
@@ -46,6 +48,7 @@ set(SOURCE_FILES
         ${root}/Map/MapPoint.cc
         ${root}/Matching/DescriptorMatching.cc
         ${root}/Optimization/nloptOptimization.cc
+        ${root}/Optimization/EigenOptimization.cc
         ${root}/Optimization/g2oBundleAdjustment.cc
         ${root}/Optimization/g2oTypes.cc
         ${root}/System/Settings.cc

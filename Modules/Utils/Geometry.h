@@ -28,6 +28,9 @@
 #include <sophus/se3.hpp>
 #include <opencv2/opencv.hpp>
 #include "Map/Map.h"
+#include "Utils/CommonTypes.h"
+#include "Optimization/g2oBundleAdjustment.h"
+#include "Optimization/g2oTypes.h"
 
 #include "open3d/Open3D.h"
 #include "open3d/geometry/Qhull.h"
@@ -109,5 +112,10 @@ static inline Eigen::Vector2i GetOrderedEdge(int vidx0, int vidx1) {
 }
 
 Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &p3D1, const Eigen::Vector3f &rayOrigin, const Eigen::Vector3f &rayDir);
+
+/*
+ * Given a map with map points, it return the standard desviation of the reprojection error in pixels
+ */
+double calculatePixelsStandDev(Map* Map);
 
 #endif //SLAM_GEOMETRY_H

@@ -133,12 +133,13 @@ private:
     std::vector<Eigen::Vector3f> originalPoints_;
     std::vector<Eigen::Vector3f> movedPoints_;
 
-    float simulatedRepError_;
+    float simulatedRepErrorStanDesv_;
 
-    float arapBalanceWeight_;
-    float reprojectionBalanceWeight_;
+    double arapBalanceWeight_;
+    double reprojectionBalanceWeight_;
 
     std::string OptSelection_;
+    std::string OptWeightsSelection_;
     std::string TrianSelection_;
 
     int nOptimizations_;

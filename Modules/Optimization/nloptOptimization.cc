@@ -3,11 +3,11 @@
 
 #include "Utils/Geometry.h"
 #include "Optimization/nloptOptimization.h"
-
+#include "Utils/CommonTypes.h"
 
 double outerObjective(const std::vector<double>& x, std::vector<double>& grad, void* data) {
-    float repBalanceWeight = x[0];
-    float arapBalanceWeight = x[1];
+    double repBalanceWeight = x[0];
+    double arapBalanceWeight = x[1];
 
     OptimizationData* pData = static_cast<OptimizationData*>(data);
     Map* Map = pData->pMap;
@@ -15,12 +15,17 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
     std::vector<Eigen::Vector3f>& movedPoints = pData->movedPoints;
     std::vector<int>& insertedIndexes = pData->insertedIndexes;
     int& nOptIterations = pData->nOptIterations;
+    float repErrorStanDesv = pData->repErrorStanDesv;
 
 
     arapOptimization(Map, repBalanceWeight, arapBalanceWeight, nOptIterations);
 
-    double error = calculateTotalError(Map, originalPoints, movedPoints, insertedIndexes);
+    //double error = calculateTotalError(Map, originalPoints, movedPoints, insertedIndexes);
+    double stanDeviation = calculatePixelsStandDev(Map);
 
+    double error = std::pow(repErrorStanDesv - stanDeviation, 2);
+
+    std::cout << "error: " << error << "\n";
     return error;
 }
 
