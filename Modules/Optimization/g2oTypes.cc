@@ -274,37 +274,6 @@ EdgeARAP::EdgeARAP(){
     resize(4);
 }
 
-// ONLY ONE POINT AND R
-// EdgeARAP::EdgeARAP(){}
-
-// bool EdgeARAP::read(std::istream& is){
-
-//     for (int i=0; i<3; i++){
-//         is >> _measurement[i];
-//     }
-
-//     for (int i=0; i<3; i++)
-//         for (int j=i; j<3; j++) {
-//             is >> information()(i,j);
-//             if (i!=j)
-//                 information()(j,i)=information()(i,j);
-//         }
-//     return true;
-// }
-
-// bool EdgeARAP::write(std::ostream& os) const {
-
-//     for (int i=0; i<3; i++){
-//         os << measurement()[i] << " ";
-//     }
-
-//     for (int i=0; i<3; i++)
-//         for (int j=i; j<3; j++){
-//             os << " " <<  information()(i,j);
-//         }
-//     return os.good();
-// }
-
 bool EdgeARAP::read(std::istream& is) {
     is >> _measurement;
 
