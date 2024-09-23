@@ -23,15 +23,9 @@
 #include "open3d/geometry/Qhull.h"
 #include "open3d/geometry/TetraMesh.h"
 
+#include "Utils/CommonTypes.h"
+
 #include <random> 
-
-
-using namespace std;
-
-typedef shared_ptr<MapPoint> MapPoint_;
-typedef shared_ptr<KeyFrame> KeyFrame_;
-typedef shared_ptr<Eigen::Matrix3d> RotationMatrix_;
-typedef shared_ptr<Eigen::Vector3d> TranslationVector_;
 
 void bundleAdjustment(Map* pMap){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
@@ -441,7 +435,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     }
 }
 
-void arapOptimization(Map* pMap, float repBalanceWeight, float arapBalanceWeight, int nOptIterations){
+void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeight, int nOptIterations){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
     unordered_map<RotationMatrix_,size_t> mRotId;

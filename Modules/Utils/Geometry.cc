@@ -380,3 +380,145 @@ Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &point, const Eigen:
     
     return closestPoint;
 }
+
+
+double calculatePixelsStandDev(Map* Map){
+    Eigen::Vector2d meanRepErrorUVC1 = Eigen::Vector2d::Zero();
+    double meanRepErrorC1 = 0;
+    double desvRepErrorC1 = 0;
+    Eigen::Vector2d meanRepErrorUVC2 = Eigen::Vector2d::Zero();
+    double meanRepErrorC2 = 0; 
+    double desvRepErrorC2 = 0;
+    Eigen::Vector2d meanRepErrorUV = Eigen::Vector2d::Zero();
+    double meanRepError = 0;
+    double desvRepError = 0;
+    
+    size_t nMatches = 0;
+    size_t validPairs = 0;
+
+    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = Map->getKeyFrames();
+
+    //std::cout << "\nKEYFRAMES k AND k+1 MEASUREMENTS: \n";
+    for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
+        for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
+            KeyFrame_ pKF1 = k2->second;
+            KeyFrame_ pKF2 = k1->second;
+            //std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
+
+            vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
+            vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
+
+            std::shared_ptr<CameraModel> pCamera1 = pKF1->getCalibration();
+            g2o::SE3Quat camera1Pose = g2o::SE3Quat(pKF1->getPose().unit_quaternion().cast<double>(),pKF1->getPose().translation().cast<double>());
+            std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
+            g2o::SE3Quat camera2Pose = g2o::SE3Quat(pKF2->getPose().unit_quaternion().cast<double>(),pKF2->getPose().translation().cast<double>());
+
+            for (size_t i = 0; i < v1MPs.size(); i++) {
+                MapPoint_ pMPi1 = v1MPs[i];
+                MapPoint_ pMPi2 = v2MPs[i];
+                if (!pMPi1) continue;
+                if (!pMPi2) continue;
+
+
+                //Reprojection error
+                //C1
+                cv::Point2f uv = pKF1->getKeyPoint(i).pt;
+                Eigen::Vector2d obs;
+                obs << uv.x, uv.y;  //Observed point in the image
+                   
+                Eigen::Vector3d p3Dw = pMPi1->getWorldPosition().cast<double>();    //Predicted 3D world position  of the point
+
+                Eigen::Vector3d p3Dc = camera1Pose.map(p3Dw);
+                Eigen::Vector2f projected;
+                pCamera1->project(p3Dc.cast<float>(), projected);
+
+                Eigen::Vector2d pixelsError = (obs - projected.cast<double>());
+                meanRepErrorUVC1 += pixelsError.cwiseAbs();
+                meanRepErrorUV += pixelsError.cwiseAbs();
+
+                //C2
+                uv = pKF2->getKeyPoint(i).pt;
+                obs << uv.x, uv.y;  //Observed point in the image
+                   
+                p3Dw = pMPi2->getWorldPosition().cast<double>();    //Predicted 3D world position  of the point
+
+                p3Dc = camera2Pose.map(p3Dw);
+                projected;
+                pCamera2->project(p3Dc.cast<float>(), projected);
+
+                pixelsError = (obs - projected.cast<double>());    
+                meanRepErrorUVC2 += pixelsError.cwiseAbs();
+                meanRepErrorUV += pixelsError.cwiseAbs();
+
+                nMatches++;
+            }
+
+            if (nMatches > 0) {
+                meanRepErrorUVC1 /= static_cast<double>(nMatches);
+                meanRepErrorUVC2 /= static_cast<double>(nMatches);
+                meanRepErrorUV /= static_cast<double>(2 * nMatches);
+
+                meanRepErrorC1 = (meanRepErrorUVC1[0] + meanRepErrorUVC1[1]) / 2.0;
+                meanRepErrorC2 = (meanRepErrorUVC2[0] + meanRepErrorUVC2[1]) / 2.0;
+                meanRepError = (meanRepErrorUV[0] + meanRepErrorUV[1]) / 2.0;
+
+                // calculate the sum of squared differences from the mean for standard deviation
+                Eigen::Vector2d sumSquaredDifferencesUVC1 = Eigen::Vector2d::Zero();
+                Eigen::Vector2d sumSquaredDifferencesUVC2 = Eigen::Vector2d::Zero();
+                Eigen::Vector2d sumSquaredDifferencesUV = Eigen::Vector2d::Zero();
+
+                for (size_t i = 0; i < v1MPs.size(); i++) {
+                    MapPoint_ pMPi1 = v1MPs[i];
+                    MapPoint_ pMPi2 = v2MPs[i];
+                    if (!pMPi1 || !pMPi2) continue;
+
+                    // Reprojection error for C1
+                    cv::Point2f uv = pKF1->getKeyPoint(i).pt;
+                    Eigen::Vector2d obs;
+                    obs << uv.x, uv.y;
+
+                    Eigen::Vector3d p3Dw = pMPi1->getWorldPosition().cast<double>();
+                    Eigen::Vector3d p3Dc = camera1Pose.map(p3Dw);
+                    Eigen::Vector2f projected;
+                    pCamera1->project(p3Dc.cast<float>(), projected);
+
+                    Eigen::Vector2d pixelsError = (obs - projected.cast<double>()).cwiseAbs();
+                    sumSquaredDifferencesUVC1 += (pixelsError - meanRepErrorUVC1).cwiseAbs2();
+                    sumSquaredDifferencesUV += (pixelsError - meanRepErrorUV).cwiseAbs2();
+
+                    // Reprojection error for C2
+                    uv = pKF2->getKeyPoint(i).pt;
+                    obs << uv.x, uv.y;
+
+                    p3Dw = pMPi2->getWorldPosition().cast<double>();
+                    p3Dc = camera2Pose.map(p3Dw);
+                    pCamera2->project(p3Dc.cast<float>(), projected);
+
+                    pixelsError = (obs - projected.cast<double>()).cwiseAbs();
+                    sumSquaredDifferencesUVC2 += (pixelsError - meanRepErrorUVC2).cwiseAbs2();
+                    sumSquaredDifferencesUV += (pixelsError - meanRepErrorUV).cwiseAbs2();
+                }
+
+                // Variance calculation
+                Eigen::Vector2d varianceUVC1 = sumSquaredDifferencesUVC1 / static_cast<double>(nMatches);
+                Eigen::Vector2d varianceUVC2 = sumSquaredDifferencesUVC2 / static_cast<double>(nMatches);
+                Eigen::Vector2d varianceUV = sumSquaredDifferencesUV / static_cast<double>(2 * nMatches);
+
+                // Standard deviation (sqrt of variance)
+                Eigen::Vector2d stdDevUVC1 = varianceUVC1.cwiseSqrt();
+                Eigen::Vector2d stdDevUVC2 = varianceUVC2.cwiseSqrt();
+                Eigen::Vector2d stdDevUV = varianceUV.cwiseSqrt();
+
+                desvRepErrorC1 = (stdDevUVC1[0] + stdDevUVC1[1]) / 2.0;
+                desvRepErrorC2 = (stdDevUVC2[0] + stdDevUVC2[1]) / 2.0;
+                desvRepError = (stdDevUV[0] + stdDevUV[1]) / 2.0;
+                } else {
+                std::cout << "No points to compare." << std::endl;
+            }
+        }
+    }
+
+    std::cout << "desvRepErrorC1: " << desvRepErrorC1 << "\n";
+    std::cout << "desvRepErrorC2: " << desvRepErrorC2 << "\n";
+    return desvRepErrorC2;
+}

@@ -22,15 +22,15 @@
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
 #include "Optimization/nloptOptimization.h"
+#include "Optimization/EigenOptimization.h"
+
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <unsupported/Eigen/NumericalDiff>
 
 #include <nlopt.hpp>
 
 #include <memory>
-
-using namespace std;
-typedef shared_ptr<MapPoint> MapPoint_;
-typedef shared_ptr<KeyFrame> KeyFrame_;
-typedef shared_ptr<Eigen::Matrix3d> RotationMatrix_;
+#include "Utils/CommonTypes.h"
 
 SLAM::SLAM(const std::string &settingsFile) {
     //Load settings from file
@@ -55,12 +55,13 @@ SLAM::SLAM(const std::string &settingsFile) {
     prevCalibration_ = prevFrame_.getCalibration();
     currCalibration_ = currFrame_.getCalibration();
 
-    simulatedRepError_ = settings_.getSimulatedRepError();
+    simulatedRepErrorStanDesv_ = settings_.getSimulatedRepError();
 
     arapBalanceWeight_ = settings_.getOptArapWeight();
     reprojectionBalanceWeight_ = settings_.getOptReprojectionWeight();
 
     OptSelection_ = settings_.getOptSelection();
+    OptWeightsSelection_ = settings_.getOptWeightsSelection();
     TrianSelection_ = settings_.getTrianSelection();
 
     nOptimizations_ = settings_.getnOptimizations();
@@ -181,7 +182,7 @@ void SLAM::viusualizeSolution() {
 
 void SLAM::createKeyPoints() {
     std::default_random_engine generator;
-    std::normal_distribution<float> distribution(0.0f, simulatedRepError_);
+    std::normal_distribution<float> distribution(0.0f, simulatedRepErrorStanDesv_);
 
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
@@ -347,35 +348,70 @@ void SLAM::mapping() {
     if (OptSelection_ == "open3DArap") {
         arapOpen3DOptimization(pMap_.get());
     } else if(OptSelection_ == "twoOptimizations") {
-        nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
+        if ( OptWeightsSelection_ == "nlopt") {
+            nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
 
-        std::vector<double> lb = {0.0, 0.0};
-        std::vector<double> ub = {10.0, 100.0};
-        opt.set_lower_bounds(lb);
-        opt.set_upper_bounds(ub);
+            std::vector<double> lb = {0.0, 0.0};
+            std::vector<double> ub = {10.0, 100.0};
+            opt.set_lower_bounds(lb);
+            opt.set_upper_bounds(ub);
 
-        OptimizationData optData;
-        optData.pMap = pMap_.get();
-        optData.originalPoints = originalPoints_; 
-        optData.movedPoints = movedPoints_;  
-        optData.insertedIndexes = insertedIndexes_;
-        optData.nOptIterations = nOptIterations_;
+            OptimizationData optData;
+            
+            std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
 
-        opt.set_min_objective(outerObjective, &optData);
+            optData.pMap = new Map(*pMapCopy);
 
-        std::vector<double> x = {reprojectionBalanceWeight_, arapBalanceWeight_};
+            optData.originalPoints = originalPoints_; 
+            optData.movedPoints = movedPoints_;  
+            optData.insertedIndexes = insertedIndexes_;
+            optData.nOptIterations = nOptIterations_;
+            optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
 
-        // Set the optimization stopping criteria
-        opt.set_xtol_rel(1e-1);
-        opt.set_xtol_abs(1e-1);
+            opt.set_min_objective(outerObjective, &optData);
 
-        double minf;
-        nlopt::result result = opt.optimize(x, minf);
+            std::vector<double> x = {reprojectionBalanceWeight_, arapBalanceWeight_};
 
-        std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
-        std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
-        std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
-        std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
+            opt.set_xtol_rel(1.5e-1);
+            opt.set_xtol_abs(1.5e-1);
+            opt.set_maxeval(10);
+
+            double minf;
+            nlopt::result result = opt.optimize(x, minf);
+
+            std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
+            std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
+            std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+            std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
+
+            std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+            arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+        } else {
+            Eigen::VectorXd x(2);
+            // Initial values
+            x[0] = reprojectionBalanceWeight_;
+            x[1] = arapBalanceWeight_;
+
+            std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
+            EigenOptimizationFunctor functor(new Map(*pMapCopy), nOptIterations_, simulatedRepErrorStanDesv_); 
+            
+            Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
+            Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
+            levenbergMarquardt.parameters.ftol = 1.5e-1;
+            levenbergMarquardt.parameters.xtol = 1.5e-1;
+            levenbergMarquardt.parameters.maxfev = 10;
+
+
+            int ret = levenbergMarquardt.minimize(x);
+            std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
+
+            std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
+            std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
+            std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+
+            std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+            arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+        }
     } else {
         arapOptimization(pMap_.get(), reprojectionBalanceWeight_, arapBalanceWeight_, nOptIterations_);
     }
@@ -518,10 +554,13 @@ void SLAM::measureRelativeErrors(){
 
     Eigen::Vector2d meanRepErrorUVC1 = Eigen::Vector2d::Zero();
     double meanRepErrorC1 = 0;
+    double desvRepErrorC1 = 0;
     Eigen::Vector2d meanRepErrorUVC2 = Eigen::Vector2d::Zero();
     double meanRepErrorC2 = 0; 
+    double desvRepErrorC2 = 0;
     Eigen::Vector2d meanRepErrorUV = Eigen::Vector2d::Zero();
     double meanRepError = 0;
+    double desvRepError = 0;
     
     size_t nMatches = 0;
     size_t validPairs = 0;
@@ -607,7 +646,7 @@ void SLAM::measureRelativeErrors(){
 
                 pixelsError = (obs - projected.cast<double>());    
                 meanRepErrorUVC2 += pixelsError.cwiseAbs();
-                meanRepErrorUV += pixelsError.cwiseAbs();;
+                meanRepErrorUV += pixelsError.cwiseAbs();
 
 
                 //ARAP error
@@ -658,9 +697,64 @@ void SLAM::measureRelativeErrors(){
                 //std::cout << "\nTotal movement: " << total_movement << std::endl;
                 std::cout << std::fixed << std::setprecision(10);
                 //std::cout << "Average relative error: " << meanRelativeError[0] << ", " << meanRelativeError[1] << ", " << meanRelativeError[2] << std::endl;
+
+                // calculate the sum of squared differences from the mean for standard deviation
+                Eigen::Vector2d sumSquaredDifferencesUVC1 = Eigen::Vector2d::Zero();
+                Eigen::Vector2d sumSquaredDifferencesUVC2 = Eigen::Vector2d::Zero();
+                Eigen::Vector2d sumSquaredDifferencesUV = Eigen::Vector2d::Zero();
+
+                for (size_t i = 0; i < v1MPs.size(); i++) {
+                    MapPoint_ pMPi1 = v1MPs[i];
+                    MapPoint_ pMPi2 = v2MPs[i];
+                    if (!pMPi1 || !pMPi2) continue;
+
+                    // Reprojection error for C1
+                    cv::Point2f uv = pKF1->getKeyPoint(i).pt;
+                    Eigen::Vector2d obs;
+                    obs << uv.x, uv.y;
+
+                    Eigen::Vector3d p3Dw = pMPi1->getWorldPosition().cast<double>();
+                    Eigen::Vector3d p3Dc = camera1Pose.map(p3Dw);
+                    Eigen::Vector2f projected;
+                    pCamera1->project(p3Dc.cast<float>(), projected);
+
+                    Eigen::Vector2d pixelsError = (obs - projected.cast<double>()).cwiseAbs();
+                    sumSquaredDifferencesUVC1 += (pixelsError - meanRepErrorUVC1).cwiseAbs2();
+                    sumSquaredDifferencesUV += (pixelsError - meanRepErrorUV).cwiseAbs2();
+
+                    // Reprojection error for C2
+                    uv = pKF2->getKeyPoint(i).pt;
+                    obs << uv.x, uv.y;
+
+                    p3Dw = pMPi2->getWorldPosition().cast<double>();
+                    p3Dc = camera2Pose.map(p3Dw);
+                    pCamera2->project(p3Dc.cast<float>(), projected);
+
+                    pixelsError = (obs - projected.cast<double>()).cwiseAbs();
+                    sumSquaredDifferencesUVC2 += (pixelsError - meanRepErrorUVC2).cwiseAbs2();
+                    sumSquaredDifferencesUV += (pixelsError - meanRepErrorUV).cwiseAbs2();
+                }
+
+                // Variance calculation
+                Eigen::Vector2d varianceUVC1 = sumSquaredDifferencesUVC1 / static_cast<double>(nMatches);
+                Eigen::Vector2d varianceUVC2 = sumSquaredDifferencesUVC2 / static_cast<double>(nMatches);
+                Eigen::Vector2d varianceUV = sumSquaredDifferencesUV / static_cast<double>(2 * nMatches);
+
+                // Standard deviation (sqrt of variance)
+                Eigen::Vector2d stdDevUVC1 = varianceUVC1.cwiseSqrt();
+                Eigen::Vector2d stdDevUVC2 = varianceUVC2.cwiseSqrt();
+                Eigen::Vector2d stdDevUV = varianceUV.cwiseSqrt();
+
+                desvRepErrorC1 = (stdDevUVC1[0] + stdDevUVC1[1]) / 2.0;
+                desvRepErrorC2 = (stdDevUVC2[0] + stdDevUVC2[1]) / 2.0;
+                desvRepError = (stdDevUV[0] + stdDevUV[1]) / 2.0;
+
                 std::cout << "Pixels C1 error (average): " << meanRepErrorC1 << std::endl;
+                std::cout << "Pixels C1 error (standard desv): " << desvRepErrorC1 << std::endl;
                 std::cout << "Pixels C2 error (average): " << meanRepErrorC2 << std::endl;
+                std::cout << "Pixels C2 error (standard desv): " << desvRepErrorC2 << std::endl;
                 std::cout << "Pixels error (average): " << meanRepError << std::endl;
+                std::cout << "Pixels error (standard desv): " << desvRepError << std::endl;
                 
                 std::cout << "Average squared norm relative error: " << meanSquaredNormRelativeError << std::endl;
             } else {
