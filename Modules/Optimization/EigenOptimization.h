@@ -49,7 +49,6 @@ int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const
 
     std::cout << "error: " << error << "\n";
 
-    // Implement y = 10*(x0+3)^2 + (x1-5)^2
     fvec(0) = error;
     fvec(1) = 0;
 

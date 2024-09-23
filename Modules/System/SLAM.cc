@@ -256,7 +256,7 @@ void SLAM::mapping() {
         } else {
             triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         }
-        //x3D_1 = x3D_prev;
+        x3D_1 = x3D_prev;
         //triangulateBerkeley(xn1, xn2, prevFrame_, currFrame_, x3D_1, x3D_2); 
         // triangulate(xn1, xn2, T1w, T2w, x3D);
         // x3D_1 = x3D;
