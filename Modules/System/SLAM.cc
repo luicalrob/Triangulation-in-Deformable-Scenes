@@ -358,13 +358,12 @@ void SLAM::mapping() {
 
             OptimizationData optData;
             
-            std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
+            // std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
 
-            optData.pMap = new Map(*pMapCopy);
+            // optData.pMap = new Map(*pMapCopy);
+            //std::shared_ptr<Map> pMapCopy = pMap_->clone(); // Assuming clone() is defined in Map
+            optData.pMap = pMap_.get();
 
-            optData.originalPoints = originalPoints_; 
-            optData.movedPoints = movedPoints_;  
-            optData.insertedIndexes = insertedIndexes_;
             optData.nOptIterations = nOptIterations_;
             optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
 
@@ -392,8 +391,7 @@ void SLAM::mapping() {
             x[0] = reprojectionBalanceWeight_;
             x[1] = arapBalanceWeight_;
 
-            std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
-            EigenOptimizationFunctor functor(new Map(*pMapCopy), nOptIterations_, simulatedRepErrorStanDesv_); 
+            EigenOptimizationFunctor functor(pMap_.get(), nOptIterations_, simulatedRepErrorStanDesv_); 
             
             Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
             Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);

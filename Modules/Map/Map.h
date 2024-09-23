@@ -166,6 +166,10 @@ public:
         assert(graphIds.size() == 0);*/
     }
 
+    std::shared_ptr<Map> clone() const {
+        return std::make_shared<Map>(*this);
+    }
+
 private:
     /*
      * Updates the orientation and most distinctive descriptor of a MapPoint

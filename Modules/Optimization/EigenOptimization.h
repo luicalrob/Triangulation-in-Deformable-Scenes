@@ -41,9 +41,12 @@ double repErrorStanDesv; // Standard deviation of error
 
 int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const
 {   
-    arapOptimization(pMap, x(0), x(1), nIterations);
+    std::shared_ptr<Map> pMapCopy = pMap->clone();
+    Map* pMapRawPointerCopy = new Map(*pMapCopy);
+
+    arapOptimization(pMapRawPointerCopy, x(0), x(1), nIterations);
     
-    double stanDeviation = calculatePixelsStandDev(pMap);
+    double stanDeviation = calculatePixelsStandDev(pMapRawPointerCopy);
 
     double error = std::pow(repErrorStanDesv - stanDeviation, 2);
 
