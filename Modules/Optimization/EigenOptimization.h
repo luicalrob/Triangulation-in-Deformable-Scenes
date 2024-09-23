@@ -10,51 +10,51 @@
 #include "Utils/CommonTypes.h"
 
 template<typename _Scalar, int NX = Eigen::Dynamic, int NY = Eigen::Dynamic>
-struct Functor
-{
-typedef _Scalar Scalar;
-enum {
-    InputsAtCompileTime = NX,
-    ValuesAtCompileTime = NY
-};
-typedef Eigen::Matrix<Scalar,InputsAtCompileTime,1> InputType;
-typedef Eigen::Matrix<Scalar,ValuesAtCompileTime,1> ValueType;
-typedef Eigen::Matrix<Scalar,ValuesAtCompileTime,InputsAtCompileTime> JacobianType;
+struct Functor {
+    typedef _Scalar Scalar;
+    enum {
+        InputsAtCompileTime = NX,
+        ValuesAtCompileTime = NY
+    };
+    typedef Eigen::Matrix<Scalar,InputsAtCompileTime,1> InputType;
+    typedef Eigen::Matrix<Scalar,ValuesAtCompileTime,1> ValueType;
+    typedef Eigen::Matrix<Scalar,ValuesAtCompileTime,InputsAtCompileTime> JacobianType;
 
-int m_inputs, m_values;
+    int m_inputs, m_values;
 
-Functor() : m_inputs(InputsAtCompileTime), m_values(ValuesAtCompileTime) {}
-Functor(int inputs, int values) : m_inputs(inputs), m_values(values) {}
+    Functor() : m_inputs(InputsAtCompileTime), m_values(ValuesAtCompileTime) {}
+    Functor(int inputs, int values) : m_inputs(inputs), m_values(values) {}
 
-int inputs() const { return m_inputs; }
-int values() const { return m_values; }
-
+    int inputs() const { return m_inputs; }
+    int values() const { return m_values; }
 };
 
-struct EigenOptimizationFunctor : Functor<double>
-{
-EigenOptimizationFunctor(Map* map, int iterations, double error): Functor<double>(2,2), pMap(map), nIterations(iterations), repErrorStanDesv(error) {}
+struct EigenOptimizationFunctor : Functor<double> {
+    EigenOptimizationFunctor(Map* map, int iterations, double error): Functor<double>(2,2), pMap(map), nIterations(iterations), repErrorStanDesv(error) {}
 
-Map* pMap;           // Pointer to a Map object
-int nIterations;     // Number of iterations
-double repErrorStanDesv; // Standard deviation of error
+    Map* pMap;           // Pointer to a Map object
+    int nIterations;     // Number of iterations
+    double repErrorStanDesv; // Standard deviation of error
 
-int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const
-{   
-    arapOptimization(pMap, x(0), x(1), nIterations);
-    
-    double stanDeviation = calculatePixelsStandDev(pMap);
+    int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const {   
+        arapOptimization(pMap, x(0), x(1), nIterations);
+        
+        double stanDeviation1 = calculatePixelsStandDev(pMap, cameraSelection::C1);
+        double stanDeviation2 = calculatePixelsStandDev(pMap, cameraSelection::C2);
+        std::cout << "stanDeviation1: " << stanDeviation1 << "\n";
+        std::cout << "stanDeviation2: " << stanDeviation2 << "\n";
 
-    double error = std::pow(repErrorStanDesv - stanDeviation, 2);
+        double errorC1 = std::pow(repErrorStanDesv - stanDeviation1, 2);
+        double errorC2 = std::pow(repErrorStanDesv - stanDeviation2, 2);
 
-    std::cout << "error: " << error << "\n";
+        std::cout << "errorC1: " << errorC1 << "\n";
+        std::cout << "errorC2: " << errorC2 << "\n";
 
-    // Implement y = 10*(x0+3)^2 + (x1-5)^2
-    fvec(0) = error;
-    fvec(1) = 0;
+        fvec(0) = errorC1;
+        fvec(1) = errorC2;
 
-    return 0;
-}
+        return 0;
+    }
 };
 
 #endif // EIGEN_OPTIMIZATION_H

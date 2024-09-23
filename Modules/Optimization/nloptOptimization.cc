@@ -21,7 +21,7 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
     arapOptimization(Map, repBalanceWeight, arapBalanceWeight, nOptIterations);
 
     //double error = calculateTotalError(Map, originalPoints, movedPoints, insertedIndexes);
-    double stanDeviation = calculatePixelsStandDev(Map);
+    double stanDeviation = calculatePixelsStandDev(Map, cameraSelection::Combined);
 
     double error = std::pow(repErrorStanDesv - stanDeviation, 2);
 

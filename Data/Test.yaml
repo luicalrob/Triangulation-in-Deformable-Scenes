@@ -59,7 +59,7 @@ Optimization.numberOfOptimizations: 1
 Optimization.numberOfIterations: 10
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
-Optimization.weightsSelection: "nlopt" # nlopt or eigen
+Optimization.weightsSelection: "eigen" # nlopt or eigen
 
 #Method selection
 Triangulation.selection: "InRays" # InRays TwoPoints or InRaysNearPrevSolution
