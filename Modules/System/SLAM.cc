@@ -357,7 +357,11 @@ void SLAM::mapping() {
             opt.set_upper_bounds(ub);
 
             OptimizationData optData;
-            optData.pMap = pMap_.get();
+            
+            std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
+
+            optData.pMap = new Map(*pMapCopy);
+
             optData.originalPoints = originalPoints_; 
             optData.movedPoints = movedPoints_;  
             optData.insertedIndexes = insertedIndexes_;
@@ -368,8 +372,9 @@ void SLAM::mapping() {
 
             std::vector<double> x = {reprojectionBalanceWeight_, arapBalanceWeight_};
 
-            opt.set_xtol_rel(1e-3);
-            opt.set_xtol_abs(1e-3);
+            opt.set_xtol_rel(1.5e-1);
+            opt.set_xtol_abs(1.5e-1);
+            opt.set_maxeval(10);
 
             double minf;
             nlopt::result result = opt.optimize(x, minf);
@@ -378,37 +383,34 @@ void SLAM::mapping() {
             std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
             std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
             std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
+
+            std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+            arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
         } else {
             Eigen::VectorXd x(2);
             // Initial values
             x[0] = reprojectionBalanceWeight_;
             x[1] = arapBalanceWeight_;
 
-            EigenOptimizationFunctor functor(pMap_.get(), nOptIterations_, simulatedRepErrorStanDesv_); 
+            std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
+            EigenOptimizationFunctor functor(new Map(*pMapCopy), nOptIterations_, simulatedRepErrorStanDesv_); 
             
             Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
-            Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>> lm(numDiff);
-            lm.parameters.maxfev = 2000;
-            lm.parameters.xtol = 1.0e-6;
-            lm.parameters.ftol = 1.0e-6;
+            Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
+            levenbergMarquardt.parameters.ftol = 1.5e-1;
+            levenbergMarquardt.parameters.xtol = 1.5e-1;
+            levenbergMarquardt.parameters.maxfev = 10;
 
-            std::cout << "Initial guess x: " << x.transpose() << std::endl;
-            std::cout << "Functor inputs: " << functor.inputs() << std::endl;
-            std::cout << "Functor values: " << functor.values() << std::endl;
 
-            std::cout << "Starting optimization with initial x: " << x.transpose() << std::endl;
-
-            int ret = lm.minimize(x);
-            std::cout << "Number of iterations: " << lm.iter << std::endl;
-            std::cout << "Return status: " << ret << std::endl;
-
-            if (ret == Eigen::LevenbergMarquardtSpace::ImproperInputParameters) {
-                std::cerr << "Improper Input Parameters" << std::endl;
-            }
+            int ret = levenbergMarquardt.minimize(x);
+            std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
 
             std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
             std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
             std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+
+            std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+            arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
         }
     } else {
         arapOptimization(pMap_.get(), reprojectionBalanceWeight_, arapBalanceWeight_, nOptIterations_);

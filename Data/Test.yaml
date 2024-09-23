@@ -51,15 +51,15 @@ Triangulation.minCos: 0.9998
 Keypoints.RepError: 1.0
 
 #Weights for optimization
-Optimization.arap: 30.0
-Optimization.reprojection: 0.5
+Optimization.arap: 80.0
+Optimization.reprojection: 0.25
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
 Optimization.numberOfIterations: 10
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
-Optimization.weightsSelection: "eigen" # nlopt or eigen
+Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
 #Method selection
 Triangulation.selection: "InRays" # InRays TwoPoints or InRaysNearPrevSolution

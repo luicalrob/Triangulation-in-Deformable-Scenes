@@ -48,7 +48,6 @@ set(SOURCE_FILES
         ${root}/Map/MapPoint.cc
         ${root}/Matching/DescriptorMatching.cc
         ${root}/Optimization/nloptOptimization.cc
-        ${root}/Optimization/EigenOptimization.cc
         ${root}/Optimization/g2oBundleAdjustment.cc
         ${root}/Optimization/g2oTypes.cc
         ${root}/System/Settings.cc
