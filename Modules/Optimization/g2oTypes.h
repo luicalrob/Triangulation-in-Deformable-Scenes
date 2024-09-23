@@ -260,18 +260,10 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        // NORMAL
-        // const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        // const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
-        // const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
-        // const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[3]);
-
-        // ONLY ONE POINT AND R
-        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
-        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
-        const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[3]);
-        const VertexRotationMatrix* vRg = static_cast<const VertexRotationMatrix*>(_vertices[4]);
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[1]);
+        const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[2]);
+        const VertexRotationMatrix* vRg = static_cast<const VertexRotationMatrix*>(_vertices[3]);
 
         //Eigen::Vector3d obs(_measurement);
         double obs(_measurement);
@@ -280,30 +272,16 @@ public:
         Eigen::Matrix3d R = vR->estimate();
         Eigen::Vector3d t = vT->estimate();
         Eigen::Matrix3d Rg = vRg->estimate();
-        //diff = (v2->estimate() - Xj2world) - ( R * (v1->estimate() - Xj1world) + t ); // [DUDA] should i use other two vertex instead of _measurement?
 
-        // NORMAL
-        // diff = (v1->estimate() - Xj1world) - ( R * (v2->estimate() - Xj2world));
 
-        // ONLY ONE POINT AND R
-        diff = (v1->estimate() - Xj1world) - (R * (v2->estimate() - Xj2world)) + Rg * (v1->estimate() - v2->estimate()) - t;
+        diff = (Xi1world - Xj1world) - (R * (v2->estimate() - Xj2world)) + Rg * (Xi1world - v2->estimate()) - t;
 
-        //Eigen::Vector3d squaredNormComponents = diff.array().square();
         double energy = diff.squaredNorm();
 
-        // _error = weight * squaredNormComponents;
-        // std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
-
-        _error[0] = weight * energy;
-        // std::cout << "ARAP error: " << _error[0] << "\n" << std::endl;   
-        // Eigen::Vector3d error = obs - (v2->estimate() - Xj2world) - R * (v1->estimate() - Xj1world);
-        // Eigen::Vector3d squaredNormComponents = error.array().square();
-        // _error = weight * squaredNormComponents;     
+        _error[0] = weight * energy;  
     }
 
-    // virtual void linearizeOplus();
-
-    // ONLY ONE POINT AND R
+    Eigen::Vector3d Xi1world;
 
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;
