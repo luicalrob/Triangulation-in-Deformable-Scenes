@@ -267,10 +267,11 @@ public:
         // const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[3]);
 
         // ONLY ONE POINT AND R
-        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[1]);
-        const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[2]);
-        const VertexRotationMatrix* vRg = static_cast<const VertexRotationMatrix*>(_vertices[3]);
+        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
+        const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[3]);
+        const VertexRotationMatrix* vRg = static_cast<const VertexRotationMatrix*>(_vertices[4]);
 
         //Eigen::Vector3d obs(_measurement);
         double obs(_measurement);
@@ -285,7 +286,7 @@ public:
         // diff = (v1->estimate() - Xj1world) - ( R * (v2->estimate() - Xj2world));
 
         // ONLY ONE POINT AND R
-        diff = (Xi1world - Xj1world) - (R * (v2->estimate() - Xj2world)) + Rg * (Xi1world - v2->estimate()) - t;
+        diff = (v1->estimate() - Xj1world) - (R * (v2->estimate() - Xj2world)) + Rg * (v1->estimate() - v2->estimate()) - t;
 
         //Eigen::Vector3d squaredNormComponents = diff.array().square();
         double energy = diff.squaredNorm();
@@ -303,7 +304,6 @@ public:
     // virtual void linearizeOplus();
 
     // ONLY ONE POINT AND R
-    Eigen::Vector3d Xi1world;
 
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;

@@ -271,7 +271,7 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 // NORMAL
 EdgeARAP::EdgeARAP(){
-    resize(4);
+    resize(5);
 }
 
 // ONLY ONE POINT AND R
