@@ -32,6 +32,16 @@ public:
      * Constructor from a Frame
      */
     KeyFrame(Frame& f);
+ 
+    /*
+     * Copy constructor
+     */
+    KeyFrame(const KeyFrame& other);
+
+    /*
+     * Clone method
+     */
+    KeyFrame* clone() const;
 
     /*
      * Gets the pose of the KeyFrame
@@ -172,6 +182,5 @@ private:
 
     double timestamp_;
 };
-
 
 #endif //SLAM_KEYFRAME_H

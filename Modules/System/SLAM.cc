@@ -357,14 +357,7 @@ void SLAM::mapping() {
             opt.set_upper_bounds(ub);
 
             OptimizationData optData;
-            
-            std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
-
-            optData.pMap = new Map(*pMapCopy);
-
-            optData.originalPoints = originalPoints_; 
-            optData.movedPoints = movedPoints_;  
-            optData.insertedIndexes = insertedIndexes_;
+            optData.pMap = pMap_->clone();
             optData.nOptIterations = nOptIterations_;
             optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
 
@@ -385,6 +378,26 @@ void SLAM::mapping() {
             std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
 
             std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+
+            std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap_->getKeyFrames();
+
+            for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
+                for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
+
+                KeyFrame_ pKF1 = k2->second;
+                KeyFrame_ pKF2 = k1->second;
+
+                vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
+                vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
+                        
+                std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
+                std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
+
+                std::cout << "v1Position: (" << v1Positions[2][0] << ", " << v1Positions[2][1] << ", " << v1Positions[2][2] << ")\n";
+                std::cout << "v2Position: (" << v2Positions[2][0] << ", " << v2Positions[2][1] << ", " << v2Positions[2][2] << ")\n";
+                }
+            }
+
             arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
         } else {
             Eigen::VectorXd x(2);
@@ -392,8 +405,7 @@ void SLAM::mapping() {
             x[0] = reprojectionBalanceWeight_;
             x[1] = arapBalanceWeight_;
 
-            std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
-            EigenOptimizationFunctor functor(new Map(*pMapCopy), nOptIterations_, simulatedRepErrorStanDesv_); 
+            EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_); 
             
             Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
             Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
@@ -414,6 +426,25 @@ void SLAM::mapping() {
             std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
 
             std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+
+            std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap_->getKeyFrames();
+
+            for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
+                for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
+
+                KeyFrame_ pKF1 = k2->second;
+                KeyFrame_ pKF2 = k1->second;
+
+                vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
+                vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
+                        
+                std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
+                std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
+
+                std::cout << "v1Position: (" << v1Positions[2][0] << ", " << v1Positions[2][1] << ", " << v1Positions[2][2] << ")\n";
+                std::cout << "v2Position: (" << v2Positions[2][0] << ", " << v2Positions[2][1] << ", " << v2Positions[2][2] << ")\n";
+                }
+            }
             arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
         }
     } else {

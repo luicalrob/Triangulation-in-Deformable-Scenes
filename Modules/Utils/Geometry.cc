@@ -382,7 +382,7 @@ Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &point, const Eigen:
 }
 
 
-double calculatePixelsStandDev(Map* Map, cameraSelection cameraSelection){
+double calculatePixelsStandDev(std::shared_ptr<Map> Map, cameraSelection cameraSelection){
     Eigen::Vector2d meanRepErrorUVC1 = Eigen::Vector2d::Zero();
     double meanRepErrorC1 = 0;
     double desvRepErrorC1 = 0;
@@ -396,7 +396,7 @@ double calculatePixelsStandDev(Map* Map, cameraSelection cameraSelection){
     size_t nMatches = 0;
     size_t validPairs = 0;
 
-    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = Map->getKeyFrames();
+    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = Map.get()->getKeyFrames();
 
     //std::cout << "\nKEYFRAMES k AND k+1 MEASUREMENTS: \n";
     for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {

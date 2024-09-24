@@ -56,6 +56,36 @@ KeyFrame::KeyFrame(Frame &f) {
     timestamp_ = f.getTimestamp();
 }
 
+KeyFrame::KeyFrame(const KeyFrame& other)
+    : vKeys_(other.vKeys_),
+      descriptors_(other.descriptors_.clone()),
+      Tcw_(other.Tcw_),
+      calibration_(other.calibration_),
+      grid_(other.grid_),
+      gridElementWidthInv_(other.gridElementWidthInv_),
+      gridElementHeightInv_(other.gridElementHeightInv_),
+      minCol_(other.minCol_),
+      minRow_(other.minRow_),
+      nId_(other.nId_),
+      vScaleFactor_(other.vScaleFactor_),
+      vInvScaleFactor_(other.vInvScaleFactor_),
+      vSigma2_(other.vSigma2_),
+      vInvSigma2_(other.vInvSigma2_),
+      timestamp_(other.timestamp_)
+{
+    for (const auto& pMP : other.vMapPoints_) {
+        if (pMP) {
+            vMapPoints_.emplace_back(std::make_shared<MapPoint>(*pMP->clone())); 
+        } else {
+            vMapPoints_.emplace_back(nullptr);
+        }
+    }
+}
+
+KeyFrame* KeyFrame::clone() const {
+    return new KeyFrame(*this);
+}
+
 Sophus::SE3f KeyFrame::getPose() {
     return Tcw_;
 }

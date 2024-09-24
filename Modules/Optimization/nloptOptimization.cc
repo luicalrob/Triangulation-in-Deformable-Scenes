@@ -9,46 +9,40 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
     double repBalanceWeight = x[0];
     double arapBalanceWeight = x[1];
 
+    std::cout << "Current x values: " << x[0] << ", " << x[1] << std::endl;
+
     OptimizationData* pData = static_cast<OptimizationData*>(data);
     std::shared_ptr<Map> pMapCopy = pData->pMap->clone();
-    Map* pMap = new Map(*pMapCopy);
-    std::vector<Eigen::Vector3f>& originalPoints = pData->originalPoints;
-    std::vector<Eigen::Vector3f>& movedPoints = pData->movedPoints;
-    std::vector<int>& insertedIndexes = pData->insertedIndexes;
     int& nOptIterations = pData->nOptIterations;
     float repErrorStanDesv = pData->repErrorStanDesv;
 
+    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMapCopy->getKeyFrames();
 
-    arapOptimization(pMap, repBalanceWeight, arapBalanceWeight, nOptIterations);
+    for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
+        for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
 
-    //double error = calculateTotalError(Map, originalPoints, movedPoints, insertedIndexes);
-    double stanDeviation = calculatePixelsStandDev(pMap, cameraSelection::Combined);
+        KeyFrame_ pKF1 = k2->second;
+        KeyFrame_ pKF2 = k1->second;
+
+        vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
+        vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
+                
+        std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
+        std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
+
+        std::cout << "v1Position: (" << v1Positions[2][0] << ", " << v1Positions[2][1] << ", " << v1Positions[2][2] << ")\n";
+        std::cout << "v2Position: (" << v2Positions[2][0] << ", " << v2Positions[2][1] << ", " << v2Positions[2][2] << ")\n";
+        }
+    }
+
+    arapOptimization(pMapCopy.get(), repBalanceWeight, arapBalanceWeight, nOptIterations);
+
+    double stanDeviation = calculatePixelsStandDev(pMapCopy, cameraSelection::Combined);
 
     double error = std::pow(repErrorStanDesv - stanDeviation, 2);
 
+    std::cout << "stanDeviation: " << stanDeviation << "\n";
+
     std::cout << "error: " << error << "\n";
     return error;
-}
-
-double calculateTotalError(Map* Map, std::vector<Eigen::Vector3f> originalPoints, std::vector<Eigen::Vector3f> movedPoints, std::vector<int> insertedIndexes) {
-    double total_error = 0.0f;
-
-    for(size_t i = 0, j = 0; j < insertedIndexes.size(); i += 2, j++) {
-        std::shared_ptr<MapPoint> mapPoint1 = Map->getMapPoint(i);
-        std::shared_ptr<MapPoint> mapPoint2 = Map->getMapPoint(i+1);
-        Eigen::Vector3f opt_original_position = mapPoint1->getWorldPosition();
-        Eigen::Vector3f opt_moved_position = mapPoint2->getWorldPosition();
-
-        Eigen::Vector3f original_position = originalPoints[insertedIndexes[j]];
-        Eigen::Vector3f moved_position = movedPoints[insertedIndexes[j]];
-
-        Eigen::Vector3f original_error = opt_original_position - original_position;
-        Eigen::Vector3f moved_error = opt_moved_position - moved_position;
-        double error_magnitude_original = static_cast<double>(original_error.norm());
-        double error_magnitude_moved = static_cast<double>(moved_error.norm());
-        total_error += error_magnitude_moved + error_magnitude_original;
-    }
-
-    // std::cout << "point_count: " << point_count << std::endl;
-    return total_error;
 }

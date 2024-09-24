@@ -10,7 +10,8 @@ set(CMAKE_BUILD_TYPE DEBUG)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #We require the C++14 standard
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #Compilation flags:
 #   -Flag for code optimizations: -O3

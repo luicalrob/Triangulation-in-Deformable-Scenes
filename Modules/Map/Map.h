@@ -166,6 +166,12 @@ public:
         assert(graphIds.size() == 0);*/
     }
 
+    /*
+     * Clones the map and returns a new Map instance
+     */
+    std::shared_ptr<Map> clone() const;
+
+    
 private:
     /*
      * Updates the orientation and most distinctive descriptor of a MapPoint
@@ -217,6 +223,7 @@ private:
 
 
 };
+
 
 #endif //SLAM_MAP_H
 
