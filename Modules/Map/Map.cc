@@ -27,6 +27,36 @@ Map::Map(float minCommonObs){
     minCommonObs_ = minCommonObs;
 }
 
+std::shared_ptr<Map> Map::clone() const {
+    std::shared_ptr<Map> newMap = std::make_shared<Map>(minCommonObs_);
+
+    for (const auto& [id, pMP] : mMapPoints_) {
+        if (pMP) {
+            newMap->insertMapPoint(std::shared_ptr<MapPoint>(pMP->clone()));
+        }
+    }
+
+    for (const auto& [id, pKF] : mKeyFrames_) {
+        if (pKF) {
+            newMap->insertKeyFrame(std::shared_ptr<KeyFrame>(pKF->clone()));
+        }
+    }
+
+    for (const auto& [kfId, observations] : mKeyFrameObs_) {
+        for (const auto& [mpId, index] : observations) {
+            newMap->addObservation(kfId, mpId, index);
+        }
+    }
+
+    for (const auto& [kfId, covisible] : mCovisibilityGraph_) {
+        for (const auto& [covKfId, count] : covisible) {
+            newMap->mCovisibilityGraph_[kfId][covKfId] = count;
+        }
+    }
+
+    return newMap;
+}
+
 void Map::insertMapPoint(std::shared_ptr<MapPoint> pMP) {
     mMapPoints_[pMP->getId()] = pMP;
     mMapPointObs_[pMP->getId()].clear();

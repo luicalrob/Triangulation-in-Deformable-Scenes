@@ -358,12 +358,7 @@ void SLAM::mapping() {
 
             OptimizationData optData;
             
-            // std::shared_ptr<Map> pMapCopy = std::make_shared<Map>(*pMap_);
-
-            // optData.pMap = new Map(*pMapCopy);
-            //std::shared_ptr<Map> pMapCopy = pMap_->clone(); // Assuming clone() is defined in Map
-            optData.pMap = pMap_.get();
-
+            optData.pMap = pMap_.clone();
             optData.nOptIterations = nOptIterations_;
             optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
 
@@ -391,13 +386,15 @@ void SLAM::mapping() {
             x[0] = reprojectionBalanceWeight_;
             x[1] = arapBalanceWeight_;
 
-            EigenOptimizationFunctor functor(pMap_.get(), nOptIterations_, simulatedRepErrorStanDesv_); 
+            EigenOptimizationFunctor functor(pMap_.clone(), nOptIterations_, simulatedRepErrorStanDesv_); 
             
             Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
             Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
-            levenbergMarquardt.parameters.ftol = 1.5e-1;
-            levenbergMarquardt.parameters.xtol = 1.5e-1;
-            levenbergMarquardt.parameters.maxfev = 10;
+            levenbergMarquardt.parameters.ftol = 1e-3;   // Loosen tolerance for function value change
+            levenbergMarquardt.parameters.xtol = 1e-3;   // Loosen tolerance for parameter change
+            levenbergMarquardt.parameters.gtol = 1e-3;   // Loosen tolerance for gradient
+            levenbergMarquardt.parameters.maxfev = 10;  // Maintain maximum number of function evaluations
+            levenbergMarquardt.setEpsilon(1e-5);        // Error precision for the algorithm
 
 
             int ret = levenbergMarquardt.minimize(x);

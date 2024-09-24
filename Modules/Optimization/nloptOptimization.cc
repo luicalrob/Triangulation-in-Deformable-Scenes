@@ -13,14 +13,12 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
 
     OptimizationData* pData = static_cast<OptimizationData*>(data);
     std::shared_ptr<Map> pMapCopy = pData->pMap->clone();
-    Map* pMap = new Map(*pMapCopy);
     int& nOptIterations = pData->nOptIterations;
     float repErrorStanDesv = pData->repErrorStanDesv;
 
-    arapOptimization(pMap, repBalanceWeight, arapBalanceWeight, nOptIterations);
+    arapOptimization(pMapCopy.get(), repBalanceWeight, arapBalanceWeight, nOptIterations);
 
-    //double error = calculateTotalError(Map, originalPoints, movedPoints, insertedIndexes);
-    double stanDeviation = calculatePixelsStandDev(pMap);
+    double stanDeviation = calculatePixelsStandDev(pMapCopy);
 
     double error = std::pow(repErrorStanDesv - stanDeviation, 2);
 

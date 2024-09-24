@@ -33,20 +33,19 @@ int values() const { return m_values; }
 
 struct EigenOptimizationFunctor : Functor<double>
 {
-EigenOptimizationFunctor(Map* map, int iterations, double error): Functor<double>(2,2), pMap(map), nIterations(iterations), repErrorStanDesv(error) {}
+EigenOptimizationFunctor(std::shared_ptr<Map> map, int iterations, double error): Functor<double>(2,2), pMap(map), nIterations(iterations), repErrorStanDesv(error) {}
 
-Map* pMap;           // Pointer to a Map object
+std::shared_ptr<Map> pMap;           // Pointer to a Map object
 int nIterations;     // Number of iterations
 double repErrorStanDesv; // Standard deviation of error
 
 int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const
 {   
     std::shared_ptr<Map> pMapCopy = pMap->clone();
-    Map* pMapRawPointerCopy = new Map(*pMapCopy);
 
-    arapOptimization(pMapRawPointerCopy, x(0), x(1), nIterations);
+    arapOptimization(pMapCopy.get(), x(0), x(1), nIterations);
     
-    double stanDeviation = calculatePixelsStandDev(pMapRawPointerCopy);
+    double stanDeviation = calculatePixelsStandDev(pMapCopy);
 
     double error = std::pow(repErrorStanDesv - stanDeviation, 2);
 

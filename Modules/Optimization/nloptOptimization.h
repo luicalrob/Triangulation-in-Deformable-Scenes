@@ -16,7 +16,7 @@
 #include <nlopt.hpp>
 
 struct OptimizationData {
-    Map* pMap;
+    std::shared_ptr<Map> pMap;
     int nOptIterations;
     float repErrorStanDesv;
 };
