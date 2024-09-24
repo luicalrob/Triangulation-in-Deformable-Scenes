@@ -352,7 +352,7 @@ void SLAM::mapping() {
             nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
 
             std::vector<double> lb = {0.0, 0.0};
-            std::vector<double> ub = {10.0, 100.0};
+            std::vector<double> ub = {10.0, 200.0};
             opt.set_lower_bounds(lb);
             opt.set_upper_bounds(ub);
 

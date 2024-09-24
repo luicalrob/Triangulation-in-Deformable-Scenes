@@ -658,16 +658,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                     // std::cout << "adjacency_list_ 1: (" << j << ")\n";
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
-                    // NORMAL
-                    // eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    // eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    // eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
-                    // eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTransId[T])));
-                    // eArap->Xj1world = mesh1->vertices_[j];
-                    // eArap->Xj2world = v2Positions[posIndexes1[j]];
-                    // eArap->weight = edge_weights_1[GetOrderedEdge(meshIndex1, j)];
 
-                    // ONLY ONE POINT AND R
                     eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                     eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                     eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
