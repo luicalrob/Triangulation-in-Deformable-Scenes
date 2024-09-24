@@ -40,26 +40,7 @@ struct EigenOptimizationFunctor : Functor<double> {
         std::shared_ptr<Map> pMapCopy = pMap->clone();
 
         std::cout << "Current x values: " << x[0] << ", " << x[1] << std::endl;
-
-        std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMapCopy->getKeyFrames();
-        for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
-            for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
-
-            KeyFrame_ pKF1 = k2->second;
-            KeyFrame_ pKF2 = k1->second;
-
-            vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
-            vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
-                    
-            std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
-            std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
-
-            std::cout << "v1Position: (" << v1Positions[2][0] << ", " << v1Positions[2][1] << ", " << v1Positions[2][2] << ")\n";
-            std::cout << "v2Position: (" << v2Positions[2][0] << ", " << v2Positions[2][1] << ", " << v2Positions[2][2] << ")\n";
-            }
-        }
-
-
+        
         arapOptimization(pMapCopy.get(), x(0), x(1), nIterations);
         
         double stanDeviation1 = calculatePixelsStandDev(pMapCopy, cameraSelection::C1);

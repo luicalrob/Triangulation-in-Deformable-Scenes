@@ -379,25 +379,6 @@ void SLAM::mapping() {
 
             std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-            std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap_->getKeyFrames();
-
-            for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
-                for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
-
-                KeyFrame_ pKF1 = k2->second;
-                KeyFrame_ pKF2 = k1->second;
-
-                vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
-                vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
-                        
-                std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
-                std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
-
-                std::cout << "v1Position: (" << v1Positions[2][0] << ", " << v1Positions[2][1] << ", " << v1Positions[2][2] << ")\n";
-                std::cout << "v2Position: (" << v2Positions[2][0] << ", " << v2Positions[2][1] << ", " << v2Positions[2][2] << ")\n";
-                }
-            }
-
             arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
         } else {
             Eigen::VectorXd x(2);
@@ -409,11 +390,11 @@ void SLAM::mapping() {
             
             Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
             Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
-            levenbergMarquardt.parameters.ftol = 1e-8;  // Tighter tolerance for function value change
-            levenbergMarquardt.parameters.xtol = 1e-8;  // Tighter tolerance for parameter change
-            levenbergMarquardt.parameters.maxfev = 100; // Increase maximum number of function evaluations
-            levenbergMarquardt.parameters.gtol = 1e-8;  // Tighter tolerance for gradient
-
+            levenbergMarquardt.parameters.ftol = 1e-3;   // Loosen tolerance for function value change
+            levenbergMarquardt.parameters.xtol = 1e-3;   // Loosen tolerance for parameter change
+            levenbergMarquardt.parameters.gtol = 1e-3;   // Loosen tolerance for gradient
+            levenbergMarquardt.parameters.maxfev = 10;  // Maintain maximum number of function evaluations
+            levenbergMarquardt.setEpsilon(1e-5);
 
 
             int ret = levenbergMarquardt.minimize(x);
@@ -427,24 +408,6 @@ void SLAM::mapping() {
 
             std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-            std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap_->getKeyFrames();
-
-            for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
-                for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
-
-                KeyFrame_ pKF1 = k2->second;
-                KeyFrame_ pKF2 = k1->second;
-
-                vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
-                vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
-                        
-                std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
-                std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
-
-                std::cout << "v1Position: (" << v1Positions[2][0] << ", " << v1Positions[2][1] << ", " << v1Positions[2][2] << ")\n";
-                std::cout << "v2Position: (" << v2Positions[2][0] << ", " << v2Positions[2][1] << ", " << v2Positions[2][2] << ")\n";
-                }
-            }
             arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
         }
     } else {
@@ -568,7 +531,7 @@ void SLAM::measureAbsoluteErrors() {
         //std::cout << "Average error in MOVED 3D: " << average_error_moved << std::endl;
         float average_error = total_error / point_count;
         //std::cout << "\nTotal error in 3D: " << total_error << std::endl;
-        std::cout << "Average error in 3D: " << average_error << std::endl;
+        std::cout << "Average error in 3D: " << average_error << "\n" << std::endl;
     } else {
         std::cout << "No points to compare." << std::endl;
     }
