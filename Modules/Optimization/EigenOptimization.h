@@ -37,10 +37,13 @@ struct EigenOptimizationFunctor : Functor<double> {
     double repErrorStanDesv; // Standard deviation of error
 
     int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const {   
-        arapOptimization(pMap, x(0), x(1), nIterations);
+        std::shared_ptr<Map> pMapCopy = pMap->clone();
+        Map* pMapRawCopy = new Map(*pMapCopy);
+
+        arapOptimization(pMapRawCopy, x(0), x(1), nIterations);
         
-        double stanDeviation1 = calculatePixelsStandDev(pMap, cameraSelection::C1);
-        double stanDeviation2 = calculatePixelsStandDev(pMap, cameraSelection::C2);
+        double stanDeviation1 = calculatePixelsStandDev(pMapRawCopy, cameraSelection::C1);
+        double stanDeviation2 = calculatePixelsStandDev(pMapRawCopy, cameraSelection::C2);
         std::cout << "stanDeviation1: " << stanDeviation1 << "\n";
         std::cout << "stanDeviation2: " << stanDeviation2 << "\n";
 

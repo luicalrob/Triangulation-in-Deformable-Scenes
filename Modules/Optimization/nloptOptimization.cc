@@ -10,7 +10,8 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
     double arapBalanceWeight = x[1];
 
     OptimizationData* pData = static_cast<OptimizationData*>(data);
-    Map* Map = pData->pMap;
+    std::shared_ptr<Map> pMapCopy = pData->pMap->clone();
+    Map* pMap = new Map(*pMapCopy);
     std::vector<Eigen::Vector3f>& originalPoints = pData->originalPoints;
     std::vector<Eigen::Vector3f>& movedPoints = pData->movedPoints;
     std::vector<int>& insertedIndexes = pData->insertedIndexes;
@@ -18,10 +19,10 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
     float repErrorStanDesv = pData->repErrorStanDesv;
 
 
-    arapOptimization(Map, repBalanceWeight, arapBalanceWeight, nOptIterations);
+    arapOptimization(pMap, repBalanceWeight, arapBalanceWeight, nOptIterations);
 
     //double error = calculateTotalError(Map, originalPoints, movedPoints, insertedIndexes);
-    double stanDeviation = calculatePixelsStandDev(Map, cameraSelection::Combined);
+    double stanDeviation = calculatePixelsStandDev(pMap, cameraSelection::Combined);
 
     double error = std::pow(repErrorStanDesv - stanDeviation, 2);
 
