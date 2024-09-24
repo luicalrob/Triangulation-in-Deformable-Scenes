@@ -397,12 +397,16 @@ void SLAM::mapping() {
             
             Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
             Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
-            levenbergMarquardt.parameters.ftol = 1.5e-1;
-            levenbergMarquardt.parameters.xtol = 1.5e-1;
-            levenbergMarquardt.parameters.maxfev = 10;
+            levenbergMarquardt.parameters.ftol = 1e-8;  // Tighter tolerance for function value change
+            levenbergMarquardt.parameters.xtol = 1e-8;  // Tighter tolerance for parameter change
+            levenbergMarquardt.parameters.maxfev = 100; // Increase maximum number of function evaluations
+            levenbergMarquardt.parameters.gtol = 1e-8;  // Tighter tolerance for gradient
+
 
 
             int ret = levenbergMarquardt.minimize(x);
+            std::cout << "Return code: " << ret << std::endl;
+
             std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
 
             std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;

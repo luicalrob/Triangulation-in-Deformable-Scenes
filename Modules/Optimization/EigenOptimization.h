@@ -47,6 +47,8 @@ struct EigenOptimizationFunctor : Functor<double> {
         double errorC1 = std::pow(repErrorStanDesv - stanDeviation1, 2);
         double errorC2 = std::pow(repErrorStanDesv - stanDeviation2, 2);
 
+        std::cout << "Current x values: " << x[0] << ", " << x[1] << std::endl;
+
         std::cout << "errorC1: " << errorC1 << "\n";
         std::cout << "errorC2: " << errorC2 << "\n";
 
