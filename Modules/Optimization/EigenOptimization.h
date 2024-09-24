@@ -43,12 +43,14 @@ int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const
 {   
     std::shared_ptr<Map> pMapCopy = pMap->clone();
 
+    std::cout << "Current x values: " << x[0] << ", " << x[1] << std::endl;
     arapOptimization(pMapCopy.get(), x(0), x(1), nIterations);
     
-    double stanDeviation = calculatePixelsStandDev(pMapCopy);
+    double stanDeviation = calculatePixelsStandDev(pMapCopy, cameraSelection::C2);
 
     double error = std::pow(repErrorStanDesv - stanDeviation, 2);
 
+    std::cout << "stanDeviation2: " << stanDeviation << "\n";
     std::cout << "error: " << error << "\n";
 
     fvec(0) = error;

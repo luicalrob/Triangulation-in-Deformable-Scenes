@@ -16,12 +16,14 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
     int& nOptIterations = pData->nOptIterations;
     float repErrorStanDesv = pData->repErrorStanDesv;
 
+    std::cout << "Current x values: " << x[0] << ", " << x[1] << std::endl;
     arapOptimization(pMapCopy.get(), repBalanceWeight, arapBalanceWeight, nOptIterations);
 
-    double stanDeviation = calculatePixelsStandDev(pMapCopy);
+    double stanDeviation = calculatePixelsStandDev(pMapCopy, cameraSelection::C2);
 
     double error = std::pow(repErrorStanDesv - stanDeviation, 2);
 
+    std::cout << "stanDeviation2: " << stanDeviation << "\n";
     std::cout << "error: " << error << "\n";
     return error;
 }

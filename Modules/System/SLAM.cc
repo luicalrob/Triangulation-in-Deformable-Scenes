@@ -358,7 +358,7 @@ void SLAM::mapping() {
 
             OptimizationData optData;
             
-            optData.pMap = pMap_.clone();
+            optData.pMap = pMap_->clone();
             optData.nOptIterations = nOptIterations_;
             optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
 
@@ -386,7 +386,7 @@ void SLAM::mapping() {
             x[0] = reprojectionBalanceWeight_;
             x[1] = arapBalanceWeight_;
 
-            EigenOptimizationFunctor functor(pMap_.clone(), nOptIterations_, simulatedRepErrorStanDesv_); 
+            EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_); 
             
             Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
             Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
