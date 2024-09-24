@@ -394,7 +394,7 @@ void SLAM::mapping() {
             levenbergMarquardt.parameters.xtol = 1e-3;   // Loosen tolerance for parameter change
             levenbergMarquardt.parameters.gtol = 1e-3;   // Loosen tolerance for gradient
             levenbergMarquardt.parameters.maxfev = 10;  // Maintain maximum number of function evaluations
-            levenbergMarquardt.setEpsilon(1e-5);
+            //levenbergMarquardt.parameters.epsilon = 1e-5;
 
 
             int ret = levenbergMarquardt.minimize(x);
