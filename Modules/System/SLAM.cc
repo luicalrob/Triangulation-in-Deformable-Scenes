@@ -256,6 +256,24 @@ void SLAM::mapping() {
         } else {
             triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         }
+        // std::cout << "===== RAYS =====\n";
+        // std::cout << "xn1: x = " << xn1.x() << ", y = " << xn1.y() << ", z = " << xn1.z() << "\n";
+        // std::cout << "xn2: x = " << xn2.x() << ", y = " << xn2.y() << ", z = " << xn2.z() << "\n";
+        // std::cout << "T1w: \n" << T1w.matrix() << "\n";
+        // std::cout << "T2w: \n" << T2w.matrix() << "\n";
+        // std::cout << "x3D_1: x = " << x3D_1.x() << ", y = " << x3D_1.y() << ", z = " << x3D_1.z() << "\n";
+        // std::cout << "x3D_2: x = " << x3D_2.x() << ", y = " << x3D_2.y() << ", z = " << x3D_2.z() << "\n";
+
+        // triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+
+        // // Print the state after triangulation
+        // std::cout << "===== TWO POINTS (After triangulation) =====\n";
+        // std::cout << "xn1: x = " << xn1.x() << ", y = " << xn1.y() << ", z = " << xn1.z() << "\n";
+        // std::cout << "xn2: x = " << xn2.x() << ", y = " << xn2.y() << ", z = " << xn2.z() << "\n";
+        // std::cout << "T1w: \n" << T1w.matrix() << "\n";
+        // std::cout << "T2w: \n" << T2w.matrix() << "\n";
+        // std::cout << "x3D_1 (After): x = " << x3D_1.x() << ", y = " << x3D_1.y() << ", z = " << x3D_1.z() << "\n";
+        // std::cout << "x3D_2 (After): x = " << x3D_2.x() << ", y = " << x3D_2.y() << ", z = " << x3D_2.z() << "\n";
         //x3D_1 = x3D_prev;
         //triangulateBerkeley(xn1, xn2, prevFrame_, currFrame_, x3D_1, x3D_2); 
         // triangulate(xn1, xn2, T1w, T2w, x3D);

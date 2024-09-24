@@ -61,7 +61,7 @@ num_points = 200  # Number of points in the dataset
 # Original points position
 x_mean, x_std = 0.0, 0.2
 y_mean, y_std = 0.0, 0.004
-z_mean, z_std = 1.1, 0.06
+z_mean, z_std = 0.6, 0.06
 # Rotation angles
 angle_x, angle_y, angle_z = -45, -0, 45  # in degrees
 

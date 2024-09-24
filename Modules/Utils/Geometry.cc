@@ -394,7 +394,7 @@ double calculatePixelsStandDev(std::shared_ptr<Map> Map, cameraSelection cameraS
     size_t nMatches = 0;
     size_t validPairs = 0;
 
-    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = Map.get()->getKeyFrames();
+    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = Map->getKeyFrames();
 
     //std::cout << "\nKEYFRAMES k AND k+1 MEASUREMENTS: \n";
     for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
