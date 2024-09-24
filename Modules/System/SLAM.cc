@@ -394,10 +394,12 @@ void SLAM::mapping() {
             levenbergMarquardt.parameters.xtol = 1e-3;   // Loosen tolerance for parameter change
             levenbergMarquardt.parameters.gtol = 1e-3;   // Loosen tolerance for gradient
             levenbergMarquardt.parameters.maxfev = 10;  // Maintain maximum number of function evaluations
-            levenbergMarquardt.setEpsilon(1e-5);        // Error precision for the algorithm
+            //levenbergMarquardt.setEpsilon(1e-5);
 
 
             int ret = levenbergMarquardt.minimize(x);
+            std::cout << "Return code: " << ret << std::endl;
+
             std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
 
             std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
@@ -405,6 +407,7 @@ void SLAM::mapping() {
             std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
 
             std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+
             arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
         }
     } else {
