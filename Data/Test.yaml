@@ -56,13 +56,13 @@ Optimization.reprojection: 0.125
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
-Optimization.numberOfIterations: 10
+Optimization.numberOfIterations: 12
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
-Optimization.weightsSelection: "eigen" # nlopt or eigen
+Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
 #Method selection
-Triangulation.selection: "InRays" # InRays TwoPoints or InRaysNearPrevSolution
+Triangulation.selection: "TwoPoints" # InRays TwoPoints or InRaysNearPrevSolution
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # InRaysNearPrevSolution: use prev solution to ge the nearest 3D points in both rays
