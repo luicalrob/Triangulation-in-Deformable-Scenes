@@ -46,19 +46,26 @@ Triangulation.minCos: 0.9998
 
 
 # LUIS
+#Cameras poses
+Camera.FirstPose.x: 0.0
+Camera.FirstPose.y: 0.0
+Camera.FirstPose.z: 0.0
+Camera.SecondPose.x: 0.30
+Camera.SecondPose.y: 0.02
+Camera.SecondPose.z: -0.08
 
 #Simulated typical desviation reprojection error for keypoints
 Keypoints.RepError: 1.0
 
 #Weights for optimization
-Optimization.arap: 100.0
-Optimization.reprojection: 0.125
+Optimization.reprojection: 8.5
+Optimization.arap: 1.0
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
-Optimization.numberOfIterations: 12
+Optimization.numberOfIterations: 20
 
-Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
+Optimization.selection: "g2oArap" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
 #Method selection

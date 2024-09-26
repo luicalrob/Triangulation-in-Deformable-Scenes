@@ -55,6 +55,12 @@ SLAM::SLAM(const std::string &settingsFile) {
     prevCalibration_ = prevFrame_.getCalibration();
     currCalibration_ = currFrame_.getCalibration();
 
+    currIm_ = cv::Mat::zeros(settings_.getImRows(), settings_.getImCols(), CV_8UC3);
+    currIm_.setTo(cv::Scalar(255, 255, 255));
+
+    C1Pose_ = settings_.getFirstCameraPos();
+    C2Pose_ = settings_.getSecondCameraPos();
+
     simulatedRepErrorStanDesv_ = settings_.getSimulatedRepError();
 
     arapBalanceWeight_ = settings_.getOptArapWeight();
@@ -173,9 +179,6 @@ void SLAM::viusualizeSolution() {
     cv::namedWindow("Test Window");
 
     // visualize
-    // visualizer_->drawCurrentFrame(currFrame_);
-    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
     mapVisualizer_->update(drawRaysSelection_);
     mapVisualizer_->updateCurrentPose(Tcw_);
 }
@@ -215,6 +218,10 @@ void SLAM::createKeyPoints() {
     currKeyFrame_ = std::make_shared<KeyFrame>(currFrame_);
     pMap_->insertKeyFrame(prevKeyFrame_);
     pMap_->insertKeyFrame(currKeyFrame_);
+
+    visualizer_->drawFeatures(prevFrame_.getKeyPoints(), currIm_, "Previous Frame KeyPoints");
+    visualizer_->drawFeatures(currFrame_.getKeyPoints(), currIm_, "Current Frame KeyPoints");
+
 }
 
 void SLAM::mapping() {
@@ -344,9 +351,6 @@ void SLAM::mapping() {
     std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
 
     // visualize
-    // visualizer_->drawCurrentFrame(currFrame_);
-    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
     // mapVisualizer_->update();
     // mapVisualizer_->updateCurrentPose(Tcw_);
 
@@ -369,8 +373,8 @@ void SLAM::mapping() {
         if ( OptWeightsSelection_ == "nlopt") {
             nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
 
-            std::vector<double> lb = {0.0, 0.0};
-            std::vector<double> ub = {10.0, 200.0};
+            std::vector<double> lb = {0.01, 0.001};
+            std::vector<double> ub = {100.0, 10.0};
             opt.set_lower_bounds(lb);
             opt.set_upper_bounds(ub);
 
@@ -383,9 +387,9 @@ void SLAM::mapping() {
 
             std::vector<double> x = {reprojectionBalanceWeight_, arapBalanceWeight_};
 
-            opt.set_xtol_rel(1.5e-1);
-            opt.set_xtol_abs(1.5e-1);
-            opt.set_maxeval(10);
+            opt.set_xtol_rel(1.5e-6);
+            opt.set_xtol_abs(1.5e-6);
+            opt.set_maxeval(30);
 
             double minf;
             nlopt::result result = opt.optimize(x, minf);
@@ -451,9 +455,6 @@ void SLAM::mapping() {
     }
 
     // visualize
-    // visualizer_->drawCurrentFrame(currFrame_);
-    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
     mapVisualizer_->update(drawRaysSelection_);
     mapVisualizer_->updateCurrentPose(Tcw_);
 
@@ -462,10 +463,7 @@ void SLAM::mapping() {
     // arapOptimization(pMap_.get());
     // std::cout << "Bundle adjustment completed... second 15 iterations " << std::endl;
 
-    // // visualize
-    // // visualizer_->drawCurrentFrame(currFrame_);
-    // // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
+    // visualize
     // mapVisualizer_->update(drawRaysSelection_);
     // mapVisualizer_->updateCurrentPose(Tcw_);
 }
@@ -791,6 +789,14 @@ Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vec
     rotation.col(2) = forward;
 
     return rotation;
+}
+
+Eigen::Vector3f SLAM::getFirstCameraPos(){
+    return C1Pose_;
+}
+
+Eigen::Vector3f SLAM::getSecondCameraPos(){
+    return C2Pose_;
 }
 
 bool SLAM::getShowSolution(){

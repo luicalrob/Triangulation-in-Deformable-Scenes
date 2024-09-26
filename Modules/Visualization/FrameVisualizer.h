@@ -50,9 +50,14 @@ public:
                      std::vector<cv::KeyPoint>& vKeys2, cv::Mat& im2, std::vector<int>& vMatches);
 
     /*
-     * Draws the extracd features in an image
+     * Draws the extracd features in current image
      */
     void drawCurrentFeatures(std::vector<cv::KeyPoint>& vKeys, cv::Mat& im);
+
+    /*
+     * Draws the extracd features in an image selected
+     */
+    void drawFeatures(const std::vector<cv::KeyPoint> &vKeys, cv::Mat &im, const std::string &windowName);
 
     /*
      * Draws the current matched MapPoints of a frame

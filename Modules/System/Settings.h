@@ -69,6 +69,9 @@ public:
     int getMinCommonObs();
 
     float getMinCos();
+    
+    Eigen::Vector3f getFirstCameraPos();
+    Eigen::Vector3f getSecondCameraPos();
 
     float getSimulatedRepError();
 
@@ -110,6 +113,9 @@ private:
     int nMinCommonObs_;
 
     float fMinCos_;
+
+    Eigen::Vector3f C1Pose_;
+    Eigen::Vector3f C2Pose_;
 
     float SimulatedRepError_;
 

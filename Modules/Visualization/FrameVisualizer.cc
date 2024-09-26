@@ -72,6 +72,13 @@ void FrameVisualizer::drawCurrentFeatures(std::vector<cv::KeyPoint> &vKeys, cv::
     cv::imshow("KeyPoints extracted", imWithKeys);
 }
 
+void FrameVisualizer::drawFeatures(const std::vector<cv::KeyPoint> &vKeys, cv::Mat &im, const std::string &windowName) {
+    cv::Mat imWithKeys;
+    cv::drawKeypoints(im, vKeys, imWithKeys);
+    cv::imshow(windowName, imWithKeys);
+}
+
+
 void FrameVisualizer::drawCurrentFrame(Frame &f) {
     cv::Mat im = f.getIm().clone();
     cvtColor(im,im,cv::COLOR_GRAY2BGR);

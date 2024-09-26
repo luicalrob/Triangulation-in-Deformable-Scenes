@@ -92,6 +92,12 @@ public:
      */
     bool getShowSolution();
 
+    /*
+     * Get camera positions
+     */
+    Eigen::Vector3f getFirstCameraPos();
+    Eigen::Vector3f getSecondCameraPos();
+
     std::vector<Eigen::Vector3f> getOriginalPoints();
 
     std::vector<Eigen::Vector3f> getMovedPoints();
@@ -132,6 +138,9 @@ private:
      */
     std::vector<Eigen::Vector3f> originalPoints_;
     std::vector<Eigen::Vector3f> movedPoints_;
+
+    Eigen::Vector3f C1Pose_;
+    Eigen::Vector3f C2Pose_;
 
     float simulatedRepErrorStanDesv_;
 

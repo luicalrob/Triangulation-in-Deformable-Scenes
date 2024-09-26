@@ -516,6 +516,8 @@ double calculatePixelsStandDev(std::shared_ptr<Map> Map, cameraSelection cameraS
         }
     }
 
+    std::cout << "meanRepErrorC1: " << meanRepErrorC1 << "\n";
+    std::cout << "meanRepError: " << meanRepError << "\n";
     // std::cout << "desvRepErrorC1: " << desvRepErrorC1 << "\n";
     // std::cout << "desvRepErrorC2: " << desvRepErrorC2 << "\n";
     double error = 0.0;

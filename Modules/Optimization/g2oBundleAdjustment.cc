@@ -591,7 +591,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
                 eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                 eKF1->setMeasurement(obs);
-                eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave) * repBalanceWeight);
+                eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave) * (1.0/repBalanceWeight));
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
                 eKF1->setRobustKernel(rk);
@@ -612,7 +612,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
                 eKF2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                 eKF2->setMeasurement(obs);
-                eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave) * repBalanceWeight);
+                eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave) * (1.0/repBalanceWeight));
 
                 rk = new g2o::RobustKernelHuber;
                 eKF2->setRobustKernel(rk);
@@ -651,7 +651,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 
                 double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
                 Eigen::Matrix<double, 1, 1> informationMatrix;
-                informationMatrix(0, 0) = scalarInformation * arapBalanceWeight;
+                informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
 
 
                 for (int j : mesh1->adjacency_list_[meshIndex1]) {

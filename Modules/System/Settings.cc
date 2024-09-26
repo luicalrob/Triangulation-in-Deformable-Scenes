@@ -84,6 +84,16 @@ Settings::Settings(const std::string& configFile) {
     nMinCommonObs_ = fSettings["Map.minObs"];
     fMinCos_ = fSettings["Triangulation.minCos"];
 
+    //LUIS
+    float C1x = fSettings["Camera.FirstPose.x"];
+    float C1y = fSettings["Camera.FirstPose.y"];
+    float C1z = fSettings["Camera.FirstPose.z"];
+    C1Pose_ << C1x, C1y, C1z;
+    float C2x = fSettings["Camera.SecondPose.x"];
+    float C2y = fSettings["Camera.SecondPose.y"];
+    float C2z = fSettings["Camera.SecondPose.z"];
+    C2Pose_ << C2x, C2y, C2z;
+
     SimulatedRepError_ = fSettings["Keypoints.RepError"];
 
     OptArapWeight_ = fSettings["Optimization.arap"];
@@ -213,6 +223,14 @@ int Settings::getMinCommonObs(){
 
 float Settings::getMinCos(){
     return fMinCos_;
+}
+
+Eigen::Vector3f Settings::getFirstCameraPos(){
+    return C1Pose_;
+}
+
+Eigen::Vector3f Settings::getSecondCameraPos(){
+    return C2Pose_;
 }
 
 float Settings::getSimulatedRepError(){
