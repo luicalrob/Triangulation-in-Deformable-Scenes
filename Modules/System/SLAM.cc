@@ -73,6 +73,14 @@ SLAM::SLAM(const std::string &settingsFile) {
     nOptimizations_ = settings_.getnOptimizations();
     nOptIterations_ = settings_.getnOptIterations();
 
+    NloptnOptimizations_ = settings_.getNloptnOptimizations();
+    NloptRelTolerance_ = settings_.getNloptRelTolerance();
+    NloptAbsTolerance_ = settings_.getNloptAbsTolerance();
+    NloptRepLowerBound_ = settings_.getNloptRepLowerBound();
+    NloptRepUpperBound_ = settings_.getNloptRepUpperBound();
+    NloptArapLowerBound_ = settings_.getNloptArapLowerBound();
+    NloptArapUpperBound_ = settings_.getNloptArapUpperBound();
+
     drawRaysSelection_ = settings_.getDrawRaysSelection();
     showSolution_ = settings_.getShowSolution();
 }
@@ -372,9 +380,9 @@ void SLAM::mapping() {
     } else if(OptSelection_ == "twoOptimizations") {
         if ( OptWeightsSelection_ == "nlopt") {
             nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
-
-            std::vector<double> lb = {0.01, 0.001};
-            std::vector<double> ub = {100.0, 10.0};
+            
+            std::vector<double> lb = {NloptRepLowerBound_, NloptArapLowerBound_};
+            std::vector<double> ub = {NloptRepUpperBound_, NloptArapUpperBound_};
             opt.set_lower_bounds(lb);
             opt.set_upper_bounds(ub);
 
@@ -387,9 +395,9 @@ void SLAM::mapping() {
 
             std::vector<double> x = {reprojectionBalanceWeight_, arapBalanceWeight_};
 
-            opt.set_xtol_rel(1.5e-6);
-            opt.set_xtol_abs(1.5e-6);
-            opt.set_maxeval(30);
+            opt.set_xtol_rel(NloptRelTolerance_);
+            opt.set_xtol_abs(NloptAbsTolerance_);
+            opt.set_maxeval(NloptnOptimizations_);
 
             double minf;
             nlopt::result result = opt.optimize(x, minf);

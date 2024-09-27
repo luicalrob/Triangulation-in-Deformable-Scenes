@@ -154,6 +154,14 @@ private:
     int nOptimizations_;
     int nOptIterations_;
 
+    int NloptnOptimizations_;
+    double NloptRelTolerance_;
+    double NloptAbsTolerance_;
+    double NloptRepLowerBound_;
+    double NloptRepUpperBound_;
+    double NloptArapLowerBound_;
+    double NloptArapUpperBound_;
+
     bool drawRaysSelection_;
     bool showSolution_;
 };

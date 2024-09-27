@@ -106,6 +106,14 @@ Settings::Settings(const std::string& configFile) {
     nOptimizations_ = fSettings["Optimization.numberOfOptimizations"];
     nOptIterations_ = fSettings["Optimization.numberOfIterations"];
 
+    NloptnOptimizations_ = fSettings["Optimization.nlopt.numberOfIterations"];
+    NloptRelTolerance_ = fSettings["Optimization.nlopt.relTolerance"];
+    NloptAbsTolerance_ = fSettings["Optimization.nlopt.absTolerance"];
+    NloptRepLowerBound_ = fSettings["Optimization.nlopt.rep.lowerBound"];
+    NloptRepUpperBound_ = fSettings["Optimization.nlopt.rep.upperBound"];
+    NloptArapLowerBound_ = fSettings["Optimization.nlopt.arap.lowerBound"];
+    NloptArapUpperBound_ = fSettings["Optimization.nlopt.arap.upperBound"];
+
     std::string drawRaysString;
     fSettings["MapVisualizer.drawRays"] >> drawRaysString;
 
@@ -263,6 +271,34 @@ int Settings::getnOptimizations(){
 
 int Settings::getnOptIterations(){
     return nOptIterations_;
+}
+
+int Settings::getNloptnOptimizations(){
+    return NloptnOptimizations_;
+}
+
+double Settings::getNloptRelTolerance(){
+    return NloptRelTolerance_;
+}
+
+double Settings::getNloptAbsTolerance(){
+    return NloptAbsTolerance_;
+}
+
+double Settings::getNloptRepLowerBound(){
+    return NloptRepLowerBound_;
+}
+
+double Settings::getNloptRepUpperBound(){
+    return NloptRepUpperBound_;
+}
+
+double Settings::getNloptArapLowerBound(){
+    return NloptArapLowerBound_;
+}
+
+double Settings::getNloptArapUpperBound(){
+    return NloptArapUpperBound_;
 }
 
 bool Settings::getDrawRaysSelection(){

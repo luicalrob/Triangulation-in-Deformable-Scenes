@@ -85,6 +85,14 @@ public:
     int getnOptimizations();
     int getnOptIterations();
 
+    int getNloptnOptimizations();
+    double getNloptRelTolerance();
+    double getNloptAbsTolerance();
+    double getNloptRepLowerBound();
+    double getNloptRepUpperBound();
+    double getNloptArapLowerBound();
+    double getNloptArapUpperBound();
+
     bool getDrawRaysSelection();
     bool getShowSolution();
 
@@ -125,6 +133,14 @@ private:
     std::string OptSelection_;
     std::string OptWeightsSelection_;
     std::string TrianSelection_;
+
+    int NloptnOptimizations_;
+    double NloptRelTolerance_;
+    double NloptAbsTolerance_;
+    double NloptRepLowerBound_;
+    double NloptRepUpperBound_;
+    double NloptArapLowerBound_;
+    double NloptArapUpperBound_;
 
     int nOptimizations_;
     int nOptIterations_;
