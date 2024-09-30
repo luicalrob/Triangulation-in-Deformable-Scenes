@@ -36,13 +36,4 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j4
 sudo make install
 
-cd ../../ceres-bin
-
-echo "Configuring and building Thirdparty/Ceres ..."
-
-cmake ../ceres-solver-2.2.0
-make -j4
-make test
-sudo make install
-
 cd ../../../

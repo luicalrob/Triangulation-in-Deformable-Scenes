@@ -378,7 +378,7 @@ void SLAM::mapping() {
     if (OptSelection_ == "open3DArap") {
         arapOpen3DOptimization(pMap_.get());
     } else if(OptSelection_ == "twoOptimizations") {
-        if ( OptWeightsSelection_ == "nlopt") {
+        if (OptWeightsSelection_ == "nlopt") {
             nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
             
             std::vector<double> lb = {NloptRepLowerBound_, NloptArapLowerBound_};
