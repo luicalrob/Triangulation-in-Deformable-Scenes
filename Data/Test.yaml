@@ -73,13 +73,13 @@ Optimization.numberOfIterations: 25
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 150
+Optimization.nlopt.numberOfIterations: 80
 Optimization.nlopt.relTolerance: 1.5e-2
 Optimization.nlopt.absTolerance: 1.5e-2
-Optimization.nlopt.rep.lowerBound: 200000.0
-Optimization.nlopt.rep.upperBound: 200000.0
-Optimization.nlopt.arap.lowerBound: 0.001
-Optimization.nlopt.arap.upperBound: 10.0
+Optimization.nlopt.rep.lowerBound: 100000.0
+Optimization.nlopt.rep.upperBound: 250000.0
+Optimization.nlopt.arap.lowerBound: 0.00001
+Optimization.nlopt.arap.upperBound: 0.1
 
 #Method selection
 Triangulation.selection: "InRays" # InRays TwoPoints or InRaysNearPrevSolution

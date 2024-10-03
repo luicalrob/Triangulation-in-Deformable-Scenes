@@ -250,14 +250,10 @@ void SLAM::mapping() {
         // if(vMatches[i] != -1){
         auto x1 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
         auto x2 = currKeyFrame_->getKeyPoint(i).pt;
-        // std::cout << "x1 x:" << x1.x << " y: " << x1.y << "\n";
-        // std::cout << "x2 x:" << x2.x << " y: " << x2.y << "\n";
 
         Eigen::Vector3f xn1 = prevCalibration_->unproject(x1).normalized();
         Eigen::Vector3f xn2 = currCalibration_->unproject(x2).normalized();
-        // std::cout << "xn1 x:" << xn1.x << " y: " << xn1.y << "\n";
-        // std::cout << "xn2 x:" << xn2 <<"\n";
-        // Eigen::Vector3f x3D;
+
         Eigen::Vector3f x3D_1;
         Eigen::Vector3f x3D_2;
         Eigen::Vector3f x3D_prev;
@@ -271,33 +267,8 @@ void SLAM::mapping() {
         } else {
             triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         }
-        // std::cout << "===== RAYS =====\n";
-        // std::cout << "xn1: x = " << xn1.x() << ", y = " << xn1.y() << ", z = " << xn1.z() << "\n";
-        // std::cout << "xn2: x = " << xn2.x() << ", y = " << xn2.y() << ", z = " << xn2.z() << "\n";
-        // std::cout << "T1w: \n" << T1w.matrix() << "\n";
-        // std::cout << "T2w: \n" << T2w.matrix() << "\n";
-        // std::cout << "x3D_1: x = " << x3D_1.x() << ", y = " << x3D_1.y() << ", z = " << x3D_1.z() << "\n";
-        // std::cout << "x3D_2: x = " << x3D_2.x() << ", y = " << x3D_2.y() << ", z = " << x3D_2.z() << "\n";
-
-        // triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-
-        // // Print the state after triangulation
-        // std::cout << "===== TWO POINTS (After triangulation) =====\n";
-        // std::cout << "xn1: x = " << xn1.x() << ", y = " << xn1.y() << ", z = " << xn1.z() << "\n";
-        // std::cout << "xn2: x = " << xn2.x() << ", y = " << xn2.y() << ", z = " << xn2.z() << "\n";
-        // std::cout << "T1w: \n" << T1w.matrix() << "\n";
-        // std::cout << "T2w: \n" << T2w.matrix() << "\n";
-        // std::cout << "x3D_1 (After): x = " << x3D_1.x() << ", y = " << x3D_1.y() << ", z = " << x3D_1.z() << "\n";
-        // std::cout << "x3D_2 (After): x = " << x3D_2.x() << ", y = " << x3D_2.y() << ", z = " << x3D_2.z() << "\n";
-        //x3D_1 = x3D_prev;
-        //triangulateBerkeley(xn1, xn2, prevFrame_, currFrame_, x3D_1, x3D_2); 
-        // triangulate(xn1, xn2, T1w, T2w, x3D);
-        // x3D_1 = x3D;
-        // x3D_2 = x3D;
 
         //Check positive depth
-        // auto x_1 = T1w * x3D;
-        // auto x_2 = T2w * x3D;
         auto x_1 = T1w * x3D_1;
         auto x_2 = T2w * x3D_2;
         if(x_1[2] < 0.0 || x_2[2] < 0.0) continue;
@@ -313,41 +284,29 @@ void SLAM::mapping() {
 
         Eigen::Vector2f p_p1;
         Eigen::Vector2f p_p2;
-        // prevCalibration_->project(T1w*x3D, p_p1);
-        // currCalibration_->project(T2w*x3D, p_p2);
         prevCalibration_->project(T1w*x3D_1, p_p1);
         currCalibration_->project(T2w*x3D_2, p_p2);
 
         cv::Point2f cv_p1(p_p1[0], p_p1[1]);
         cv::Point2f cv_p2(p_p2[0], p_p2[1]);
 
-        // std::cout << "x1 x:" << x1.x << " y: " << x1.y << "\n";
-        // std::cout << "cv_p1 x:" << cv_p1.x << " y: " << cv_p1.y << "\n";
-
         auto e1 = squaredReprojectionError(x1, cv_p1);
         auto e2 = squaredReprojectionError(x2, cv_p2);
-        // std::cout << "e1: " << e1 << " e2: " << e2 << "\n";
 
         //if(e1 > 5.991 || e2 > 5.991) continue;
 
-        // std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
         std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
-        //std::shared_ptr<MapPoint> map_point_1(new MapPoint(originalPoints_[i]));
         std::shared_ptr<MapPoint> map_point_2(new MapPoint(x3D_2));
 
-        // pMap_->insertMapPoint(map_point);
         pMap_->insertMapPoint(map_point_1);
         pMap_->insertMapPoint(map_point_2);
 
         // Save the index "i" of the original/moved match
         insertedIndexes_.push_back(i);
 
-        // pMap_->addObservation(prevKeyFrame_->getId(), map_point->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
-        // pMap_->addObservation(currKeyFrame_->getId(), map_point->getId(), i);
         pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
         pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
 
-        // prevKeyFrame_->setMapPoint(i, map_point);
         prevKeyFrame_->setMapPoint(i, map_point_1); // vMatches[i]?
         currKeyFrame_->setMapPoint(i, map_point_2);
 
@@ -357,10 +316,6 @@ void SLAM::mapping() {
     }
 
     std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
-
-    // visualize
-    // mapVisualizer_->update();
-    // mapVisualizer_->updateCurrentPose(Tcw_);
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
@@ -465,15 +420,6 @@ void SLAM::mapping() {
     // visualize
     mapVisualizer_->update(drawRaysSelection_);
     mapVisualizer_->updateCurrentPose(Tcw_);
-
-    // measureAbsoluteErrors();
-
-    // arapOptimization(pMap_.get());
-    // std::cout << "Bundle adjustment completed... second 15 iterations " << std::endl;
-
-    // visualize
-    // mapVisualizer_->update(drawRaysSelection_);
-    // mapVisualizer_->updateCurrentPose(Tcw_);
 }
 
 void SLAM::measureAbsoluteErrors() {

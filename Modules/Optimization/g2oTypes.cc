@@ -269,41 +269,9 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 }
 
 
-// NORMAL
 EdgeARAP::EdgeARAP(){
-    resize(5);
+    resize(3);
 }
-
-// ONLY ONE POINT AND R
-// EdgeARAP::EdgeARAP(){}
-
-// bool EdgeARAP::read(std::istream& is){
-
-//     for (int i=0; i<3; i++){
-//         is >> _measurement[i];
-//     }
-
-//     for (int i=0; i<3; i++)
-//         for (int j=i; j<3; j++) {
-//             is >> information()(i,j);
-//             if (i!=j)
-//                 information()(j,i)=information()(i,j);
-//         }
-//     return true;
-// }
-
-// bool EdgeARAP::write(std::ostream& os) const {
-
-//     for (int i=0; i<3; i++){
-//         os << measurement()[i] << " ";
-//     }
-
-//     for (int i=0; i<3; i++)
-//         for (int j=i; j<3; j++){
-//             os << " " <<  information()(i,j);
-//         }
-//     return os.good();
-// }
 
 bool EdgeARAP::read(std::istream& is) {
     is >> _measurement;
@@ -322,7 +290,34 @@ bool EdgeARAP::write(std::ostream& os) const {
     return os.good();
 }
 
-// void EdgeARAP::linearizeOplus() {
-//     _jacobianOplusXi = Eigen::Matrix3d::Identity();
-//     _jacobianOplusXj = -Eigen::Matrix3d::Identity();
-// }
+void EdgeARAP::linearizeOplus() {
+    VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+    VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[1]);
+    VertexRotationMatrix* vR = static_cast<VertexRotationMatrix*>(_vertices[2]);
+    //VertexTranslationVector* vT = static_cast<VertexTranslationVector*>(_vertices[3]);
+    //VertexRotationMatrix* vRg = static_cast<VertexRotationMatrix*>(_vertices[4]);
+
+    //Eigen::Vector3d obs(_measurement);
+    double obs(_measurement);
+    Eigen::Vector3d diff;
+
+    Eigen::Matrix3d R = vR->estimate();
+    //Eigen::Vector3d t = vT->estimate();
+    //Eigen::Matrix3d Rg = vRg->estimate();
+
+    diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world));// + Rg * (v1->estimate() - v2->estimate()) - t;
+    
+    Eigen::Vector3d J_v1_3x1 = -2 * PcdNorm * weight * (R.transpose() * diff);
+    Eigen::Vector3d J_v2_3x1 = 2 * PcdNorm * weight * diff;
+    Eigen::Matrix3d J_R_mat3 = -2 * PcdNorm * weight * (diff * v1->estimate().transpose());
+
+    Eigen::Matrix<double, 1, 3> J_v1_mat = J_v1_3x1.transpose();
+    Eigen::Matrix<double, 1, 3> J_v2_mat = J_v2_3x1.transpose();
+    Eigen::Matrix<double, 1, 9> J_R = Eigen::Map<Eigen::Matrix<double, 1, 9>>(J_R_mat3.data());
+
+
+    // Fill _jacobianOplus
+    _jacobianOplus[0] = J_v1_mat;
+    _jacobianOplus[1] = J_v2_mat;
+    _jacobianOplus[2] = J_R;
+}

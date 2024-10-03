@@ -17,6 +17,7 @@
 
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Optimization/g2oTypes.h"
+#include "Optimization/Tet.h"
 
 #include "Utils/Geometry.h"
 #include "open3d/Open3D.h"
@@ -491,50 +492,79 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             Ts = transformation.second;
 
             // Perform Delaunay Reconstruction
-            mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
-            // mesh2 = ComputeDelaunayTriangulation3D(v2Positions);
 
-            auto posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
-            // auto indexMap2 = createVectorMap(mesh2->vertices_, v2Positions);
-            // std::cout << "point mesh: (" << mesh1->vertices_[67] << ")\n";
-            // std::cout << "point: (" << v1Positions[posIndexes1[67]] << ")\n";
-            // std::cout << "index: (" << posIndexes1[67] << ")\n";
-            // std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
+            //std::shared_ptr<open3d::geometry::PointCloud> cloud = convertToOpen3DPointCloud(v1Positions);
+            std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh;
+            std::vector<size_t> pt_map;
 
-            std::map<size_t, size_t> invertedPosIndexes1;
-            // std::map<size_t, size_t> invertedIndexMap2;
-            for (const auto& pair : posIndexes1) {
-                invertedPosIndexes1[pair.second] = pair.first;
-            } 
+            std::tie(tetra_mesh, pt_map) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
+            std::cout << "tetra mesh size: (" << tetra_mesh->vertices_.size() << ")\n";
+
+            auto posIndexes = createVectorMap(tetra_mesh->vertices_, v1Positions);
+
+            std::map<size_t, size_t> invertedPosIndexes;
+
+            for (const auto& pair : posIndexes) {
+                invertedPosIndexes[pair.second] = pair.first;
+            }
+
+            std::vector<std::unordered_set<int>> tetrahedronsList;
+            std::vector<std::unordered_set<int>> invertedtetrahedronsList;
+            std::vector<Tet> tetrahedrons;
+            tetrahedronsList.resize(tetra_mesh->tetras_.size());
+            invertedtetrahedronsList.resize(tetra_mesh->tetras_.size());
+                
+            int tetraIndex = 0;
+            for (const auto& tetra : tetra_mesh->tetras_) {
+                Tet tet;
+                tet.p[0] = v1Positions[posIndexes[tetra(0)]];
+                tet.q[0] = v2Positions[posIndexes[tetra(0)]];
+                tet.p[1] = v1Positions[posIndexes[tetra(1)]];
+                tet.q[1] = v2Positions[posIndexes[tetra(1)]];
+                tet.p[2] = v1Positions[posIndexes[tetra(2)]];
+                tet.q[2] = v2Positions[posIndexes[tetra(2)]];
+                tet.p[3] = v1Positions[posIndexes[tetra(3)]];
+                tet.q[3] = v2Positions[posIndexes[tetra(3)]];
+
+                tet.Init();
+                tet.ComputeVolume();
+                tetrahedrons.push_back(tet);
+                tetrahedronsList[tetra(0)].insert(tetraIndex);
+                tetrahedronsList[tetra(1)].insert(tetraIndex);
+                tetrahedronsList[tetra(2)].insert(tetraIndex);
+                tetrahedronsList[tetra(3)].insert(tetraIndex);
+                invertedtetrahedronsList[tetraIndex].insert(tetra(0));
+                invertedtetrahedronsList[tetraIndex].insert(tetra(1));
+                invertedtetrahedronsList[tetraIndex].insert(tetra(2));
+                invertedtetrahedronsList[tetraIndex].insert(tetra(3));
+                tetraIndex++;
+            }
 
             // Visualize OPEN3D the meshes
             // open3d::visualization::Visualizer visualizer;
             // visualizer.CreateVisualizerWindow("Mesh Visualization");
             // Eigen::Vector3d red(1.0, 0.0, 0.0);
-            // mesh1->vertex_colors_.resize(mesh1->vertices_.size(), red);
-            // visualizer.AddGeometry(mesh1);
+            // tetra_mesh->vertex_colors_.resize(tetra_mesh->vertices_.size(), red);
+            // visualizer.AddGeometry(tetra_mesh);
             // visualizer.Run();
             // visualizer.DestroyVisualizerWindow();
-
-            mesh1->ComputeAdjacencyList();
-            auto edge_weights_1 = ComputeEdgeWeightsCot(mesh1, 0);
 
             RotationMatrix_ Rot_global = std::make_shared<Eigen::Matrix<double, 3, 3>>(Rs_global);
             TranslationVector_ T = std::make_shared<Eigen::Matrix<double, 3, 1>>(Ts);
 
-            VertexTranslationVector* tVertex = new VertexTranslationVector();
-            tVertex->setId(currId); // unique ID
-            tVertex->setEstimate(Ts);
-            optimizer.addVertex(tVertex);
-            mTransId[T] = currId;
-            currId++;
+            // VertexTranslationVector* tVertex = new VertexTranslationVector();
+            // tVertex->setId(currId); // unique ID
+            // tVertex->setEstimate(Ts);
+            // optimizer.addVertex(tVertex);
+            // mTransId[T] = currId;
+            // currId++;
 
-            VertexRotationMatrix* rotVertexGlobal = new VertexRotationMatrix();
-            rotVertexGlobal->setId(currId); // unique ID
-            rotVertexGlobal->setEstimate(Rs_global);
-            optimizer.addVertex(rotVertexGlobal);
-            mRotGlobalId[Rot_global] = currId;
-            currId++;
+            // VertexRotationMatrix* rotVertexGlobal = new VertexRotationMatrix();
+            // rotVertexGlobal->setId(currId); // unique ID
+            // rotVertexGlobal->setEstimate(Rs_global);
+            // optimizer.addVertex(rotVertexGlobal);
+            // mRotGlobalId[Rot_global] = currId;
+            // currId++;
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];
@@ -624,10 +654,10 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
                 optimizer.addEdge(eKF2);
 
-                auto it1 = invertedPosIndexes1.find(i);
-                size_t meshIndex1 = 0;
-                if (it1 != invertedPosIndexes1.end()) {
-                    meshIndex1 = it1->second;
+                auto it = invertedPosIndexes.find(i);
+                size_t meshIndex = 0;
+                if (it != invertedPosIndexes.end()) {
+                    meshIndex = it->second;
                     // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
                     // std::cout << "v2Position: (" << v2Positions[i][0] << ", " << v2Positions[i][1] << ", " << v2Positions[i][2] << ")\n";
                     // std::cout << "point mesh: (" << mesh1->vertices_[meshIndex1][0] << ", " << mesh1->vertices_[meshIndex1][1] << ", " << mesh1->vertices_[meshIndex1][2] << ")\n";
@@ -636,45 +666,72 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                     continue;
                 }
 
-                                
-                if (mesh1->adjacency_list_[meshIndex1].empty()) continue;
+                if (tetrahedronsList[meshIndex].empty()) continue;
 
-                // std::cout << "adjacency_list_ 1: (" << mesh1->adjacency_list_[meshIndex1].size() << ")\n";
+                for (const auto& index : tetrahedronsList[meshIndex]) {
 
-                Eigen::Vector3d distancesInvTipDesv;
-                // distancesInvTipDesv = getInvUncertainty(*firstPointToOptimize, *secondPointToOptimize, *pKF1, *pKF2);
-                std::unordered_set<int> jIndexes = mesh1->adjacency_list_[meshIndex1];
-                distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes1, v1Positions, v2Positions);
-                //distancesInvTipDesv << 1.0 / 10.0, 1.0 / 10.0, 1.0 / 10.0;
+                    Tet tetra = tetrahedrons[index];
 
-                // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal() * arapBalanceWeight;
-                
-                double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
-                Eigen::Matrix<double, 1, 1> informationMatrix;
-                informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
+                    std::unordered_set<int> jIndexes = invertedtetrahedronsList[index];
 
+                    Eigen::Vector3d distancesInvTipDesv;
+                    distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes, v1Positions, v2Positions);
+                    double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
+                    Eigen::Matrix<double, 1, 1> informationMatrix;
+                    informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
+                    //std::cout << "TETRAHEDRON \n";
 
-                for (int j : mesh1->adjacency_list_[meshIndex1]) {
-                    // std::cout << "adjacency_list_ 1: (" << j << ")\n";
-                    //Set ARAP edge
-                    EdgeARAP* eArap = new EdgeARAP();
+                    int toOptimizeTetIndex = -1;
+                    int jTetIndex = -1;
 
-                    eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
-                    eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTransId[T])));
-                    eArap->setVertex(4, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotGlobalId[Rot_global])));
-                    //eArap->Xi1world = mesh1->vertices_[meshIndex1]; // or v1Positions[i] or v1Positions[posIndexes1[meshIndex1]]
-                    eArap->Xj1world = mesh1->vertices_[j];
-                    eArap->Xj2world = v2Positions[posIndexes1[j]];
-                    eArap->weight = edge_weights_1[GetOrderedEdge(meshIndex1, j)];
+                    Eigen::Vector3d firstWorldPos = firstPointToOptimize->getWorldPosition().cast<double>();
+                    for (int v = 0; v <= 3; v++){
+                        if (firstWorldPos == tetra.p[v]) {
+                            toOptimizeTetIndex = v;
+                            break;
+                        }
+                    }
 
-                    eArap->setInformation(informationMatrix);
-                    // eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
-                    double measurement = 0.0;
-                    eArap->setMeasurement(measurement);
+                    for (int j : jIndexes){
+                        Eigen::Vector3d vertex = tetra_mesh->vertices_[j];
 
-                    optimizer.addEdge(eArap);
+                        if (vertex == firstWorldPos) continue;
+                        int cTetIndex = -1;
+                        int dTetIndex = -1;
+                        for (int v = 0; v <= 3; v++){
+                            if (v == toOptimizeTetIndex) {
+                                continue;
+                            }
+                            else if (vertex == tetra.p[v]) {
+                                jTetIndex = v;
+                            } 
+                            else if (cTetIndex < 0) {
+                                cTetIndex = v;
+                            } 
+                            else if (dTetIndex < 0) {
+                                dTetIndex = v;
+                            }
+                        }
+                        
+                        //Set ARAP edge
+                        EdgeARAP* eArap = new EdgeARAP();
+
+                        eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                        eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                        eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
+                        
+                        eArap->Xj1world = tetra_mesh->vertices_[j];
+                        eArap->Xj2world = v2Positions[posIndexes[j]];
+                        eArap->weight = tetra.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
+                        eArap->PcdNorm = (tetra.p[cTetIndex]-tetra.p[dTetIndex]).norm();
+                        eArap->tet = tetra;
+
+                        eArap->setInformation(informationMatrix);
+                        double measurement = 0.0;
+                        eArap->setMeasurement(measurement);
+
+                        optimizer.addEdge(eArap);
+                    }
                 }
             }
         }

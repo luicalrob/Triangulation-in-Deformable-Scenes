@@ -31,6 +31,7 @@ set(HEADER_FILES
         ${root}/Matching/DescriptorMatching.h
         ${root}/Optimization/nloptOptimization.h
         ${root}/Optimization/EigenOptimization.h
+        ${root}/Optimization/Tet.h
         ${root}/Optimization/g2oBundleAdjustment.h
         ${root}/Optimization/g2oTypes.h
         ${root}/System/Settings.h
@@ -49,6 +50,7 @@ set(SOURCE_FILES
         ${root}/Matching/DescriptorMatching.cc
         ${root}/Optimization/nloptOptimization.cc
         ${root}/Optimization/g2oBundleAdjustment.cc
+        ${root}/Optimization/Tet.cc
         ${root}/Optimization/g2oTypes.cc
         ${root}/System/Settings.cc
         ${root}/System/SLAM.cc
