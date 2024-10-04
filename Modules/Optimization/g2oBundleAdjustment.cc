@@ -483,7 +483,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             // OPEN3D LIBRARY
             std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
 
-            std::vector<Eigen::Matrix3d> Rs(v1Positions.size(), Eigen::Matrix3d::Identity());
+            std::vector<Sophus::SO3d> Rs(v1Positions.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
             Eigen::Matrix3d Rs_global = Eigen::Matrix3d::Identity();
             Eigen::Vector3d Ts = Eigen::Vector3d::Zero();
             std::pair<Eigen::Matrix3d, Eigen::Vector3d> transformation = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
@@ -549,8 +549,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             // visualizer.Run();
             // visualizer.DestroyVisualizerWindow();
 
-            RotationMatrix_ Rot_global = std::make_shared<Eigen::Matrix<double, 3, 3>>(Rs_global);
-            TranslationVector_ T = std::make_shared<Eigen::Matrix<double, 3, 1>>(Ts);
+            //RotationMatrix_ Rot_global = std::make_shared<Eigen::Matrix<double, 3, 3>>(Rs_global);
+            //TranslationVector_ T = std::make_shared<Eigen::Matrix<double, 3, 1>>(Ts);
 
             // VertexTranslationVector* tVertex = new VertexTranslationVector();
             // tVertex->setId(currId); // unique ID
@@ -573,7 +573,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 if (!pMPi2) continue;
 
                 MapPoint_ firstPointToOptimize = pMPi1;
-                RotationMatrix_ Rot = std::make_shared<Eigen::Matrix<double, 3, 3>>(Rs[i]);
+                RotationMatrix_ Rot = std::make_shared<Sophus::SO3d>(Rs[i]);
                 MapPoint_ secondPointToOptimize = pMPi2;
 
                 //Check if this MapPoint has been already added to the optimization
@@ -603,9 +603,9 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                     //std::cout << "ID: (" << currId << ")\n";
                     currId++;
 
-                    VertexRotationMatrix* rotVertex = new VertexRotationMatrix();
-                    rotVertex->setId(currId); // unique ID
+                    VertexSO3* rotVertex = new VertexSO3();
                     rotVertex->setEstimate(Rs[i]);
+                    rotVertex->setId(currId);
                     optimizer.addVertex(rotVertex);
                     mRotId[Rot] = currId;
                     currId++;
@@ -762,8 +762,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
     for(pair<RotationMatrix_,ID> pairRotationMatrixId : mRotId){
         RotationMatrix_ Rots = pairRotationMatrixId.first;
-        VertexRotationMatrix* mRot = static_cast<VertexRotationMatrix*>(optimizer.vertex(pairRotationMatrixId.second));
-        Eigen::Matrix3d Rotation = mRot->estimate();
+        VertexSO3* mRot = static_cast<VertexSO3*>(optimizer.vertex(pairRotationMatrixId.second));
+        Sophus::SO3d Rotation = mRot->estimate();
         // std::cout << "Rotation matrix:\n" << Rotation << std::endl;
     }
 

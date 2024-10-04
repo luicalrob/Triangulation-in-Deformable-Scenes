@@ -26,6 +26,7 @@
 
 #include "Calibration/CameraModel.h"
 #include "Optimization/Tet.h"
+#include "Utils/CommonTypes.h"
 
 #include <g2o/core/base_unary_edge.h>
 #include <g2o/core/base_multi_edge.h>
@@ -72,6 +73,36 @@ public:
         Eigen::AngleAxisd angleAxis(updateVec.norm(), updateVec.normalized());
         Eigen::Matrix3d updateMatrix = angleAxis.toRotationMatrix();
         _estimate = updateMatrix * _estimate;
+    }
+};
+
+class VertexSO3 : public g2o::BaseVertex<3, Sophus::SO3d> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    VertexSO3() {}
+
+    virtual void setToOriginImpl() override {
+        _estimate = Sophus::SO3d();  // Set to identity rotation
+    }
+
+    virtual void oplusImpl(const double *update) override {
+        Eigen::Map<const Eigen::Matrix<double, 3, 1>> updateVec(update);
+        _estimate = Sophus::SO3d::exp(updateVec) * _estimate;  // Apply update in SO(3)
+    }
+
+    virtual bool read(std::istream &is) override {
+        double x, y, z;
+        is >> x >> y >> z;
+        Eigen::Vector3d v(x, y, z);
+        _estimate = Sophus::SO3d::exp(v);  // Load rotation from file
+        return true;
+    }
+
+    virtual bool write(std::ostream &os) const override {
+        Eigen::Vector3d v = _estimate.log();  // Write the Lie algebra parameters
+        os << v.x() << " " << v.y() << " " << v.z();
+        return true;
     }
 };
 
@@ -262,7 +293,7 @@ public:
     void computeError() {
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
-        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
+        const VertexSO3* vR = static_cast<const VertexSO3*>(_vertices[2]);
         //const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[3]);
         //const VertexRotationMatrix* vRg = static_cast<const VertexRotationMatrix*>(_vertices[4]);
 
@@ -270,7 +301,7 @@ public:
         double obs(_measurement);
         Eigen::Vector3d diff;
 
-        Eigen::Matrix3d R = vR->estimate();
+        Sophus::SO3d R = vR->estimate();
         //Eigen::Vector3d t = vT->estimate();
         //Eigen::Matrix3d Rg = vRg->estimate();
 
@@ -280,7 +311,7 @@ public:
         _error[0] = obs - (PcdNorm * weight * energy);   
     }
 
-    virtual void linearizeOplus();
+    // virtual void linearizeOplus();
 
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;
