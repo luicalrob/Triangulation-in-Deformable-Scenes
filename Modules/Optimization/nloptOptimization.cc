@@ -20,7 +20,8 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
 
     double stanDeviation = calculatePixelsStandDev(pMapCopy, cameraSelection::Combined);
 
-    double error = std::pow(repErrorStanDesv - stanDeviation, 2);
+    double error = std::pow(std::log(repErrorStanDesv + 1) - std::log(stanDeviation + 1), 2);
+    // The +1 inside the logarithm prevents it from becoming undefined when the values are close to zero.
 
     std::cout << "stanDeviation: " << stanDeviation << "\n";
 

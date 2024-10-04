@@ -311,7 +311,7 @@ public:
         _error[0] = obs - (PcdNorm * weight * energy);   
     }
 
-    // virtual void linearizeOplus();
+    virtual void linearizeOplus();
 
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;
