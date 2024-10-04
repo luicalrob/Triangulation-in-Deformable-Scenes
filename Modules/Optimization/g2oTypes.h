@@ -294,18 +294,18 @@ public:
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
         const VertexSO3* vR = static_cast<const VertexSO3*>(_vertices[2]);
-        //const VertexTranslationVector* vT = static_cast<const VertexTranslationVector*>(_vertices[3]);
-        //const VertexRotationMatrix* vRg = static_cast<const VertexRotationMatrix*>(_vertices[4]);
+        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[3]);
 
         //Eigen::Vector3d obs(_measurement);
         double obs(_measurement);
         Eigen::Vector3d diff;
 
         Sophus::SO3d R = vR->estimate();
-        //Eigen::Vector3d t = vT->estimate();
-        //Eigen::Matrix3d Rg = vRg->estimate();
+        g2o::SE3Quat T_global =  vT->estimate();
+        Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
+        Eigen::Vector3d t = T_global.translation();
 
-        diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world));// + Rg * (v1->estimate() - v2->estimate()) - t;
+        diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world)) + Rg * (v1->estimate() - v2->estimate()) - t;
 
         double energy = diff.squaredNorm();
         _error[0] = obs - (PcdNorm * weight * energy);   

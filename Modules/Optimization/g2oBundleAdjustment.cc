@@ -440,8 +440,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
     unordered_map<RotationMatrix_,size_t> mRotId;
-    unordered_map<RotationMatrix_,size_t> mRotGlobalId;
-    unordered_map<TranslationVector_,size_t> mTransId;
+    unordered_map<TransformationMatrix_,size_t> mTGlobalId;
 
     //Get all KeyFrames from map
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
@@ -484,12 +483,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
 
             std::vector<Sophus::SO3d> Rs(v1Positions.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
-            Eigen::Matrix3d Rs_global = Eigen::Matrix3d::Identity();
-            Eigen::Vector3d Ts = Eigen::Vector3d::Zero();
-            std::pair<Eigen::Matrix3d, Eigen::Vector3d> transformation = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
-
-            Rs_global = transformation.first;
-            Ts = transformation.second;
+            Sophus::SE3f T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
 
             // Perform Delaunay Reconstruction
 
@@ -549,22 +543,14 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             // visualizer.Run();
             // visualizer.DestroyVisualizerWindow();
 
-            //RotationMatrix_ Rot_global = std::make_shared<Eigen::Matrix<double, 3, 3>>(Rs_global);
-            //TranslationVector_ T = std::make_shared<Eigen::Matrix<double, 3, 1>>(Ts);
+            TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
 
-            // VertexTranslationVector* tVertex = new VertexTranslationVector();
-            // tVertex->setId(currId); // unique ID
-            // tVertex->setEstimate(Ts);
-            // optimizer.addVertex(tVertex);
-            // mTransId[T] = currId;
-            // currId++;
-
-            // VertexRotationMatrix* rotVertexGlobal = new VertexRotationMatrix();
-            // rotVertexGlobal->setId(currId); // unique ID
-            // rotVertexGlobal->setEstimate(Rs_global);
-            // optimizer.addVertex(rotVertexGlobal);
-            // mRotGlobalId[Rot_global] = currId;
-            // currId++;
+            g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+            vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
+            vSE3->setId(currId);
+            optimizer.addVertex(vSE3);
+            mTGlobalId[T] = currId;
+            currId++;
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];
@@ -719,6 +705,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                         eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                         eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                         eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
+                        eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
                         
                         eArap->Xj1world = tetra_mesh->vertices_[j];
                         eArap->Xj2world = v2Positions[posIndexes[j]];
@@ -767,23 +754,15 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
         // std::cout << "Rotation matrix:\n" << Rotation << std::endl;
     }
 
-    Eigen::Matrix3d RotGlobal = Eigen::Matrix3d::Identity();
-    Eigen::Vector3d TGlobal = Eigen::Vector3d::Zero();
+    Sophus::SE3f TGlobal;
 
-    for(pair<RotationMatrix_,ID> pairRotationGlobalMatrixId : mRotGlobalId){
-        RotationMatrix_ Rots = pairRotationGlobalMatrixId.first;
-        VertexRotationMatrix* mRot = static_cast<VertexRotationMatrix*>(optimizer.vertex(pairRotationGlobalMatrixId.second));
-        RotGlobal = mRot->estimate();
+    for(pair<TransformationMatrix_,ID> pairTransformationGlobalMatrixId : mTGlobalId){
+        TransformationMatrix_ T = pairTransformationGlobalMatrixId.first;
+        g2o::VertexSE3Expmap* mT = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pairTransformationGlobalMatrixId.second));
+        TGlobal = Sophus::SE3f(mT->estimate().to_homogeneous_matrix().cast<float>());
         //std::cout << "Global Rotation matrix:\n" << Rotation << std::endl;
     }
-
-    for(pair<TranslationVector_,ID> pairTranslationVectorId : mTransId){
-        TranslationVector_ Ts = pairTranslationVectorId.first;
-        VertexTranslationVector* mT = static_cast<VertexTranslationVector*>(optimizer.vertex(pairTranslationVectorId.second));
-        TGlobal = mT->estimate();
-        //std::cout << "Global translation vector:\n" << t << std::endl;
-    }
-    pMap->insertGlobalKeyFramesTransformation(0, 1, RotGlobal, TGlobal);
+    pMap->insertGlobalKeyFramesTransformation(0, 1, TGlobal);
 }
 
 void arapOpen3DOptimization(Map* pMap){

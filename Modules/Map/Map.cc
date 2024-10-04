@@ -321,28 +321,24 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
     mMapPoints_[mpId]->setDescriptor(bestDesc);
 }
 
-void Map::insertGlobalKeyFramesTransformation(ID kf1, ID kf2, const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation) {
+void Map::insertGlobalKeyFramesTransformation(ID kf1, ID kf2, const Sophus::SE3f& transformation) {
     assert(mKeyFrames_.count(kf1) != 0);
     assert(mKeyFrames_.count(kf2) != 0);
     
-    mGRotations_[kf1][kf2] = rotation;
-    mGTranslations_[kf1][kf2] = translation;
+    mGTransformation_[kf1][kf2] = transformation;
 
-    mGRotations_[kf2][kf1] = rotation.transpose();
-    mGTranslations_[kf2][kf1] = -rotation.transpose() * translation;
+    mGTransformation_[kf2][kf1] = transformation.inverse();
 }
 
-std::pair<Eigen::Matrix3d, Eigen::Vector3d> Map::getGlobalKeyFramesTransformation(ID kf1, ID kf2) {
+Sophus::SE3f Map::getGlobalKeyFramesTransformation(ID kf1, ID kf2) {
     assert(mKeyFrames_.count(kf1) != 0);
     assert(mKeyFrames_.count(kf2) != 0);
 
-    Eigen::Matrix3d globalRotation = Eigen::Matrix3d::Identity();
-    Eigen::Vector3d globalTranslation = Eigen::Vector3d::Zero();
+    Sophus::SE3f globalT;
     
-    if (mGRotations_.count(kf1) && mGRotations_[kf1].count(kf2)) {
-        globalRotation = mGRotations_[kf1][kf2];
-        globalTranslation = mGTranslations_[kf1][kf2];
+    if (mGTransformation_.count(kf1) && mGTransformation_[kf1].count(kf2)) {
+        globalT = mGTransformation_[kf1][kf2];
     }
 
-    return std::make_pair(globalRotation, globalTranslation);
+    return globalT;
 }

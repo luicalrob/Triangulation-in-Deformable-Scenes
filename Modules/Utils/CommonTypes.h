@@ -13,7 +13,7 @@ using namespace std;
 typedef shared_ptr<MapPoint> MapPoint_;
 typedef shared_ptr<KeyFrame> KeyFrame_;
 typedef shared_ptr<Sophus::SO3d> RotationMatrix_;
-typedef shared_ptr<Eigen::Vector3d> TranslationVector_;
+typedef shared_ptr<Sophus::SE3f> TransformationMatrix_;
 
 enum class cameraSelection {
     C1,

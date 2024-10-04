@@ -542,12 +542,12 @@ void SLAM::measureRelativeErrors(){
             KeyFrame_ pKF2 = k1->second;
             std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
 
-            Eigen::Matrix3d Rs_global = Eigen::Matrix3d::Identity();
-            Eigen::Vector3d Ts = Eigen::Vector3d::Zero();
-            std::pair<Eigen::Matrix3d, Eigen::Vector3d> transformation = pMap_->getGlobalKeyFramesTransformation(k2->first, k1->first);
+            Eigen::Matrix3f Rs_global = Eigen::Matrix3f::Identity();
+            Eigen::Vector3f Ts = Eigen::Vector3f::Zero();
+            Sophus::SE3f transformation = pMap_->getGlobalKeyFramesTransformation(k2->first, k1->first);
 
-            Rs_global = transformation.first;
-            Ts = transformation.second;
+            Rs_global = transformation.so3().matrix();
+            Ts = transformation.translation();
 
             std::cout << "Global rotation: " << Rs_global<< "\n";
             std::cout << "Global translation: " << Ts<< "\n";

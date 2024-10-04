@@ -128,12 +128,12 @@ public:
     /*
      * Insert Global rotation and translation calculated between the mappoints of two keyframes
      */
-    void insertGlobalKeyFramesTransformation(ID kf1, ID kf2, const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation);
+    void insertGlobalKeyFramesTransformation(ID kf1, ID kf2, const Sophus::SE3f& transformation);
 
     /*
      * Gets the global rotation and translation calculated between the mappoints of two keyframes
      */
-    std::pair<Eigen::Matrix3d, Eigen::Vector3d> getGlobalKeyFramesTransformation(ID kf1, ID kf2);
+    Sophus::SE3f getGlobalKeyFramesTransformation(ID kf1, ID kf2);
 
     /*
      * Checks that the KeyFrame with the given ID is consistent with the information
@@ -216,8 +216,7 @@ private:
     std::unordered_map<ID,GraphNode_> mKeyFrameGraph_;
     std::unordered_map<ID,GraphNode_> mMapPointGraph_;
 
-    std::unordered_map<ID, std::unordered_map<ID, Eigen::Matrix3d>> mGRotations_;
-    std::unordered_map<ID, std::unordered_map<ID, Eigen::Vector3d>> mGTranslations_;
+    std::unordered_map<ID, std::unordered_map<ID, Sophus::SE3f>> mGTransformation_;
 
     float minCommonObs_;
 
