@@ -519,16 +519,6 @@ void SLAM::measureRelativeErrors(){
     std::vector<double> squaredNormRelativeErrors;
     Eigen::Vector3d meanRelativeError = Eigen::Vector3d::Zero();
     double meanSquaredNormRelativeError = 0;
-
-    Eigen::Vector2d meanRepErrorUVC1 = Eigen::Vector2d::Zero();
-    double meanRepErrorC1 = 0;
-    double desvRepErrorC1 = 0;
-    Eigen::Vector2d meanRepErrorUVC2 = Eigen::Vector2d::Zero();
-    double meanRepErrorC2 = 0; 
-    double desvRepErrorC2 = 0;
-    Eigen::Vector2d meanRepErrorUV = Eigen::Vector2d::Zero();
-    double meanRepError = 0;
-    double desvRepError = 0;
     
     size_t nMatches = 0;
     size_t validPairs = 0;
@@ -585,38 +575,6 @@ void SLAM::measureRelativeErrors(){
                 if (!pMPi1) continue;
                 if (!pMPi2) continue;
 
-
-                //Reprojection error
-                //C1
-                cv::Point2f uv = pKF1->getKeyPoint(i).pt;
-                Eigen::Vector2d obs;
-                obs << uv.x, uv.y;  //Observed point in the image
-                   
-                Eigen::Vector3d p3Dw = pMPi1->getWorldPosition().cast<double>();    //Predicted 3D world position  of the point
-
-                Eigen::Vector3d p3Dc = camera1Pose.map(p3Dw);
-                Eigen::Vector2f projected;
-                pCamera1->project(p3Dc.cast<float>(), projected);
-
-                Eigen::Vector2d pixelsError = (obs - projected.cast<double>());
-                meanRepErrorUVC1 += pixelsError.cwiseAbs();;
-                meanRepErrorUV += pixelsError.cwiseAbs();;
-
-                //C2
-                uv = pKF2->getKeyPoint(i).pt;
-                obs << uv.x, uv.y;  //Observed point in the image
-                   
-                p3Dw = pMPi2->getWorldPosition().cast<double>();    //Predicted 3D world position  of the point
-
-                p3Dc = camera2Pose.map(p3Dw);
-                projected;
-                pCamera2->project(p3Dc.cast<float>(), projected);
-
-                pixelsError = (obs - projected.cast<double>());    
-                meanRepErrorUVC2 += pixelsError.cwiseAbs();
-                meanRepErrorUV += pixelsError.cwiseAbs();
-
-
                 //ARAP error
                 auto it = invertedPosIndexes.find(i);
                 size_t meshIndex = 0;
@@ -651,78 +609,15 @@ void SLAM::measureRelativeErrors(){
             }
 
             if (validPairs > 1) {
-                meanRelativeError /= static_cast<double>(validPairs);
-                meanSquaredNormRelativeError /= static_cast<double>(validPairs);
+                PixelsError pixelsErrors;
+                calculatePixelsStandDev(pMap_, pixelsErrors);
 
-                meanRepErrorUVC1 /= static_cast<double>(nMatches);
-                meanRepErrorUVC2 /= static_cast<double>(nMatches);
-                meanRepErrorUV /= static_cast<double>(2*nMatches);
-
-                meanRepErrorC1 = (meanRepErrorUVC1[0] + meanRepErrorUVC1[1]) / 2.0;
-                meanRepErrorC2 = (meanRepErrorUVC2[0] + meanRepErrorUVC2[1]) / 2.0;
-                meanRepError = (meanRepErrorUV[0] + meanRepErrorUV[1]) / 2.0;
-                
-                //std::cout << "\nTotal movement: " << total_movement << std::endl;
-                std::cout << std::fixed << std::setprecision(10);
-                //std::cout << "Average relative error: " << meanRelativeError[0] << ", " << meanRelativeError[1] << ", " << meanRelativeError[2] << std::endl;
-
-                // calculate the sum of squared differences from the mean for standard deviation
-                Eigen::Vector2d sumSquaredDifferencesUVC1 = Eigen::Vector2d::Zero();
-                Eigen::Vector2d sumSquaredDifferencesUVC2 = Eigen::Vector2d::Zero();
-                Eigen::Vector2d sumSquaredDifferencesUV = Eigen::Vector2d::Zero();
-
-                for (size_t i = 0; i < v1MPs.size(); i++) {
-                    MapPoint_ pMPi1 = v1MPs[i];
-                    MapPoint_ pMPi2 = v2MPs[i];
-                    if (!pMPi1 || !pMPi2) continue;
-
-                    // Reprojection error for C1
-                    cv::Point2f uv = pKF1->getKeyPoint(i).pt;
-                    Eigen::Vector2d obs;
-                    obs << uv.x, uv.y;
-
-                    Eigen::Vector3d p3Dw = pMPi1->getWorldPosition().cast<double>();
-                    Eigen::Vector3d p3Dc = camera1Pose.map(p3Dw);
-                    Eigen::Vector2f projected;
-                    pCamera1->project(p3Dc.cast<float>(), projected);
-
-                    Eigen::Vector2d pixelsError = (obs - projected.cast<double>()).cwiseAbs();
-                    sumSquaredDifferencesUVC1 += (pixelsError - meanRepErrorUVC1).cwiseAbs2();
-                    sumSquaredDifferencesUV += (pixelsError - meanRepErrorUV).cwiseAbs2();
-
-                    // Reprojection error for C2
-                    uv = pKF2->getKeyPoint(i).pt;
-                    obs << uv.x, uv.y;
-
-                    p3Dw = pMPi2->getWorldPosition().cast<double>();
-                    p3Dc = camera2Pose.map(p3Dw);
-                    pCamera2->project(p3Dc.cast<float>(), projected);
-
-                    pixelsError = (obs - projected.cast<double>()).cwiseAbs();
-                    sumSquaredDifferencesUVC2 += (pixelsError - meanRepErrorUVC2).cwiseAbs2();
-                    sumSquaredDifferencesUV += (pixelsError - meanRepErrorUV).cwiseAbs2();
-                }
-
-                // Variance calculation
-                Eigen::Vector2d varianceUVC1 = sumSquaredDifferencesUVC1 / static_cast<double>(nMatches);
-                Eigen::Vector2d varianceUVC2 = sumSquaredDifferencesUVC2 / static_cast<double>(nMatches);
-                Eigen::Vector2d varianceUV = sumSquaredDifferencesUV / static_cast<double>(2 * nMatches);
-
-                // Standard deviation (sqrt of variance)
-                Eigen::Vector2d stdDevUVC1 = varianceUVC1.cwiseSqrt();
-                Eigen::Vector2d stdDevUVC2 = varianceUVC2.cwiseSqrt();
-                Eigen::Vector2d stdDevUV = varianceUV.cwiseSqrt();
-
-                desvRepErrorC1 = (stdDevUVC1[0] + stdDevUVC1[1]) / 2.0;
-                desvRepErrorC2 = (stdDevUVC2[0] + stdDevUVC2[1]) / 2.0;
-                desvRepError = (stdDevUV[0] + stdDevUV[1]) / 2.0;
-
-                std::cout << "Pixels C1 error (average): " << meanRepErrorC1 << std::endl;
-                std::cout << "Pixels C1 error (standard desv): " << desvRepErrorC1 << std::endl;
-                std::cout << "Pixels C2 error (average): " << meanRepErrorC2 << std::endl;
-                std::cout << "Pixels C2 error (standard desv): " << desvRepErrorC2 << std::endl;
-                std::cout << "Pixels error (average): " << meanRepError << std::endl;
-                std::cout << "Pixels error (standard desv): " << desvRepError << std::endl;
+                std::cout << "Pixels C1 error (average): " << pixelsErrors.avgc1 << std::endl;
+                std::cout << "Pixels C1 error (standard desv): " << pixelsErrors.desvc1 << std::endl;
+                std::cout << "Pixels C2 error (average): " << pixelsErrors.avgc2 << std::endl;
+                std::cout << "Pixels C2 error (standard desv): " << pixelsErrors.desvc2 << std::endl;
+                std::cout << "Pixels error (average): " << pixelsErrors.avg << std::endl;
+                std::cout << "Pixels error (standard desv): " << pixelsErrors.desv << std::endl;
                 
                 std::cout << "Average squared norm relative error: " << meanSquaredNormRelativeError << std::endl;
             } else {

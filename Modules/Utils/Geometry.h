@@ -116,6 +116,6 @@ Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &p3D1, const Eigen::
 /*
  * Given a map with map points, it return the standard desviation of the reprojection error in pixels
  */
-double calculatePixelsStandDev(std::shared_ptr<Map> Map, cameraSelection cameraSelection);
+void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors);
 
 #endif //SLAM_GEOMETRY_H

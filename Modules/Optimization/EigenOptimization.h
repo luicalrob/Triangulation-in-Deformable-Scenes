@@ -43,13 +43,13 @@ struct EigenOptimizationFunctor : Functor<double> {
         
         arapOptimization(pMapCopy.get(), x(0), x(1), nIterations);
         
-        double stanDeviation1 = calculatePixelsStandDev(pMapCopy, cameraSelection::C1);
-        double stanDeviation2 = calculatePixelsStandDev(pMapCopy, cameraSelection::C2);
-        std::cout << "stanDeviation1: " << stanDeviation1 << "\n";
-        std::cout << "stanDeviation2: " << stanDeviation2 << "\n";
+        PixelsError pixelsErrors;
+        calculatePixelsStandDev(pMapCopy, pixelsErrors);
+        std::cout << "stanDeviation1: " << pixelsErrors.desvc1 << "\n";
+        std::cout << "stanDeviation2: " << pixelsErrors.desvc2 << "\n";
 
-        double errorC1 = std::pow(repErrorStanDesv - stanDeviation1, 2);
-        double errorC2 = std::pow(repErrorStanDesv - stanDeviation2, 2);
+        double errorC1 = std::pow(repErrorStanDesv - pixelsErrors.desvc1, 2);
+        double errorC2 = std::pow(repErrorStanDesv - pixelsErrors.desvc2, 2);
 
         std::cout << "errorC1: " << errorC1 << "\n";
         std::cout << "errorC2: " << errorC2 << "\n";

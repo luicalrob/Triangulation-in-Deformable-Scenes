@@ -522,6 +522,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
                 tet.Init();
                 tet.ComputeVolume();
+                tet.ComputeR();
                 tetrahedrons.push_back(tet);
                 tetrahedronsList[tetra(0)].insert(tetraIndex);
                 tetrahedronsList[tetra(1)].insert(tetraIndex);
@@ -662,9 +663,12 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
                     Eigen::Vector3d distancesInvTipDesv;
                     distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes, v1Positions, v2Positions);
-                    double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
-                    Eigen::Matrix<double, 1, 1> informationMatrix;
-                    informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
+                    // double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
+                    // Eigen::Matrix<double, 1, 1> informationMatrix;
+                    // informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
+
+                    Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal() * (1.0/arapBalanceWeight);
+
                     //std::cout << "TETRAHEDRON \n";
 
                     int toOptimizeTetIndex = -1;
@@ -714,8 +718,9 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                         eArap->tet = tetra;
 
                         eArap->setInformation(informationMatrix);
-                        double measurement = 0.0;
-                        eArap->setMeasurement(measurement);
+                        eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
+                        // double measurement = 0.0;
+                        // eArap->setMeasurement(measurement);
 
                         optimizer.addEdge(eArap);
                     }

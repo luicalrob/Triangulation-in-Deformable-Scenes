@@ -18,12 +18,15 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
 
     arapOptimization(pMapCopy.get(), repBalanceWeight, arapBalanceWeight, nOptIterations);
 
-    double stanDeviation = calculatePixelsStandDev(pMapCopy, cameraSelection::Combined);
+    PixelsError pixelsErrors;
+    calculatePixelsStandDev(pMapCopy, pixelsErrors);
 
-    double error = std::pow(std::log(repErrorStanDesv + 1) - std::log(stanDeviation + 1), 2);
+    double errorC1 = std::pow(std::log(repErrorStanDesv + 1) - std::log(pixelsErrors.desvc1 + 1), 2);
+    double errorC2 = std::pow(std::log(repErrorStanDesv + 1) - std::log(pixelsErrors.desvc2 + 1), 2);
+    double error = errorC1 + errorC2;
     // The +1 inside the logarithm prevents it from becoming undefined when the values are close to zero.
 
-    std::cout << "stanDeviation: " << stanDeviation << "\n";
+    std::cout << "stanDeviation: " << pixelsErrors.desv << "\n";
 
     std::cout << "error: " << error << "\n";
     return error;

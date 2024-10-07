@@ -270,23 +270,34 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 
 EdgeARAP::EdgeARAP(){
-    resize(4);
+    resize(3);
 }
 
-bool EdgeARAP::read(std::istream& is) {
-    is >> _measurement;
+bool EdgeARAP::read(std::istream& is){
 
-    double info;
-    is >> info;
-    information()(0, 0) = info;
+    for (int i=0; i<3; i++){
+        is >> _measurement[i];
+    }
 
+    for (int i=0; i<3; i++)
+        for (int j=i; j<3; j++) {
+            is >> information()(i,j);
+            if (i!=j)
+                information()(j,i)=information()(i,j);
+        }
     return true;
 }
 
 bool EdgeARAP::write(std::ostream& os) const {
-    os << _measurement << " ";
 
-    os << information()(0, 0);
+    for (int i=0; i<3; i++){
+        os << measurement()[i] << " ";
+    }
+
+    for (int i=0; i<3; i++)
+        for (int j=i; j<3; j++){
+            os << " " <<  information()(i,j);
+        }
     return os.good();
 }
 
@@ -297,8 +308,8 @@ void EdgeARAP::linearizeOplus() {
     //VertexTranslationVector* vT = static_cast<VertexTranslationVector*>(_vertices[3]);
     //VertexRotationMatrix* vRg = static_cast<VertexRotationMatrix*>(_vertices[4]);
 
-    //Eigen::Vector3d obs(_measurement);
-    double obs(_measurement);
+    Eigen::Vector3d obs(_measurement);
+    //double obs(_measurement);
     Eigen::Vector3d diff;
 
     Eigen::Matrix3d R = vR->estimate().matrix();
@@ -315,13 +326,21 @@ void EdgeARAP::linearizeOplus() {
 
     // Sophus::SO3d so3(J_R_mat3);
     // Eigen::Vector3d J_rotation_vector = so3.log();
+    // Eigen::Matrix3d J_v1_3x1 = J_v1_3x1.asDiagonal()
+    // J_v1_3x1.setZero();
 
-    Eigen::Matrix<double, 1, 3> J_v1_mat = J_v1_3x1.transpose();
-    Eigen::Matrix<double, 1, 3> J_v2_mat = J_v2_3x1.transpose();
-    //Eigen::Matrix<double, 1, 3> J_R = J_rotation_vector.transpose(); 
+    // Eigen::Matrix3d J_v2_3x1;
+    // J_v2_3x1.setZero();
+
+    // Eigen::Matrix3d J_rotation_vector;
+    // J_rotation_vector.setZero();
+
+    Eigen::Matrix<double, 3, 3> J_v1_mat = J_v1_3x1.asDiagonal();
+    Eigen::Matrix<double, 3, 3> J_v2_mat = J_v2_3x1.asDiagonal();
+    Eigen::Matrix<double, 3, 3> J_R = J_R_mat3; 
     //Eigen::Matrix<double, 1, 9> J_R = Eigen::Map<Eigen::Matrix<double, 1, 9>>(J_R_mat3.data());
 
     _jacobianOplus[0] = J_v1_mat;
     _jacobianOplus[1] = J_v2_mat;
-    //_jacobianOplus[2] = J_R;
+    _jacobianOplus[2] = J_R;
 }

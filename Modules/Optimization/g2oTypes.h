@@ -280,7 +280,7 @@ public:
     //float balance;
 };
 
-class EdgeARAP : public g2o::BaseMultiEdge<1, double> {
+class EdgeARAP : public g2o::BaseMultiEdge<3, Eigen::Vector3d> {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -296,19 +296,20 @@ public:
         const VertexSO3* vR = static_cast<const VertexSO3*>(_vertices[2]);
         //const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[3]);
 
-        //Eigen::Vector3d obs(_measurement);
-        double obs(_measurement);
+        Eigen::Vector3d obs(_measurement);
+        //double obs(_measurement);
         Eigen::Vector3d diff;
 
         Sophus::SO3d R = vR->estimate();
-        g2o::SE3Quat T_global =  vT->estimate();
+        //g2o::SE3Quat T_global =  vT->estimate();
         // Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
         // Eigen::Vector3d t = T_global.translation();
 
         diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world));// + Rg * (v1->estimate() - v2->estimate()) - t;
 
-        double energy = diff.squaredNorm();
-        _error[0] = obs - (PcdNorm * weight * energy);   
+        // double energy = diff.squaredNorm();
+        // _error[0] = obs - (PcdNorm * weight * energy);  
+        _error = obs - (PcdNorm * weight * diff);   
     }
 
     virtual void linearizeOplus();

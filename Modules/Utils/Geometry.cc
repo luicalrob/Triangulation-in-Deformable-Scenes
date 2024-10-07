@@ -380,7 +380,7 @@ Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &point, const Eigen:
 }
 
 
-double calculatePixelsStandDev(std::shared_ptr<Map> Map, cameraSelection cameraSelection){
+void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors){
     Eigen::Vector2d meanRepErrorUVC1 = Eigen::Vector2d::Zero();
     double meanRepErrorC1 = 0;
     double desvRepErrorC1 = 0;
@@ -516,22 +516,18 @@ double calculatePixelsStandDev(std::shared_ptr<Map> Map, cameraSelection cameraS
         }
     }
 
+    desvRepError = desvRepErrorC1 + desvRepErrorC2 / 2.0;
+    meanRepError = meanRepErrorC1 + meanRepErrorC2 / 2.0;
+
     // std::cout << "meanRepErrorC1: " << meanRepErrorC1 << "\n";
     // std::cout << "meanRepError: " << meanRepError << "\n";
     std::cout << "desvRepErrorC1: " << desvRepErrorC1 << "\n";
     std::cout << "desvRepErrorC2: " << desvRepErrorC2 << "\n";
-    double error = 0.0;
-    switch (cameraSelection) {
-        case cameraSelection::C1:
-            error = desvRepErrorC1;
-            break;
-        case cameraSelection::C2:
-            error = desvRepErrorC2;
-            break;
-        case cameraSelection::Combined:
-            error = desvRepError;
-            break;
-    }
-
-    return error;
+    
+    pixelsErrors.avgc1 = meanRepErrorC1;
+    pixelsErrors.avgc2 = meanRepErrorC2;
+    pixelsErrors.avg = meanRepError;
+    pixelsErrors.desvc1 = desvRepErrorC1;
+    pixelsErrors.desvc2 = desvRepErrorC2;
+    pixelsErrors.desv = desvRepError;
 }
