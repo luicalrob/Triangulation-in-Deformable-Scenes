@@ -270,7 +270,7 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 
 EdgeARAP::EdgeARAP(){
-    resize(3);
+    resize(4);
 }
 
 bool EdgeARAP::read(std::istream& is) {
@@ -302,8 +302,9 @@ void EdgeARAP::linearizeOplus() {
     Eigen::Vector3d diff;
 
     Eigen::Matrix3d R = vR->estimate().matrix();
-    //Eigen::Vector3d t = vT->estimate();
-    //Eigen::Matrix3d Rg = vRg->estimate();
+    // g2o::SE3Quat T_global =  vT->estimate();
+    // Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
+    // Eigen::Vector3d t = T_global.translation();
 
     diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world));// + Rg * (v1->estimate() - v2->estimate()) - t;
     

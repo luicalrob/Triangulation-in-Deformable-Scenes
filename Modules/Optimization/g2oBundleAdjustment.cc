@@ -545,12 +545,12 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
             TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
 
-            g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-            vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
-            vSE3->setId(currId);
-            optimizer.addVertex(vSE3);
-            mTGlobalId[T] = currId;
-            currId++;
+            // g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+            // vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
+            // vSE3->setId(currId);
+            // optimizer.addVertex(vSE3);
+            // mTGlobalId[T] = currId;
+            // currId++;
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];
@@ -705,7 +705,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                         eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                         eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                         eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
-                        eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
+                        //eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
                         
                         eArap->Xj1world = tetra_mesh->vertices_[j];
                         eArap->Xj2world = v2Positions[posIndexes[j]];
