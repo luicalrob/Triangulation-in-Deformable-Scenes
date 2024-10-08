@@ -318,7 +318,6 @@ public:
     Eigen::Vector3d Xj2world;
     double weight;
     double PcdNorm;
-    Tet tet;
 };
 
 #endif //SLAM_G2OTYPES_H
