@@ -482,9 +482,6 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             // OPEN3D LIBRARY
             std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
 
-            std::vector<Sophus::SO3d> Rs(v1Positions.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
-            Sophus::SE3f T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
-
             // Perform Delaunay Reconstruction
 
             //std::shared_ptr<open3d::geometry::PointCloud> cloud = convertToOpen3DPointCloud(v1Positions);
@@ -493,6 +490,13 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
             std::tie(tetra_mesh, pt_map) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
             std::cout << "tetra mesh size: (" << tetra_mesh->vertices_.size() << ")\n";
+            std::cout << "tetrahedrons size: (" << tetra_mesh->tetras_.size() << ")\n";
+
+            //std::vector<Sophus::SO3d> Rs(tetra_mesh->tetras_.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
+            std::vector<RotationMatrix_> Rs(tetra_mesh->tetras_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
+
+            Sophus::SE3f T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
+
 
             auto posIndexes = createVectorMap(tetra_mesh->vertices_, v1Positions);
 
@@ -532,6 +536,9 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 invertedtetrahedronsList[tetraIndex].insert(tetra(1));
                 invertedtetrahedronsList[tetraIndex].insert(tetra(2));
                 invertedtetrahedronsList[tetraIndex].insert(tetra(3));
+                
+                Rs[tetraIndex] = std::make_shared<Sophus::SO3d>(tet.R);
+
                 tetraIndex++;
             }
 
@@ -560,7 +567,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 if (!pMPi2) continue;
 
                 MapPoint_ firstPointToOptimize = pMPi1;
-                RotationMatrix_ Rot = std::make_shared<Sophus::SO3d>(Rs[i]);
+                //RotationMatrix_ Rot = std::make_shared<Sophus::SO3d>(Rs[i]);
                 MapPoint_ secondPointToOptimize = pMPi2;
 
                 //Check if this MapPoint has been already added to the optimization
@@ -589,13 +596,14 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                     mMapPointId[secondPointToOptimize] = currId;
                     //std::cout << "ID: (" << currId << ")\n";
                     currId++;
+                    
+                    // VertexSO3* rotVertex = new VertexSO3();
+                    // rotVertex->setEstimate(Rs[i]);
+                    // rotVertex->setId(currId);
+                    // optimizer.addVertex(rotVertex);
+                    // mRotId[Rot] = currId;
+                    // currId++;
 
-                    VertexSO3* rotVertex = new VertexSO3();
-                    rotVertex->setEstimate(Rs[i]);
-                    rotVertex->setId(currId);
-                    optimizer.addVertex(rotVertex);
-                    mRotId[Rot] = currId;
-                    currId++;
                 }
 
                 //Set fisrt projection edge
@@ -658,6 +666,18 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 for (const auto& index : tetrahedronsList[meshIndex]) {
 
                     Tet tetra = tetrahedrons[index];
+
+                    RotationMatrix_ Rot = (Rs[index]);
+                    
+                    if (mRotId.count(Rot) == 0) {
+                        VertexSO3* rotVertex = new VertexSO3();
+                        rotVertex->setEstimate(tetra.R);
+                        rotVertex->setId(currId);
+                        optimizer.addVertex(rotVertex);
+                        mRotId[Rot] = currId;
+                        currId++;
+                    }
+
 
                     std::unordered_set<int> jIndexes = invertedtetrahedronsList[index];
 
@@ -729,6 +749,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
         }
     }
 
+    std::cout << "currId: (" << currId << ")\n";
     //Run optimization
     optimizer.initializeOptimization();
 

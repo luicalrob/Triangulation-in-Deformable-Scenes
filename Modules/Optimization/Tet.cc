@@ -18,14 +18,23 @@ void Tet::Init() {
 
 void Tet::ComputeR() {
     Eigen::Matrix3d F;
-    // Deformed edges
+    // Deformed edges (compute edge vectors of the deformed tetrahedron)
     F.col(0) = q[1] - q[0];
     F.col(1) = q[2] - q[0];
     F.col(2) = q[3] - q[0];
 
     // Perform polar decomposition via SVD to compute R
     Eigen::JacobiSVD<Eigen::Matrix3d> svd(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    
     R = svd.matrixU() * svd.matrixV().transpose();
+
+    // Ensure that R has a determinant of +1 (i.e., a proper rotation)
+    if (R.determinant() < 0) {
+        // If det(R) is -1, flip the third column of U to make det(R) +1
+        Eigen::Matrix3d U = svd.matrixU();
+        U.col(2) *= -1;
+        R = U * svd.matrixV().transpose();
+    }
 }
 
 void Tet::ComputeVolume() {
