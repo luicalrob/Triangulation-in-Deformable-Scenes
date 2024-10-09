@@ -118,4 +118,16 @@ Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &p3D1, const Eigen::
  */
 void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors);
 
+/*
+ * Function to compute centroids of a set of points
+ */
+Eigen::Vector3d ComputeCentroid(const std::vector<Eigen::Vector3d>& positions);
+
+/*
+ * Function to estimate the initial global rotation and translation
+ */
+void EstimateRotationAndTranslation(const std::vector<Eigen::Vector3d>& v1Positions, 
+                                    const std::vector<Eigen::Vector3d>& v2Positions, 
+                                    Eigen::Matrix3d& rotation, 
+                                    Eigen::Vector3d& translation);
 #endif //SLAM_GEOMETRY_H

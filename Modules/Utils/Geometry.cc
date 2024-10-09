@@ -531,3 +531,59 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
     pixelsErrors.desvc2 = desvRepErrorC2;
     pixelsErrors.desv = desvRepError;
 }
+
+
+Eigen::Vector3d ComputeCentroid(const std::vector<Eigen::Vector3d>& positions) {
+    Eigen::Vector3d centroid(0.0, 0.0, 0.0);
+    for (const auto& pos : positions) {
+        centroid += pos;
+    }
+    centroid /= positions.size();
+    return centroid;
+}
+
+void EstimateRotationAndTranslation(const std::vector<Eigen::Vector3d>& v1Positions, 
+                                    const std::vector<Eigen::Vector3d>& v2Positions, 
+                                    Eigen::Matrix3d& rotation, 
+                                    Eigen::Vector3d& translation) {
+    // Ensure both sets have the same number of points
+    assert(v1Positions.size() == v2Positions.size());
+
+    size_t n = v1Positions.size();
+
+    Eigen::Vector3d centroid1 = ComputeCentroid(v1Positions);
+    Eigen::Vector3d centroid2 = ComputeCentroid(v2Positions);
+
+    // 2. Center both sets by subtracting their centroids
+    std::vector<Eigen::Vector3d> centeredV1(n);
+    std::vector<Eigen::Vector3d> centeredV2(n);
+    
+    for (size_t i = 0; i < n; ++i) {
+        centeredV1[i] = v1Positions[i] - centroid1;
+        centeredV2[i] = v2Positions[i] - centroid2;
+    }
+
+    // 3. Compute the covariance matrix H
+    Eigen::Matrix3d H = Eigen::Matrix3d::Zero();
+    for (size_t i = 0; i < n; ++i) {
+        H += centeredV1[i] * centeredV2[i].transpose();
+    }
+
+    // 4. Perform Singular Value Decomposition (SVD) of H
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(H, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::Matrix3d U = svd.matrixU();
+    Eigen::Matrix3d V = svd.matrixV();
+
+    // 5. Compute the optimal rotation matrix
+    rotation = V * U.transpose();
+
+    // Handle the case where the determinant of the rotation is negative (reflection)
+    if (rotation.determinant() < 0) {
+        Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
+        I(2, 2) = -1; // Flip the sign of the last singular value
+        rotation = V * I * U.transpose();
+    }
+
+    // 6. Compute the translation vector
+    translation = centroid2 - rotation * centroid1;
+}

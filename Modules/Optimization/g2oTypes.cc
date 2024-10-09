@@ -270,7 +270,7 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 
 EdgeARAP::EdgeARAP(){
-    resize(3);
+    resize(4);
 }
 
 bool EdgeARAP::read(std::istream& is){
@@ -305,42 +305,63 @@ void EdgeARAP::linearizeOplus() {
     VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
     VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[1]);
     VertexSO3* vR = static_cast<VertexSO3*>(_vertices[2]);
-    //VertexTranslationVector* vT = static_cast<VertexTranslationVector*>(_vertices[3]);
-    //VertexRotationMatrix* vRg = static_cast<VertexRotationMatrix*>(_vertices[4]);
+    g2o::VertexSE3Expmap* vT = static_cast<g2o::VertexSE3Expmap*>(_vertices[3]);
 
     Eigen::Vector3d obs(_measurement);
     //double obs(_measurement);
-    Eigen::Vector3d diff;
+    Eigen::Vector3d arap_diff;
 
     Eigen::Matrix3d R = vR->estimate().matrix();
-    // g2o::SE3Quat T_global =  vT->estimate();
-    // Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
-    // Eigen::Vector3d t = T_global.translation();
+    g2o::SE3Quat T_global =  vT->estimate();
+    Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
+    Eigen::Vector3d t = T_global.translation();
 
-    diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world));// + Rg * (v1->estimate() - v2->estimate()) - t;
+    arap_diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world));
     
-    Eigen::Vector3d J_v1_3x1 = -2 * PcdNorm * weight * (diff.transpose() * R);
-    Eigen::Vector3d J_v2_3x1 = 2 * PcdNorm * weight * diff;
-    Eigen::Matrix3d J_R_mat3 = -2 * PcdNorm * weight * (diff * v1->estimate().transpose());
+    Eigen::Vector3d J_v1_3x1_FT = -2*weight * R.transpose() * arap_diff;
+    Eigen::Vector3d J_v2_3x1_FT = 2*weight * arap_diff;
+    Eigen::Matrix3d J_R_mat3_FT = -2*weight * (arap_diff * v1->estimate().transpose());
+
+    Eigen::Vector3d global_diff = (v2->estimate() - v1->estimate());
+
+    Eigen::Vector3d J_v1_3x1_ST = -2 * Rg.transpose() * (Rg * global_diff - t);
+    Eigen::Vector3d J_v2_3x1_ST = 2 * Rg.transpose() * (Rg * global_diff - t);
+    Eigen::Matrix3d J_Rg_mat3_ST = -2 * Rg * global_diff * global_diff.transpose();
+    Eigen::Vector3d J_tg_mat3_ST = -2 * (Rg * global_diff - t);
+
+    // Eigen::Matrix3d J_v1_3x1_FT;
+    // J_v1_3x1_FT.setZero();
+    // Eigen::Vector3d J_v2_3x1_FT;
+    // J_v2_3x1_FT.setZero();
+    // Eigen::Matrix3d J_R_mat3_FT;
+    // J_R_mat3_FT.setZero();
+
+    // Eigen::Matrix3d J_v1_3x1_ST;
+    // Eigen::Matrix3d J_v2_3x1_ST;
+    // Eigen::Matrix3d J_Rg_mat3_ST;
+    // Eigen::Vector3d J_tg_mat3_ST;
+
+    // J_v1_3x1_ST.setZero();
+    // J_v2_3x1_ST.setZero();
+    // J_Rg_mat3_ST.setZero();
+    // J_tg_mat3_ST.setZero();
 
 
-    // Sophus::SO3d so3(J_R_mat3);
-    // Eigen::Vector3d J_rotation_vector = so3.log();
-    // Eigen::Matrix3d J_v1_3x1 = J_v1_3x1.asDiagonal()
-    // J_v1_3x1.setZero();
+    Eigen::Matrix3d J_v1_3x1 = J_v1_3x1_FT.asDiagonal().toDenseMatrix() + J_v1_3x1_ST.asDiagonal().toDenseMatrix();
+    Eigen::Matrix3d J_v2_3x1 = J_v2_3x1_FT.asDiagonal().toDenseMatrix() + J_v2_3x1_ST.asDiagonal().toDenseMatrix();
+    Eigen::Matrix3d J_R_mat3 = J_R_mat3_FT;
+    Eigen::Matrix3d J_G_mat3 = J_Rg_mat3_ST + J_tg_mat3_ST.asDiagonal().toDenseMatrix();
 
-    // Eigen::Matrix3d J_v2_3x1;
-    // J_v2_3x1.setZero();
-
-    // Eigen::Matrix3d J_rotation_vector;
-    // J_rotation_vector.setZero();
-
-    Eigen::Matrix<double, 3, 3> J_v1_mat = J_v1_3x1.asDiagonal();
-    Eigen::Matrix<double, 3, 3> J_v2_mat = J_v2_3x1.asDiagonal();
+    Eigen::Matrix<double, 3, 3> J_v1_mat = J_v1_3x1;
+    Eigen::Matrix<double, 3, 3> J_v2_mat = J_v2_3x1;
     Eigen::Matrix<double, 3, 3> J_R = J_R_mat3; 
-    //Eigen::Matrix<double, 1, 9> J_R = Eigen::Map<Eigen::Matrix<double, 1, 9>>(J_R_mat3.data());
+    Eigen::Matrix<double, 3, 6> J_global;// = J_G_mat3; 
+    J_global.block<3,3>(0,0) = J_Rg_mat3_ST;
+    J_global.block<3,3>(0,3) = J_tg_mat3_ST.asDiagonal(); 
+    //J_global.setZero(); 
 
     _jacobianOplus[0] = J_v1_mat;
     _jacobianOplus[1] = J_v2_mat;
     _jacobianOplus[2] = J_R;
+    _jacobianOplus[3] = J_global;
 }

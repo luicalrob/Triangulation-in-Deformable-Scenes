@@ -491,16 +491,23 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             std::vector<size_t> pt_map;
 
             std::tie(tetra_mesh, pt_map) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
-            std::cout << "tetra mesh size: (" << tetra_mesh->vertices_.size() << ")\n";
-            std::cout << "tetrahedrons size: (" << tetra_mesh->tetras_.size() << ")\n";
             std::cout << "mesh size: (" << mesh1->vertices_.size() << ")\n";
-            std::cout << "triangles size: (" << mesh1->triangles_.size() << ")\n";
 
             //std::vector<Sophus::SO3d> Rs(tetra_mesh->tetras_.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
             std::vector<RotationMatrix_> Rs(mesh1->triangles_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
 
             Sophus::SE3f T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
 
+            Eigen::Matrix3d rotation;
+            Eigen::Vector3d translation;
+
+            if (T_global.translation().norm() == 0 &&  T_global.rotationMatrix().isApprox(Eigen::Matrix3f::Identity())) {
+                // std::cout << "Estimate initial Rotation and Translation \n";
+                EstimateRotationAndTranslation(v1Positions, v2Positions, rotation, translation);
+                // std::cout << "Rotation: " << rotation << "\n";
+                // std::cout << "translation: " << translation << "\n";
+                T_global = Sophus::SE3f(rotation.cast<float>(), translation.cast<float>());
+            }
 
             auto posIndexes = createVectorMap(mesh1->vertices_, v1Positions);
 
@@ -553,12 +560,12 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
             TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
 
-            // g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-            // vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
-            // vSE3->setId(currId);
-            // optimizer.addVertex(vSE3);
-            // mTGlobalId[T] = currId;
-            // currId++;
+            g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+            vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
+            vSE3->setId(currId);
+            optimizer.addVertex(vSE3);
+            mTGlobalId[T] = currId;
+            currId++;
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];
@@ -718,7 +725,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                         eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                         eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                         eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
-                        //eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
+                        eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
                         
                         eArap->Xj1world = tetra_mesh->vertices_[j];
                         eArap->Xj2world = v2Positions[posIndexes[j]];
@@ -736,7 +743,6 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
         }
     }
 
-    std::cout << "currId: (" << currId << ")\n";
     //Run optimization
     optimizer.initializeOptimization();
 

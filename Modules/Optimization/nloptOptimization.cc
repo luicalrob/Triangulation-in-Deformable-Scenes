@@ -21,8 +21,12 @@ double outerObjective(const std::vector<double>& x, std::vector<double>& grad, v
     PixelsError pixelsErrors;
     calculatePixelsStandDev(pMapCopy, pixelsErrors);
 
-    double errorC1 = std::pow(std::log(repErrorStanDesv + 1) - std::log(pixelsErrors.desvc1 + 1), 2);
-    double errorC2 = std::pow(std::log(repErrorStanDesv + 1) - std::log(pixelsErrors.desvc2 + 1), 2);
+    // double objetiveError1 = repErrorStanDesv - pixelsErrors.desvc1;
+    // double objetiveError2 = repErrorStanDesv - pixelsErrors.desvc2;
+
+    //assuming that repErrorStanDesv is 1 pixel
+    double errorC1 = std::pow(std::log(pixelsErrors.desvc1), 2);
+    double errorC2 = std::pow(std::log(pixelsErrors.desvc2), 2);
     double error = errorC1 + errorC2;
     // The +1 inside the logarithm prevents it from becoming undefined when the values are close to zero.
 
