@@ -270,7 +270,7 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 
 EdgeARAP::EdgeARAP(){
-    resize(4);
+    resize(3);
 }
 
 bool EdgeARAP::read(std::istream& is){
@@ -302,10 +302,10 @@ bool EdgeARAP::write(std::ostream& os) const {
 }
 
 void EdgeARAP::linearizeOplus() {
-    VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-    VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[1]);
-    VertexSO3* vR = static_cast<VertexSO3*>(_vertices[2]);
-    g2o::VertexSE3Expmap* vT = static_cast<g2o::VertexSE3Expmap*>(_vertices[3]);
+    //VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+    VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+    VertexSO3* vR = static_cast<VertexSO3*>(_vertices[1]);
+    g2o::VertexSE3Expmap* vT = static_cast<g2o::VertexSE3Expmap*>(_vertices[2]);
 
     Eigen::Vector3d obs(_measurement);
     //double obs(_measurement);
@@ -316,13 +316,13 @@ void EdgeARAP::linearizeOplus() {
     Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
     Eigen::Vector3d t = T_global.translation();
 
-    arap_diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world));
+    arap_diff = (v2->estimate() - Xj2world) - (R * (Xi1world - Xj1world));
     
     Eigen::Vector3d J_v1_3x1_FT = -2*weight * R.transpose() * arap_diff;
     Eigen::Vector3d J_v2_3x1_FT = 2*weight * arap_diff;
-    Eigen::Matrix3d J_R_mat3_FT = -2*weight * (arap_diff * v1->estimate().transpose());
+    Eigen::Matrix3d J_R_mat3_FT = -2*weight * (arap_diff * Xi1world.transpose());
 
-    Eigen::Vector3d global_diff = (v2->estimate() - v1->estimate());
+    Eigen::Vector3d global_diff = (v2->estimate() - Xi1world);
 
     Eigen::Vector3d J_v1_3x1_ST = -2 * Rg.transpose() * (Rg * global_diff - t);
     Eigen::Vector3d J_v2_3x1_ST = 2 * Rg.transpose() * (Rg * global_diff - t);
@@ -360,8 +360,8 @@ void EdgeARAP::linearizeOplus() {
     J_global.block<3,3>(0,3) = J_tg_mat3_ST.asDiagonal(); 
     //J_global.setZero(); 
 
-    _jacobianOplus[0] = J_v1_mat;
+    //_jacobianOplus[0] = J_v1_mat;
     _jacobianOplus[1] = J_v2_mat;
-    _jacobianOplus[2] = J_R;
-    _jacobianOplus[3] = J_global;
+    _jacobianOplus[1] = J_R;
+    _jacobianOplus[2] = J_global;
 }

@@ -417,7 +417,6 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
                 if (!pMPi1) continue;
                 if (!pMPi2) continue;
 
-
                 //Reprojection error
                 //C1
                 cv::Point2f uv = pKF1->getKeyPoint(i).pt;

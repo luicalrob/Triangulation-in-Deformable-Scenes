@@ -291,10 +291,10 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
-        const VertexSO3* vR = static_cast<const VertexSO3*>(_vertices[2]);
-        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[3]);
+        //const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSO3* vR = static_cast<const VertexSO3*>(_vertices[1]);
+        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[2]);
 
         Eigen::Vector3d obs(_measurement);
         //double obs(_measurement);
@@ -305,7 +305,7 @@ public:
         Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
         Eigen::Vector3d t = T_global.translation();
 
-        diff = (v2->estimate() - Xj2world) - (R * (v1->estimate() - Xj1world)) + (Rg * (v2->estimate() - v1->estimate()) - t);
+        diff = (v2->estimate() - Xj2world) - (R * (Xi1world - Xj1world)) + (Rg * (v2->estimate() - Xi1world) - t);
 
         // double energy = diff.squaredNorm();
         // _error[0] = obs - (PcdNorm * weight * energy);  
@@ -314,6 +314,7 @@ public:
 
     virtual void linearizeOplus();
 
+    Eigen::Vector3d Xi1world;
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;
     double weight;

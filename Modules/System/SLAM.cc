@@ -267,6 +267,8 @@ void SLAM::mapping() {
         } else {
             triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         }
+        
+        x3D_1 = x3D_prev; 
 
         //Check positive depth
         auto x_1 = T1w * x3D_1;
