@@ -291,7 +291,7 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        //const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        ///const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSO3* vR = static_cast<const VertexSO3*>(_vertices[1]);
         const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[2]);
@@ -319,5 +319,6 @@ public:
     Eigen::Vector3d Xj2world;
     double weight;
 };
+
 
 #endif //SLAM_G2OTYPES_H

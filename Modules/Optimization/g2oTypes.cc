@@ -360,8 +360,8 @@ void EdgeARAP::linearizeOplus() {
     J_global.block<3,3>(0,3) = J_tg_mat3_ST.asDiagonal(); 
     //J_global.setZero(); 
 
-    //_jacobianOplus[0] = J_v1_mat;
-    _jacobianOplus[1] = J_v2_mat;
+    _jacobianOplus[0] = J_v1_mat;
+    // _jacobianOplus[1] = J_v2_mat;
     _jacobianOplus[1] = J_R;
     _jacobianOplus[2] = J_global;
 }
