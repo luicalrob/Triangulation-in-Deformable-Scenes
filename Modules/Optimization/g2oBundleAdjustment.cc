@@ -618,8 +618,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 // eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave) * (1.0/repBalanceWeight));
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-                // eKF1->setRobustKernel(rk);
-                // rk->setDelta(thHuber2D);
+                eKF1->setRobustKernel(rk);
+                rk->setDelta(thHuber2D);
 
                 // eKF1->pCamera = pKF1->getCalibration();
                 Sophus::SE3f kfPose = pKF1->getPose();
@@ -638,9 +638,9 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 eKF2->setMeasurement(obs);
                 eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave) * (1.0/repBalanceWeight));
 
-                rk = new g2o::RobustKernelHuber;
-                eKF2->setRobustKernel(rk);
-                rk->setDelta(thHuber2D);
+                // rk = new g2o::RobustKernelHuber;
+                // eKF2->setRobustKernel(rk);
+                // rk->setDelta(thHuber2D);
 
                 eKF2->pCamera = pKF2->getCalibration();
                 kfPose = pKF2->getPose();

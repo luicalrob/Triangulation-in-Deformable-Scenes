@@ -298,18 +298,26 @@ public:
 
         Eigen::Vector3d obs(_measurement);
         //double obs(_measurement);
-        Eigen::Vector3d diff;
+        Eigen::Vector3d diffArap;
+        Eigen::Vector3d diffGlobalT;
 
         Sophus::SO3d R = vR->estimate();
         g2o::SE3Quat T_global =  vT->estimate();
         Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
         Eigen::Vector3d t = T_global.translation();
 
-        diff = (v2->estimate() - Xj2world) - (R * (Xi1world - Xj1world)) + (Rg * (v2->estimate() - Xi1world) - t);
+        diffArap = (v2->estimate() - Xj2world) - (R * (Xi1world - Xj1world));
+        diffGlobalT = (Rg * (v2->estimate() - Xi1world) - t);
+
+        Eigen::Vector3d weightedDiffArap = weight * diffArap;
+
+        Eigen::Vector3d squaredDiffArap = weightedDiffArap.cwiseProduct(weightedDiffArap);
+        Eigen::Vector3d squaredDiffGlobalT = diffGlobalT.cwiseProduct(diffGlobalT);
+
 
         // double energy = diff.squaredNorm();
         // _error[0] = obs - (PcdNorm * weight * energy);  
-        _error = obs - (weight * diff);   
+        _error = obs - (squaredDiffArap + squaredDiffGlobalT);   
     }
 
     virtual void linearizeOplus();

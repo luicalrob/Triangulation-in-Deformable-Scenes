@@ -63,8 +63,8 @@ Keypoints.RepError: 1.0
 # 1.5: 0 stand
 # 10000000: 3 stand
 #Weights for optimization
-Optimization.reprojection: 0.1 # 200000 # up: less reprojection weight (inverse value)
-Optimization.arap: 0.1 # # 0.001 up: less arap weight (inverse value)
+Optimization.reprojection: 1 # 200000 # up: less reprojection weight (inverse value)
+Optimization.arap: 5.875 # # 0.001 up: less arap weight (inverse value)
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
@@ -78,7 +78,7 @@ Optimization.nlopt.relTolerance: 1.5e-1
 Optimization.nlopt.absTolerance: 1.5e-1
 Optimization.nlopt.rep.lowerBound: 0.000001 #80000
 Optimization.nlopt.rep.upperBound: 100000.0 #250000
-Optimization.nlopt.arap.lowerBound: 0.0001 #0.0001
+Optimization.nlopt.arap.lowerBound: 0.000001 #0.0001
 Optimization.nlopt.arap.upperBound: 100000 #0.1
 
 #Method selection
