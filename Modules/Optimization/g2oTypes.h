@@ -314,13 +314,18 @@ public:
         Eigen::Vector3d squaredDiffArap = weightedDiffArap.cwiseProduct(weightedDiffArap);
         Eigen::Vector3d squaredDiffGlobalT = diffGlobalT.cwiseProduct(diffGlobalT);
 
+        double energyArap = diffArap.squaredNorm();
+        double energyGlobalT = diffGlobalT.squaredNorm();
+        double totalEnergy = weight * (energyArap + energyGlobalT);
+
+        Eigen::Vector3d energy = Eigen::Vector3d::Constant(totalEnergy);
 
         // double energy = diff.squaredNorm();
-        // _error[0] = obs - (PcdNorm * weight * energy);  
-        _error = obs - (squaredDiffArap + squaredDiffGlobalT);   
+        //_error[0] = obs - weight * ( energyArap + energyGlobalT);  
+        _error = obs - energy;   
     }
 
-    virtual void linearizeOplus();
+    // virtual void linearizeOplus();
 
     Eigen::Vector3d Xi1world;
     Eigen::Vector3d Xj1world;

@@ -63,14 +63,14 @@ Keypoints.RepError: 1.0
 # 1.5: 0 stand
 # 10000000: 3 stand
 #Weights for optimization
-Optimization.reprojection: 1 # 200000 # up: less reprojection weight (inverse value)
-Optimization.arap: 5.875 # # 0.001 up: less arap weight (inverse value)
+Optimization.reprojection: 0.0006 # 200000 # up: less reprojection weight (inverse value)
+Optimization.arap: 183 # # 0.001 up: less arap weight (inverse value)
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
-Optimization.numberOfIterations: 25
+Optimization.numberOfIterations: 50
 
-Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
+Optimization.selection: "g2oArap" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
 Optimization.nlopt.numberOfIterations: 15

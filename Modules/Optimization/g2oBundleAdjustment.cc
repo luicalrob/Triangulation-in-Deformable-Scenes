@@ -481,8 +481,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
 
             // OPEN3D LIBRARY
-            std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
-            mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
+            std::shared_ptr<open3d::geometry::TriangleMesh> mesh;
+            mesh = ComputeDelaunayTriangulation3D(v1Positions);
 
             // Perform Delaunay Reconstruction
 
@@ -491,10 +491,10 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             std::vector<size_t> pt_map;
 
             std::tie(tetra_mesh, pt_map) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
-            std::cout << "mesh size: (" << mesh1->vertices_.size() << ")\n";
+            std::cout << "mesh size: (" << mesh->vertices_.size() << ")\n";
 
             //std::vector<Sophus::SO3d> Rs(tetra_mesh->tetras_.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
-            std::vector<RotationMatrix_> Rs(mesh1->triangles_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
+            std::vector<RotationMatrix_> Rs(mesh->triangles_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
 
             Sophus::SE3f T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
 
@@ -509,7 +509,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 T_global = Sophus::SE3f(rotation.cast<float>(), translation.cast<float>());
             }
 
-            auto posIndexes = createVectorMap(mesh1->vertices_, v1Positions);
+            auto posIndexes = createVectorMap(mesh->vertices_, v1Positions);
 
             std::map<size_t, size_t> invertedPosIndexes;
 
@@ -520,11 +520,11 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             std::vector<std::unordered_set<int>> trianglesList;
             std::vector<std::unordered_set<int>> invertedtrianglesList;
             std::vector<Triangle> triangles;
-            trianglesList.resize(mesh1->triangles_.size());
-            invertedtrianglesList.resize(mesh1->triangles_.size());
+            trianglesList.resize(mesh->triangles_.size());
+            invertedtrianglesList.resize(mesh->triangles_.size());
                 
             int triIndex = 0;
-            for (const auto& triangle : mesh1->triangles_) {
+            for (const auto& triangle : mesh->triangles_) {
                 Triangle tri;
                 tri.p[0] = v1Positions[posIndexes[triangle(0)]];
                 tri.q[0] = v2Positions[posIndexes[triangle(0)]];
@@ -550,13 +550,13 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             }
 
             // Visualize OPEN3D the meshes
-            // open3d::visualization::Visualizer visualizer;
-            // visualizer.CreateVisualizerWindow("Mesh Visualization");
-            // Eigen::Vector3d red(1.0, 0.0, 0.0);
-            // tetra_mesh->vertex_colors_.resize(tetra_mesh->vertices_.size(), red);
-            // visualizer.AddGeometry(tetra_mesh);
-            // visualizer.Run();
-            // visualizer.DestroyVisualizerWindow();
+            open3d::visualization::Visualizer visualizer;
+            visualizer.CreateVisualizerWindow("Mesh Visualization");
+            Eigen::Vector3d red(1.0, 0.0, 0.0);
+            mesh->vertex_colors_.resize(mesh->vertices_.size(), red);
+            visualizer.AddGeometry(mesh);
+            visualizer.Run();
+            visualizer.DestroyVisualizerWindow();
 
             TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
 
@@ -654,7 +654,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                     meshIndex = it->second;
                     // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
                     // std::cout << "v2Position: (" << v2Positions[i][0] << ", " << v2Positions[i][1] << ", " << v2Positions[i][2] << ")\n";
-                    // std::cout << "point mesh: (" << mesh1->vertices_[meshIndex1][0] << ", " << mesh1->vertices_[meshIndex1][1] << ", " << mesh1->vertices_[meshIndex1][2] << ")\n";
+                    // std::cout << "point mesh: (" << mesh->vertices_[meshIndex1][0] << ", " << mesh->vertices_[meshIndex1][1] << ", " << mesh->vertices_[meshIndex1][2] << ")\n";
                     // std::cout << "index: (" << i << ")\n";
                 } else {
                     continue;
@@ -727,7 +727,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                         eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
                         eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
                         
-                        eArap->Xi1world = mesh1->vertices_[meshIndex];
+                        eArap->Xi1world = mesh->vertices_[meshIndex];
                         eArap->Xj1world = v2Positions[posIndexes[i]];
                         eArap->Xj2world = v2Positions[posIndexes[j]];
                         eArap->weight = triangle.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
@@ -812,14 +812,14 @@ void arapOpen3DOptimization(Map* pMap){
             std::vector<Eigen::Vector3d> v1Positions = extractPositions(v1MPs);
             std::vector<Eigen::Vector3d> v2Positions = extractPositions(v2MPs);
 
-            std::shared_ptr<open3d::geometry::TriangleMesh> mesh1;
+            std::shared_ptr<open3d::geometry::TriangleMesh> mesh;
 
             // Perform Delaunay Reconstruction
-            mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
-            mesh1->ComputeAdjacencyList();
+            mesh = ComputeDelaunayTriangulation3D(v1Positions);
+            mesh->ComputeAdjacencyList();
 
-            auto posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
-            std::cout << "mesh size 1: (" << mesh1->vertices_.size() << ")\n";
+            auto posIndexes1 = createVectorMap(mesh->vertices_, v1Positions);
+            std::cout << "mesh size 1: (" << mesh->vertices_.size() << ")\n";
 
             std::map<size_t, size_t> invertedPosIndexes1;
             for (const auto& pair : posIndexes1) {
@@ -833,11 +833,11 @@ void arapOpen3DOptimization(Map* pMap){
             //     constraint_vertex_indices[i] = i;
             // }
 
-            std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh1->DeformAsRigidAsPossible(
+            std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh->DeformAsRigidAsPossible(
                 constraint_vertex_indices, v2Positions, 500,  // max_iter = 50
                 open3d::geometry::TriangleMesh::DeformAsRigidAsPossibleEnergy::Spokes, 0.01
             );
-            // std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh1->DeformAsRigidAsPossible();
+            // std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh->DeformAsRigidAsPossible();
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];
@@ -848,13 +848,13 @@ void arapOpen3DOptimization(Map* pMap){
                 if (it1 != invertedPosIndexes1.end()) {
                     meshIndex1 = it1->second;
                     // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
-                    // std::cout << "point mesh: (" << mesh1->vertices_[meshIndex1][0] << ", " << mesh1->vertices_[meshIndex1][1] << ", " << mesh1->vertices_[meshIndex1][2] << ")\n";
+                    // std::cout << "point mesh: (" << mesh->vertices_[meshIndex1][0] << ", " << mesh->vertices_[meshIndex1][1] << ", " << mesh->vertices_[meshIndex1][2] << ")\n";
                     // std::cout << "index: (" << i << ")\n";
                 } else {
                     continue;
                 }
 
-                Eigen::Vector3f p3D1 = mesh1->vertices_[meshIndex1].cast<float>();
+                Eigen::Vector3f p3D1 = mesh->vertices_[meshIndex1].cast<float>();
                 Eigen::Vector3f p3D2 = deformed_mesh->vertices_[meshIndex1].cast<float>();
                 pMPi1->setWorldPosition(p3D1);
                 pMPi2->setWorldPosition(p3D2);
@@ -869,10 +869,10 @@ void arapOpen3DOptimization(Map* pMap){
             v2Positions = extractPositions(v2MPs);
 
             // Perform Delaunay Reconstruction
-            mesh1 = ComputeDelaunayTriangulation3D(v1Positions);
-            mesh1->ComputeAdjacencyList();
+            mesh = ComputeDelaunayTriangulation3D(v1Positions);
+            mesh->ComputeAdjacencyList();
 
-            posIndexes1 = createVectorMap(mesh1->vertices_, v1Positions);
+            posIndexes1 = createVectorMap(mesh->vertices_, v1Positions);
 
             for (const auto& pair : posIndexes1) {
                 invertedPosIndexes1[pair.second] = pair.first;
