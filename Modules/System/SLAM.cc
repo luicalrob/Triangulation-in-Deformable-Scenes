@@ -336,10 +336,13 @@ void SLAM::mapping() {
         arapOpen3DOptimization(pMap_.get());
     } else if(OptSelection_ == "twoOptimizations") {
         if (OptWeightsSelection_ == "nlopt") {
-            nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
+            //nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
+            nlopt::opt opt(nlopt::LN_NELDERMEAD, 1);
             
-            std::vector<double> lb = {NloptRepLowerBound_, NloptArapLowerBound_};
-            std::vector<double> ub = {NloptRepUpperBound_, NloptArapUpperBound_};
+            // std::vector<double> lb = {NloptRepLowerBound_, NloptArapLowerBound_};
+            // std::vector<double> ub = {NloptRepUpperBound_, NloptArapUpperBound_};
+            std::vector<double> lb = {NloptArapLowerBound_};
+            std::vector<double> ub = {NloptArapUpperBound_};
             opt.set_lower_bounds(lb);
             opt.set_upper_bounds(ub);
 
@@ -350,7 +353,8 @@ void SLAM::mapping() {
 
             opt.set_min_objective(outerObjective, &optData);
 
-            std::vector<double> x = {reprojectionBalanceWeight_, arapBalanceWeight_};
+            // std::vector<double> x = {reprojectionBalanceWeight_, arapBalanceWeight_};
+            std::vector<double> x = {arapBalanceWeight_};
 
             opt.set_xtol_rel(NloptRelTolerance_);
             opt.set_xtol_abs(NloptAbsTolerance_);
@@ -360,13 +364,14 @@ void SLAM::mapping() {
             nlopt::result result = opt.optimize(x, minf);
 
             std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
-            std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
-            std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+            // std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
+            std::cout << "Optimized arapBalanceWeight: " << x[0] << std::endl;
             std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
 
             std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-            arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+            // arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+            arapOptimization(pMap_.get(), 0.0, x[0], nOptIterations_);
         } else {
             Eigen::VectorXd x(2);
             // Initial values

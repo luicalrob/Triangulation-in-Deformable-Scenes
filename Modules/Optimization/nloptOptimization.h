@@ -21,6 +21,7 @@ struct OptimizationData {
     float repErrorStanDesv;
 };
 
-double outerObjective(const std::vector<double>& x, std::vector<double>& grad, void* data);
+//double outerObjective(const std::vector<double>& x, std::vector<double>& grad, void* data);
+double outerObjective(unsigned int n, const double* x, double* grad, void* data);
 
 #endif //SLAM_NLOPTOPTIMIZATION_H

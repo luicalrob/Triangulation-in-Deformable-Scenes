@@ -5,11 +5,12 @@
 #include "Optimization/nloptOptimization.h"
 #include "Utils/CommonTypes.h"
 
-double outerObjective(const std::vector<double>& x, std::vector<double>& grad, void* data) {
-    double repBalanceWeight = x[0];
-    double arapBalanceWeight = x[1];
+double outerObjective(unsigned int n, const double* x, double* grad, void* data){
 
-    std::cout << "Current x values: " << x[0] << ", " << x[1] << std::endl;
+    double repBalanceWeight = 0.0;
+    double arapBalanceWeight = x[0];
+
+    std::cout << "Current x values: " << x[0] << std::endl;
 
     OptimizationData* pData = static_cast<OptimizationData*>(data);
     std::shared_ptr<Map> pMapCopy = pData->pMap->clone();

@@ -459,6 +459,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
     optimizer.setVerbose(false);
 
     const float thHuber2D = sqrt(5.99);
+    const float deltaMono = sqrt(100.991);
 
     size_t currId = 0;
 
@@ -550,13 +551,13 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
             }
 
             // Visualize OPEN3D the meshes
-            open3d::visualization::Visualizer visualizer;
-            visualizer.CreateVisualizerWindow("Mesh Visualization");
-            Eigen::Vector3d red(1.0, 0.0, 0.0);
-            mesh->vertex_colors_.resize(mesh->vertices_.size(), red);
-            visualizer.AddGeometry(mesh);
-            visualizer.Run();
-            visualizer.DestroyVisualizerWindow();
+            // open3d::visualization::Visualizer visualizer;
+            // visualizer.CreateVisualizerWindow("Mesh Visualization");
+            // Eigen::Vector3d red(1.0, 0.0, 0.0);
+            // mesh->vertex_colors_.resize(mesh->vertices_.size(), red);
+            // visualizer.AddGeometry(mesh);
+            // visualizer.Run();
+            // visualizer.DestroyVisualizerWindow();
 
             TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
 
@@ -618,8 +619,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 // eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave) * (1.0/repBalanceWeight));
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+                rk->setDelta(deltaMono);
                 eKF1->setRobustKernel(rk);
-                rk->setDelta(thHuber2D);
 
                 // eKF1->pCamera = pKF1->getCalibration();
                 Sophus::SE3f kfPose = pKF1->getPose();
@@ -636,11 +637,11 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
                 eKF2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                 eKF2->setMeasurement(obs);
-                eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave) * (1.0/repBalanceWeight));
+                eKF2->setInformation(Eigen::Matrix2d::Identity() * pKF2->getInvSigma2(octave));
 
-                // rk = new g2o::RobustKernelHuber;
-                // eKF2->setRobustKernel(rk);
-                // rk->setDelta(thHuber2D);
+                rk = new g2o::RobustKernelHuber;
+                rk->setDelta(deltaMono);
+                eKF2->setRobustKernel(rk);
 
                 eKF2->pCamera = pKF2->getCalibration();
                 kfPose = pKF2->getPose();
@@ -680,13 +681,13 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
                     std::unordered_set<int> jIndexes = invertedtrianglesList[index];
 
-                    Eigen::Vector3d distancesInvTipDesv;
-                    distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes, v1Positions, v2Positions);
-                    // double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
-                    // Eigen::Matrix<double, 1, 1> informationMatrix;
-                    // informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
+                    // Eigen::Vector3d distancesInvTipDesv;
+                    // distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes, v1Positions, v2Positions);
+                    // // double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
+                    // // Eigen::Matrix<double, 1, 1> informationMatrix;
+                    // // informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
 
-                    Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal() * (1.0/arapBalanceWeight);
+                    // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal() * (1.0/arapBalanceWeight);
 
                     //std::cout << "TETRAHEDRON \n";
 
@@ -732,7 +733,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                         eArap->Xj2world = v2Positions[posIndexes[j]];
                         eArap->weight = triangle.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
 
-                        eArap->setInformation(informationMatrix);
+                        eArap->setInformation(arapBalanceWeight * Eigen::Matrix3d::Identity() / mesh->triangles_.size() * mesh->vertices_.size());
                         eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
                         // double measurement = 0.0;
                         // eArap->setMeasurement(measurement);

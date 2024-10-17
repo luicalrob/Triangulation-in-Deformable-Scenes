@@ -64,7 +64,7 @@ Keypoints.RepError: 1.0
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.reprojection: 0.0006 # 200000 # up: less reprojection weight (inverse value)
-Optimization.arap: 183 # # 0.001 up: less arap weight (inverse value)
+Optimization.arap: 0.0002 # # 0.001 up: less arap weight (inverse value)
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
@@ -74,12 +74,12 @@ Optimization.selection: "g2oArap" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
 Optimization.nlopt.numberOfIterations: 15
-Optimization.nlopt.relTolerance: 1.5e-1
-Optimization.nlopt.absTolerance: 1.5e-1
+Optimization.nlopt.relTolerance: 1.5e-2
+Optimization.nlopt.absTolerance: 1.5e-2
 Optimization.nlopt.rep.lowerBound: 0.000001 #80000
 Optimization.nlopt.rep.upperBound: 100000.0 #250000
-Optimization.nlopt.arap.lowerBound: 0.000001 #0.0001
-Optimization.nlopt.arap.upperBound: 100000 #0.1
+Optimization.nlopt.arap.lowerBound: 0.00001 #0.0001
+Optimization.nlopt.arap.upperBound: 0.1 #0.1
 
 #Method selection
 Triangulation.selection: "InRays" # InRays TwoPoints or InRaysNearPrevSolution
