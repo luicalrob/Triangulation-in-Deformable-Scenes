@@ -661,6 +661,24 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                     continue;
                 }
 
+                EdgeTransformation* eT = new EdgeTransformation();
+
+                //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
+                
+                eT->Xi1world = mesh->vertices_[meshIndex];
+                //eT->weight = triangle.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
+                
+                Eigen::Matrix<double, 1, 1> informationMatrixT;
+                informationMatrixT(0, 0) = globalBalanceWeight / mesh->vertices_.size();
+                eT->setInformation(informationMatrixT);
+                
+                double measurementT = 0.0;
+                eT->setMeasurement(measurementT);
+
+                optimizer.addEdge(eT);
+
 
                 if (trianglesList[meshIndex].empty()) continue;
 
@@ -733,26 +751,14 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                         eArap->Xj2world = v2Positions[posIndexes[j]];
                         eArap->weight = triangle.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
 
-                        eArap->setInformation(arapBalanceWeight * Eigen::Matrix3d::Identity() / mesh->triangles_.size() * mesh->vertices_.size());
-                        eArap->setMeasurement(Eigen::Vector3d(0, 0, 0));
-                        // double measurement = 0.0;
-                        // eArap->setMeasurement(measurement);
+                        Eigen::Matrix<double, 1, 1> informationMatrixArap;
+                        informationMatrixArap(0, 0) = arapBalanceWeight / mesh->triangles_.size() * mesh->vertices_.size();
+
+                        eArap->setInformation(informationMatrixArap);
+                        double measurementArap = 0.0;
+                        eArap->setMeasurement(measurementArap);
 
                         optimizer.addEdge(eArap);
-
-                        EdgeTransformation* eT = new EdgeTransformation();
-
-                        //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                        eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                        eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
-                        
-                        eT->Xi1world = mesh->vertices_[meshIndex];
-                        eT->weight = triangle.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
-
-                        eT->setInformation(globalBalanceWeight * Eigen::Matrix3d::Identity() / mesh->vertices_.size());
-                        eT->setMeasurement(Eigen::Vector3d(0, 0, 0));
-
-                        optimizer.addEdge(eT);
                     }
                 }
             }

@@ -272,31 +272,20 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 EdgeARAP::EdgeARAP(){
 }
 
-bool EdgeARAP::read(std::istream& is){
+bool EdgeARAP::read(std::istream& is) {
+    is >> _measurement;
 
-    for (int i=0; i<3; i++){
-        is >> _measurement[i];
-    }
+    double info;
+    is >> info;
+    information()(0, 0) = info;
 
-    for (int i=0; i<3; i++)
-        for (int j=i; j<3; j++) {
-            is >> information()(i,j);
-            if (i!=j)
-                information()(j,i)=information()(i,j);
-        }
     return true;
 }
 
 bool EdgeARAP::write(std::ostream& os) const {
+    os << _measurement << " ";
 
-    for (int i=0; i<3; i++){
-        os << measurement()[i] << " ";
-    }
-
-    for (int i=0; i<3; i++)
-        for (int j=i; j<3; j++){
-            os << " " <<  information()(i,j);
-        }
+    os << information()(0, 0);
     return os.good();
 }
 
@@ -366,52 +355,24 @@ bool EdgeARAP::write(std::ostream& os) const {
 EdgeTransformation::EdgeTransformation(){
 }
 
-bool EdgeTransformation::read(std::istream& is){
+bool EdgeTransformation::read(std::istream& is) {
+    is >> _measurement;
 
-    for (int i=0; i<3; i++){
-        is >> _measurement[i];
-    }
+    double info;
+    is >> info;
+    information()(0, 0) = info;
 
-    for (int i=0; i<3; i++)
-        for (int j=i; j<3; j++) {
-            is >> information()(i,j);
-            if (i!=j)
-                information()(j,i)=information()(i,j);
-        }
     return true;
 }
 
 bool EdgeTransformation::write(std::ostream& os) const {
+    os << _measurement << " ";
 
-    for (int i=0; i<3; i++){
-        os << measurement()[i] << " ";
-    }
-
-    for (int i=0; i<3; i++)
-        for (int j=i; j<3; j++){
-            os << " " <<  information()(i,j);
-        }
+    os << information()(0, 0);
     return os.good();
 }
 
-// bool EdgeARAP::read(std::istream& is) {
-//     is >> _measurement;
-
-//     double info;
-//     is >> info;
-//     information()(0, 0) = info;
-
-//     return true;
-// }
-
-// bool EdgeARAP::write(std::ostream& os) const {
-//     os << _measurement << " ";
-
-//     os << information()(0, 0);
-//     return os.good();
-// }
-
-// void EdgeARAP::linearizeOplus() {
+// void EdgeTransformation::linearizeOplus() {
 //     //VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
 //     VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
 //     VertexSO3* vR = static_cast<VertexSO3*>(_vertices[1]);
