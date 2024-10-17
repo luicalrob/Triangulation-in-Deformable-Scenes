@@ -97,7 +97,7 @@ Settings::Settings(const std::string& configFile) {
     SimulatedRepError_ = fSettings["Keypoints.RepError"];
 
     OptArapWeight_ = fSettings["Optimization.arap"];
-    OptReprojectionWeight_ = fSettings["Optimization.reprojection"];
+    OptGlobalWeight_ = fSettings["Optimization.global"];
 
     fSettings["Optimization.selection"] >> OptSelection_;
     fSettings["Optimization.weightsSelection"] >> OptWeightsSelection_;
@@ -109,8 +109,8 @@ Settings::Settings(const std::string& configFile) {
     NloptnOptimizations_ = fSettings["Optimization.nlopt.numberOfIterations"];
     NloptRelTolerance_ = fSettings["Optimization.nlopt.relTolerance"];
     NloptAbsTolerance_ = fSettings["Optimization.nlopt.absTolerance"];
-    NloptRepLowerBound_ = fSettings["Optimization.nlopt.rep.lowerBound"];
-    NloptRepUpperBound_ = fSettings["Optimization.nlopt.rep.upperBound"];
+    NloptGlobalLowerBound_ = fSettings["Optimization.nlopt.global.lowerBound"];
+    NloptGlobalUpperBound_ = fSettings["Optimization.nlopt.global.upperBound"];
     NloptArapLowerBound_ = fSettings["Optimization.nlopt.arap.lowerBound"];
     NloptArapUpperBound_ = fSettings["Optimization.nlopt.arap.upperBound"];
 
@@ -249,8 +249,8 @@ double Settings::getOptArapWeight(){
     return OptArapWeight_;
 }
 
-double Settings::getOptReprojectionWeight(){
-    return OptReprojectionWeight_;
+double Settings::getOptGlobalWeight(){
+    return OptGlobalWeight_;
 }
 
 std::string Settings::getOptSelection(){
@@ -285,12 +285,12 @@ double Settings::getNloptAbsTolerance(){
     return NloptAbsTolerance_;
 }
 
-double Settings::getNloptRepLowerBound(){
-    return NloptRepLowerBound_;
+double Settings::getNloptGlobalLowerBound(){
+    return NloptGlobalLowerBound_;
 }
 
-double Settings::getNloptRepUpperBound(){
-    return NloptRepUpperBound_;
+double Settings::getNloptGlobalUpperBound(){
+    return NloptGlobalUpperBound_;
 }
 
 double Settings::getNloptArapLowerBound(){

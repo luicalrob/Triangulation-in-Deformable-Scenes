@@ -67,7 +67,7 @@ angle_x, angle_y, angle_z = -45, -0, 45  # in degrees
 
 # Movement
 rigid_movement = 0.00  # Scale of movement for the moved points
-gaussian_movement = 0.03  # Scale of movement for the moved points
+gaussian_movement = 0.005  # Scale of movement for the moved points
 
 original_points, moved_points = generate_points(num_points, rigid_movement, gaussian_movement, x_mean, x_std, y_mean, y_std, z_mean, z_std, angle_x, angle_y, angle_z)
 

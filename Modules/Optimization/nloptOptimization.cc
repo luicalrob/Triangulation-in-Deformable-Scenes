@@ -7,17 +7,17 @@
 
 double outerObjective(unsigned int n, const double* x, double* grad, void* data){
 
-    double repBalanceWeight = 0.0;
-    double arapBalanceWeight = x[0];
+    double globalBalanceWeight = x[0];
+    double arapBalanceWeight = x[1];
 
-    std::cout << "Current x values: " << x[0] << std::endl;
+    std::cout << "Current x values: " << x[0] << ", "<< x[1] << std::endl;
 
     OptimizationData* pData = static_cast<OptimizationData*>(data);
     std::shared_ptr<Map> pMapCopy = pData->pMap->clone();
     int& nOptIterations = pData->nOptIterations;
     float repErrorStanDesv = pData->repErrorStanDesv;
 
-    arapOptimization(pMapCopy.get(), repBalanceWeight, arapBalanceWeight, nOptIterations);
+    arapOptimization(pMapCopy.get(), globalBalanceWeight, arapBalanceWeight, nOptIterations);
 
     PixelsError pixelsErrors;
     calculatePixelsStandDev(pMapCopy, pixelsErrors);

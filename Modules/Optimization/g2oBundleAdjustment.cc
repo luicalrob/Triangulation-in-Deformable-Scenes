@@ -437,7 +437,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     }
 }
 
-void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeight, int nOptIterations){
+void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceWeight, int nOptIterations){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
     unordered_map<RotationMatrix_,size_t> mRotId;
@@ -616,7 +616,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
 
                 // eKF1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                 // eKF1->setMeasurement(obs);
-                // eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave) * (1.0/repBalanceWeight));
+                // eKF1->setInformation(Eigen::Matrix2d::Identity() * pKF1->getInvSigma2(octave));
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
                 rk->setDelta(deltaMono);
@@ -660,6 +660,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                 } else {
                     continue;
                 }
+
 
                 if (trianglesList[meshIndex].empty()) continue;
 
@@ -726,7 +727,6 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                         //eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                         eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                         eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
-                        eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
                         
                         eArap->Xi1world = mesh->vertices_[meshIndex];
                         eArap->Xj1world = v2Positions[posIndexes[i]];
@@ -739,6 +739,20 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double arapBalanceWeig
                         // eArap->setMeasurement(measurement);
 
                         optimizer.addEdge(eArap);
+
+                        EdgeTransformation* eT = new EdgeTransformation();
+
+                        //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                        eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                        eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
+                        
+                        eT->Xi1world = mesh->vertices_[meshIndex];
+                        eT->weight = triangle.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
+
+                        eT->setInformation(globalBalanceWeight * Eigen::Matrix3d::Identity() / mesh->vertices_.size());
+                        eT->setMeasurement(Eigen::Vector3d(0, 0, 0));
+
+                        optimizer.addEdge(eT);
                     }
                 }
             }

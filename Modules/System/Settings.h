@@ -76,7 +76,7 @@ public:
     float getSimulatedRepError();
 
     double getOptArapWeight();
-    double getOptReprojectionWeight();
+    double getOptGlobalWeight();
 
     std::string getOptSelection();
     std::string getOptWeightsSelection();
@@ -88,8 +88,8 @@ public:
     int getNloptnOptimizations();
     double getNloptRelTolerance();
     double getNloptAbsTolerance();
-    double getNloptRepLowerBound();
-    double getNloptRepUpperBound();
+    double getNloptGlobalLowerBound();
+    double getNloptGlobalUpperBound();
     double getNloptArapLowerBound();
     double getNloptArapUpperBound();
 
@@ -128,7 +128,7 @@ private:
     float SimulatedRepError_;
 
     double OptArapWeight_;
-    double OptReprojectionWeight_;
+    double OptGlobalWeight_;
 
     std::string OptSelection_;
     std::string OptWeightsSelection_;
@@ -137,8 +137,8 @@ private:
     int NloptnOptimizations_;
     double NloptRelTolerance_;
     double NloptAbsTolerance_;
-    double NloptRepLowerBound_;
-    double NloptRepUpperBound_;
+    double NloptGlobalLowerBound_;
+    double NloptGlobalUpperBound_;
     double NloptArapLowerBound_;
     double NloptArapUpperBound_;
 

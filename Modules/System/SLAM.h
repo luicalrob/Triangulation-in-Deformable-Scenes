@@ -145,7 +145,7 @@ private:
     float simulatedRepErrorStanDesv_;
 
     double arapBalanceWeight_;
-    double reprojectionBalanceWeight_;
+    double globalBalanceWeight_;
 
     std::string OptSelection_;
     std::string OptWeightsSelection_;
@@ -157,8 +157,8 @@ private:
     int NloptnOptimizations_;
     double NloptRelTolerance_;
     double NloptAbsTolerance_;
-    double NloptRepLowerBound_;
-    double NloptRepUpperBound_;
+    double NloptGlobalLowerBound_;
+    double NloptGlobalUpperBound_;
     double NloptArapLowerBound_;
     double NloptArapUpperBound_;
 
