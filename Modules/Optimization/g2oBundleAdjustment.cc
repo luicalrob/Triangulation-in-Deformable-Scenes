@@ -484,6 +484,10 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
             // OPEN3D LIBRARY
             std::shared_ptr<open3d::geometry::TriangleMesh> mesh;
             mesh = ComputeDelaunayTriangulation3D(v1Positions);
+            mesh->ComputeAdjacencyList();
+            std::unordered_map<Eigen::Vector2i,
+                        double,
+                        open3d::utility::hash_eigen<Eigen::Vector2i>> edge_weights = ComputeEdgeWeightsCot(mesh, 0);
 
             // Perform Delaunay Reconstruction
 
@@ -495,7 +499,8 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
             std::cout << "mesh size: (" << mesh->vertices_.size() << ")\n";
 
             //std::vector<Sophus::SO3d> Rs(tetra_mesh->tetras_.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
-            std::vector<RotationMatrix_> Rs(mesh->triangles_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
+            //std::vector<RotationMatrix_> Rs(mesh->triangles_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
+            std::vector<Sophus::SO3d> Rs(v1Positions.size(),Sophus::SO3d(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
 
             Sophus::SE3f T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
 
@@ -516,38 +521,6 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
 
             for (const auto& pair : posIndexes) {
                 invertedPosIndexes[pair.second] = pair.first;
-            }
-
-            std::vector<std::unordered_set<int>> trianglesList;
-            std::vector<std::unordered_set<int>> invertedtrianglesList;
-            std::vector<Triangle> triangles;
-            trianglesList.resize(mesh->triangles_.size());
-            invertedtrianglesList.resize(mesh->triangles_.size());
-                
-            int triIndex = 0;
-            for (const auto& triangle : mesh->triangles_) {
-                Triangle tri;
-                tri.p[0] = v1Positions[posIndexes[triangle(0)]];
-                tri.q[0] = v2Positions[posIndexes[triangle(0)]];
-                tri.p[1] = v1Positions[posIndexes[triangle(1)]];
-                tri.q[1] = v2Positions[posIndexes[triangle(1)]];
-                tri.p[2] = v1Positions[posIndexes[triangle(2)]];
-                tri.q[2] = v2Positions[posIndexes[triangle(2)]];
-
-                tri.Init();
-                tri.ComputeArea();
-                tri.ComputeR();
-                triangles.push_back(tri);
-                trianglesList[triangle(0)].insert(triIndex);
-                trianglesList[triangle(1)].insert(triIndex);
-                trianglesList[triangle(2)].insert(triIndex);
-                invertedtrianglesList[triIndex].insert(triangle(0));
-                invertedtrianglesList[triIndex].insert(triangle(1));
-                invertedtrianglesList[triIndex].insert(triangle(2));
-                
-                Rs[triIndex] = std::make_shared<Sophus::SO3d>(tri.R);
-
-                triIndex++;
             }
 
             // Visualize OPEN3D the meshes
@@ -655,7 +628,7 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                     meshIndex = it->second;
                     // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
                     // std::cout << "v2Position: (" << v2Positions[i][0] << ", " << v2Positions[i][1] << ", " << v2Positions[i][2] << ")\n";
-                    // std::cout << "point mesh: (" << mesh->vertices_[meshIndex1][0] << ", " << mesh->vertices_[meshIndex1][1] << ", " << mesh->vertices_[meshIndex1][2] << ")\n";
+                    // std::cout << "point mesh: (" << mesh->vertices_[meshIndex][0] << ", " << mesh->vertices_[meshIndex][1] << ", " << mesh->vertices_[meshIndex][2] << ")\n";
                     // std::cout << "index: (" << i << ")\n";
                 } else {
                     continue;
@@ -668,7 +641,6 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                 eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
                 
                 eT->Xi1world = mesh->vertices_[meshIndex];
-                //eT->weight = triangle.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
                 
                 Eigen::Matrix<double, 1, 1> informationMatrixT;
                 informationMatrixT(0, 0) = globalBalanceWeight / mesh->vertices_.size();
@@ -679,26 +651,13 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
 
                 optimizer.addEdge(eT);
 
+                std::unordered_set<int> jIndexes = mesh->adjacency_list_[meshIndex];
 
-                if (trianglesList[meshIndex].empty()) continue;
+                if (jIndexes.empty()) continue;
 
-                for (const auto& index : trianglesList[meshIndex]) {
+                Rs[i] = computeR(meshIndex, jIndexes, posIndexes, v1Positions, v2Positions, edge_weights);
 
-                    Triangle triangle = triangles[index];
-
-                    RotationMatrix_ Rot = (Rs[index]);
-                    
-                    if (mRotId.count(Rot) == 0) {
-                        VertexSO3* rotVertex = new VertexSO3();
-                        rotVertex->setEstimate(triangle.R);
-                        rotVertex->setId(currId);
-                        optimizer.addVertex(rotVertex);
-                        mRotId[Rot] = currId;
-                        currId++;
-                    }
-
-
-                    std::unordered_set<int> jIndexes = invertedtrianglesList[index];
+                for (int j : jIndexes) {
 
                     // Eigen::Vector3d distancesInvTipDesv;
                     // distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes, v1Positions, v2Positions);
@@ -708,58 +667,27 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
 
                     // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal() * (1.0/arapBalanceWeight);
 
-                    //std::cout << "TETRAHEDRON \n";
+                    //Set ARAP edge
+                    EdgeARAP* eArap = new EdgeARAP();
 
-                    int toOptimizeTetIndex = -1;
-                    int jTetIndex = -1;
+                    //eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                    eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                    //eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
+                    
+                    eArap->Ri = Rs[i];
+                    eArap->Xi1world = v1Positions[i];
+                    eArap->Xj1world = v1Positions[posIndexes[j]];
+                    eArap->Xj2world = v2Positions[posIndexes[j]];
+                    eArap->weight = edge_weights[GetOrderedEdge(meshIndex, j)];
 
-                    Eigen::Vector3d firstWorldPos = firstPointToOptimize->getWorldPosition().cast<double>();
-                    for (int v = 0; v <= 2; v++){
-                        if (firstWorldPos == triangle.p[v]) {
-                            toOptimizeTetIndex = v;
-                            break;
-                        }
-                    }
+                    Eigen::Matrix<double, 1, 1> informationMatrixArap;
+                    informationMatrixArap(0, 0) = arapBalanceWeight / mesh->triangles_.size() * mesh->vertices_.size();
 
-                    for (int j : jIndexes){
-                        Eigen::Vector3d vertex = tetra_mesh->vertices_[j];
+                    eArap->setInformation(informationMatrixArap);
+                    double measurementArap = 0.0;
+                    eArap->setMeasurement(measurementArap);
 
-                        if (vertex == firstWorldPos) continue;
-                        int cTetIndex = -1;
-                        int dTetIndex = -1;
-                        for (int v = 0; v <= 2; v++){
-                            if (v == toOptimizeTetIndex) {
-                                continue;
-                            }
-                            else if (vertex == triangle.p[v]) {
-                                jTetIndex = v;
-                            } 
-                            else if (cTetIndex < 0) {
-                                cTetIndex = v;
-                            }
-                        }
-                        
-                        //Set ARAP edge
-                        EdgeARAP* eArap = new EdgeARAP();
-
-                        //eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                        eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                        eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
-                        
-                        eArap->Xi1world = mesh->vertices_[meshIndex];
-                        eArap->Xj1world = v2Positions[posIndexes[i]];
-                        eArap->Xj2world = v2Positions[posIndexes[j]];
-                        eArap->weight = triangle.ComputeEdgeWeight(toOptimizeTetIndex, jTetIndex);
-
-                        Eigen::Matrix<double, 1, 1> informationMatrixArap;
-                        informationMatrixArap(0, 0) = arapBalanceWeight / mesh->triangles_.size() * mesh->vertices_.size();
-
-                        eArap->setInformation(informationMatrixArap);
-                        double measurementArap = 0.0;
-                        eArap->setMeasurement(measurementArap);
-
-                        optimizer.addEdge(eArap);
-                    }
+                    optimizer.addEdge(eArap);
                 }
             }
         }

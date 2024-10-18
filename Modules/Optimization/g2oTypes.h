@@ -285,7 +285,7 @@ public:
 // public:
 //     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-//     EdgeSE3ProjectXYZOnlyPose();
+//     EdgeArapRotations();
 
 //     bool read(std::istream& is);
 
@@ -296,10 +296,6 @@ public:
 //         Eigen::Vector2d obs(_measurement);  //Observed point in the image
 //         g2o::SE3Quat Tcw = v1->estimate();  //Preficted camera pose
 
-//         /*
-//         * Your code for Lab 3 - Task 3 here! Example:
-//         * _error = Eigen::Vector2d::Ones()*100;
-//         */
 //         // Project the 3D point onto the image plane using the camera pose
 //         Eigen::Vector3d p3Dc = Tcw.map(Xworld);
 //         Eigen::Vector2f projected;
@@ -315,7 +311,7 @@ public:
 //     std::shared_ptr<CameraModel> pCamera;
 // };
 
-class EdgeARAP: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexSO3>{
+class EdgeARAP: public  g2o::BaseUnaryEdge<1, double, VertexSBAPointXYZ>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -328,24 +324,21 @@ public:
     void computeError() {
         ///const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSO3* vR = static_cast<const VertexSO3*>(_vertices[1]);
 
         double obs(_measurement);
         Eigen::Vector3d diffArap;
 
-        Sophus::SO3d R = vR->estimate();
-
-        diffArap = (v2->estimate() - Xj2world) - (R * (Xi1world - Xj1world));
+        diffArap = (v2->estimate() - Xj2world) - (Ri * (Xi1world - Xj1world));
 
         double energyArap = diffArap.norm();
         double totalEnergy = weight * energyArap;
-
 
         _error[0] = obs - totalEnergy;   
     }
 
     // virtual void linearizeOplus();
 
+    Sophus::SO3d Ri;
     Eigen::Vector3d Xi1world;
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;

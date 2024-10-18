@@ -586,3 +586,42 @@ void EstimateRotationAndTranslation(const std::vector<Eigen::Vector3d>& v1Positi
     // 6. Compute the translation vector
     translation = centroid2 - rotation * centroid1;
 }
+
+Sophus::SO3d computeR(size_t& i, std::unordered_set<int>& jIndexes, 
+                        std::map<size_t, size_t> posIndexes,
+                        std::vector<Eigen::Vector3d>& v1Positions, 
+                        std::vector<Eigen::Vector3d>& v2Positions,
+                        std::unordered_map<Eigen::Vector2i,
+                        double,
+                        open3d::utility::hash_eigen<Eigen::Vector2i>>& edge_weights) {
+    
+    Eigen::Matrix3d Si = Eigen::Matrix3d::Zero();
+    
+    for (int j : jIndexes) {
+        double weight = edge_weights[GetOrderedEdge(i, j)];
+
+        Eigen::Vector3d pi1 = v1Positions[posIndexes[i]];
+        Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
+        Eigen::Vector3d pi2 = v2Positions[posIndexes[i]];
+        Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
+
+        Eigen::Vector3d undeformed_eij = pi1 - pj1;
+        Eigen::Vector3d deformed_eij = pi2 - pj2;
+
+        Si += weight * undeformed_eij * deformed_eij.transpose();
+    }
+
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(Si, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::Matrix3d U = svd.matrixU();
+    Eigen::Matrix3d V = svd.matrixV();
+    
+    Eigen::Matrix3d Ri = V * U.transpose();
+    
+    if (Ri.determinant() < 0) {
+        U.col(2) *= -1; // Flip the sign of the last column of U
+        Ri = V * U.transpose();
+    }
+    
+    Sophus::SO3d rotation(Ri);
+    return rotation;
+}
