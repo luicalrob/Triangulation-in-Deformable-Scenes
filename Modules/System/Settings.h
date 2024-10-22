@@ -74,6 +74,7 @@ public:
     Eigen::Vector3f getSecondCameraPos();
 
     float getSimulatedRepError();
+    int getDecimalsRepError();
 
     double getOptArapWeight();
     double getOptGlobalWeight();
@@ -126,6 +127,7 @@ private:
     Eigen::Vector3f C2Pose_;
 
     float SimulatedRepError_;
+    int DecimalsRepError_;
 
     double OptArapWeight_;
     double OptGlobalWeight_;

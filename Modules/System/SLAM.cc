@@ -21,6 +21,7 @@
 #include "Map/MapPoint.h"
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
+#include "Utils/Conversions.h"
 #include "Optimization/nloptOptimization.h"
 #include "Optimization/EigenOptimization.h"
 
@@ -62,6 +63,7 @@ SLAM::SLAM(const std::string &settingsFile) {
     C2Pose_ = settings_.getSecondCameraPos();
 
     simulatedRepErrorStanDesv_ = settings_.getSimulatedRepError();
+    decimalsRepError_ = settings_.getDecimalsRepError();
 
     arapBalanceWeight_ = settings_.getOptArapWeight();
     globalBalanceWeight_ = settings_.getOptGlobalWeight();
@@ -209,10 +211,10 @@ void SLAM::createKeyPoints() {
         moved_p2D = currCalibration_->project(p3Dcam2);
 
         // Add Gaussian reprojection noise in units of pixels
-        original_p2D.x = std::round(original_p2D.x + distribution(generator));
-        original_p2D.y = std::round(original_p2D.y + distribution(generator));
-        moved_p2D.x = std::round(moved_p2D.x + distribution(generator));
-        moved_p2D.y = std::round(moved_p2D.y + distribution(generator));
+        original_p2D.x = roundToDecimals(original_p2D.x + distribution(generator), decimalsRepError_);
+        original_p2D.y = roundToDecimals(original_p2D.y + distribution(generator), decimalsRepError_);
+        moved_p2D.x = roundToDecimals(moved_p2D.x + distribution(generator), decimalsRepError_);
+        moved_p2D.y = roundToDecimals(moved_p2D.y + distribution(generator), decimalsRepError_);
 
         cv::KeyPoint original_keypoint(original_p2D, 1.0f); // 1.0f is the size of the keypoint
         cv::KeyPoint moved_keypoint(moved_p2D, 1.0f);
@@ -244,12 +246,14 @@ void SLAM::mapping() {
 
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
+    Eigen::Matrix3f K1 = prevCalibration_->getCalibrationMatrix();
+    Eigen::Matrix3f K2 = currCalibration_->getCalibrationMatrix();
 
     //Try to triangulate a new MapPoint with each match
     for(size_t i = 0; i < nMatches; i++){ //vMatches.size()
         // if(vMatches[i] != -1){
-        auto x1 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
-        auto x2 = currKeyFrame_->getKeyPoint(i).pt;
+        cv::Point2f x1 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
+        cv::Point2f x2 = currKeyFrame_->getKeyPoint(i).pt;
 
         Eigen::Vector3f xn1 = prevCalibration_->unproject(x1).normalized();
         Eigen::Vector3f xn2 = currCalibration_->unproject(x2).normalized();
@@ -262,8 +266,10 @@ void SLAM::mapping() {
 
         if (TrianSelection_ == "TwoPoints") {
             triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-        } else if (TrianSelection_ == "InRaysNearPrevSolution") {
-            triangulateInRaysNearPrevSolution(xn1, xn2, T1w, T2w, x3D_1, x3D_2, x3D_prev);
+        } else if (TrianSelection_ == "Projection") {
+            triangulateProjection(xn1, xn2, T1w, T2w, K1, K2, x3D_1, x3D_2);
+        } else if (TrianSelection_ == "ORBSLAM") {
+            triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         } else {
             triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         }
@@ -292,8 +298,8 @@ void SLAM::mapping() {
         cv::Point2f cv_p1(p_p1[0], p_p1[1]);
         cv::Point2f cv_p2(p_p2[0], p_p2[1]);
 
-        auto e1 = squaredReprojectionError(x1, cv_p1);
-        auto e2 = squaredReprojectionError(x2, cv_p2);
+        float e1 = squaredReprojectionError(x1, cv_p1);
+        float e2 = squaredReprojectionError(x2, cv_p2);
 
         //if(e1 > 5.991 || e2 > 5.991) continue;
 

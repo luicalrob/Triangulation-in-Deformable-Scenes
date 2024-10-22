@@ -667,14 +667,39 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
 
                     // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal() * (1.0/arapBalanceWeight);
 
+                    MapPoint_ pMPj2 = v2MPs[posIndexes[j]];
+                    if (!pMPj2) continue;
+                    MapPoint_ jPointToOptimize = pMPj2;
+
+                    if (mMapPointId.count(jPointToOptimize) == 0) {
+                        VertexSBAPointXYZ* vPoint = new VertexSBAPointXYZ();
+                        Eigen::Vector3d p3D = jPointToOptimize->getWorldPosition().cast<double>();
+                        vPoint->setEstimate(p3D);
+                        vPoint->setId(currId);
+                        //vPoint->setMarginalized(true);
+                        optimizer.addVertex(vPoint);
+
+                        mMapPointId[jPointToOptimize] = currId;
+                        //std::cout << "ID: (" << currId << ")\n";
+                        currId++;
+                    }
+
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
 
                     //eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                     eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    //eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mRotId[Rot])));
+                    eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[jPointToOptimize])));
                     
+                    size_t newMeshIndex = static_cast<size_t>(j);
+                    std::unordered_set<int> newjIndexes = jIndexes;
+                    newjIndexes.erase(j);
+                    newjIndexes.insert(static_cast<int>(meshIndex)); 
+
+                    //Sophus::SO3d Rj = computeR(newMeshIndex, newjIndexes, posIndexes, v1Positions, v2Positions, edge_weights);
+
                     eArap->Ri = Rs[i];
+                    //eArap->Rj = Rj;
                     eArap->Xi1world = v1Positions[i];
                     eArap->Xj1world = v1Positions[posIndexes[j]];
                     eArap->Xj2world = v2Positions[posIndexes[j]];

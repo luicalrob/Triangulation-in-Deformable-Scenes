@@ -311,7 +311,7 @@ public:
 //     std::shared_ptr<CameraModel> pCamera;
 // };
 
-class EdgeARAP: public  g2o::BaseUnaryEdge<1, double, VertexSBAPointXYZ>{
+class EdgeARAP: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexSBAPointXYZ>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -324,21 +324,23 @@ public:
     void computeError() {
         ///const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v3 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
 
         double obs(_measurement);
         Eigen::Vector3d diffArap;
 
-        diffArap = (v2->estimate() - Xj2world) - (Ri * (Xi1world - Xj1world));
+        diffArap = (v2->estimate() - v3->estimate()) - (Ri * (Xi1world - Xj1world));
 
         double energyArap = diffArap.norm();
         double totalEnergy = weight * energyArap;
 
-        _error[0] = obs - totalEnergy;   
+        _error[0] = totalEnergy - obs;   
     }
 
     // virtual void linearizeOplus();
 
     Sophus::SO3d Ri;
+    //Sophus::SO3d Rj;
     Eigen::Vector3d Xi1world;
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;
@@ -373,7 +375,7 @@ public:
         double energyGlobalT = diffGlobalT.norm();
         double totalEnergy = energyGlobalT;
 
-        _error[0] = obs - totalEnergy;   
+        _error[0] = totalEnergy - obs;   
     }
 
     // virtual void linearizeOplus();

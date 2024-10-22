@@ -95,6 +95,7 @@ Settings::Settings(const std::string& configFile) {
     C2Pose_ << C2x, C2y, C2z;
 
     SimulatedRepError_ = fSettings["Keypoints.RepError"];
+    DecimalsRepError_ = fSettings["Keypoints.decimalsApproximation"];
 
     OptArapWeight_ = fSettings["Optimization.arap"];
     OptGlobalWeight_ = fSettings["Optimization.global"];
@@ -243,6 +244,10 @@ Eigen::Vector3f Settings::getSecondCameraPos(){
 
 float Settings::getSimulatedRepError(){
     return SimulatedRepError_;
+}
+
+int Settings::getDecimalsRepError(){
+    return DecimalsRepError_;
 }
 
 double Settings::getOptArapWeight(){

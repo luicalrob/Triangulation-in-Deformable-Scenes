@@ -143,6 +143,7 @@ private:
     Eigen::Vector3f C2Pose_;
 
     float simulatedRepErrorStanDesv_;
+    int decimalsRepError_;
 
     double arapBalanceWeight_;
     double globalBalanceWeight_;

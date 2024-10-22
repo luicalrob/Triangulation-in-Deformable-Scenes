@@ -49,17 +49,21 @@ float cosRayParallax(const Eigen::Vector3f& a, const Eigen::Vector3f& b);
 void triangulate(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
                  const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, Eigen::Vector3f &x3D);
 
-void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
-                 const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
+void triangulateInRays(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
+                 const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
 
-void triangulateInRaysNearPrevSolution(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
-                        const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2, Eigen::Vector3f &x3D_prev);
+void triangulateInRaysNearPrevSolution(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
+                        const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, Eigen::Vector3f& x3D_prev);
 
-void triangulateTwoPoints(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
-                 const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2);
+void triangulateTwoPoints(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
+                 const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
 
-void triangulateBerkeley(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
-                        Frame &F1, Frame &F2,
+void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
+                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2, Eigen::Matrix3f& K1, Eigen::Matrix3f& K2,
+                        Eigen::Vector3f& point1, Eigen::Vector3f& point2);
+
+void triangulateORBSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
+                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2,
                         Eigen::Vector3f& point1, Eigen::Vector3f& point2);
 /*
  * Squared reprojection error

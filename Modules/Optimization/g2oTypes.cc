@@ -293,63 +293,15 @@ bool EdgeARAP::write(std::ostream& os) const {
 // void EdgeARAP::linearizeOplus() {
 //     //VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
 //     VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-//     VertexSO3* vR = static_cast<VertexSO3*>(_vertices[1]);
+//     VertexSBAPointXYZ* v3 = static_cast<VertexSBAPointXYZ*>(_vertices[1]);
 
-//     Eigen::Vector3d obs(_measurement);
-//     //double obs(_measurement);
-//     Eigen::Vector3d arap_diff;
+//     Eigen::Vector3d undeformed_eij = Xi1world - Xj1world;
+//     Eigen::Vector3d deformed_eij = v2->estimate() - v3->estimate();
 
-//     Eigen::Matrix3d R = vR->estimate().matrix();
+//     Eigen::Vector3d jacobian = 4.0 * weight * (deformed_eij - ((Ri.matrix()+Rj.matrix()) * undeformed_eij)/2.0);
 
-//     arap_diff = (v2->estimate() - Xj2world) - (R * (Xi1world - Xj1world));
-    
-//     Eigen::Vector3d J_v1_3x1 = -2 * weight * (arap_diff.transpose() * R).transpose();
-//     Eigen::Vector3d J_v2_3x1 = 2 * weight * arap_diff;
-//     Eigen::Matrix3d J_R_mat3 = -2 * weight * (arap_diff * Xi1world.transpose());
-
-//           const VertexSBAPointXYZ *v1 =
-//           static_cast<const VertexSBAPointXYZ *>(_vertices[0]);
-//       const VertexSBAPointXYZ *v2 =
-//           static_cast<const VertexSBAPointXYZ *>(_vertices[1]);
-//       Eigen::MatrixXd ddo =
-//           ((v1->estimate() - v2->estimate()).norm() * _measurement).inverse();
-
-//       Eigen::MatrixXd a = (v1->estimate() - v2->estimate()) * ddo;
-
-//     _jacobianOplusXi << a(0), a(1), a(2);
-//     _jacobianOplusXj << -a(0), -a(1), -a(2);
-
-
-//     // Eigen::Matrix3d J_v1_3x1_FT;
-//     // J_v1_3x1_FT.setZero();
-//     // Eigen::Vector3d J_v2_3x1_FT;
-//     // J_v2_3x1_FT.setZero();
-//     // Eigen::Matrix3d J_R_mat3_FT;
-//     // J_R_mat3_FT.setZero();
-
-//     // Eigen::Matrix3d J_v1_3x1_ST;
-//     // Eigen::Matrix3d J_v2_3x1_ST;
-//     // Eigen::Matrix3d J_Rg_mat3_ST;
-//     // Eigen::Vector3d J_tg_mat3_ST;
-
-//     // J_v1_3x1_ST.setZero();
-//     // J_v2_3x1_ST.setZero();
-//     // J_Rg_mat3_ST.setZero();
-//     // J_tg_mat3_ST.setZero();
-
-
-//     Eigen::Matrix3d J_v1_3x1 = J_v1_3x1.asDiagonal().toDenseMatrix();
-//     Eigen::Matrix3d J_v2_3x1 = J_v2_3x1.asDiagonal().toDenseMatrix();
-//     Eigen::Matrix3d J_R_mat3 = J_R_mat3;
-
-//     Eigen::Matrix<double, 3, 3> J_v1_mat = J_v1_3x1;
-//     Eigen::Matrix<double, 3, 3> J_v2_mat = J_v2_3x1;
-//     Eigen::Matrix<double, 3, 3> J_R = J_R_mat3; 
-//     //J_global.setZero(); 
-
-//     //_jacobianOplus[0] = J_v1_mat;
-//     _jacobianOplus[0] = J_v2_mat;
-//     _jacobianOplus[1] = J_R;
+//     _jacobianOplusXi = jacobian; //1x3
+//     _jacobianOplusXj = jacobian;
 // }
 
 EdgeTransformation::EdgeTransformation(){
