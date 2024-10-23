@@ -138,12 +138,9 @@ void EstimateRotationAndTranslation(const std::vector<Eigen::Vector3d>& v1Positi
 /*
  * Function to compute local Rotation matrices for each vertex i in the ARAP optimization
  */
-Sophus::SO3d computeR(size_t& i, std::unordered_set<int>& jIndexes, 
-                        std::map<size_t, size_t> posIndexes,
-                        std::vector<Eigen::Vector3d>& v1Positions, 
+void computeR(std::shared_ptr<open3d::geometry::TriangleMesh> mesh, 
+                        std::vector<Eigen::Vector3d>& v1Positions,
                         std::vector<Eigen::Vector3d>& v2Positions,
-                        std::unordered_map<Eigen::Vector2i,
-                        double,
-                        open3d::utility::hash_eigen<Eigen::Vector2i>>& edge_weights);
+                        std::vector<Sophus::SO3d>& Rs);
 
 #endif //SLAM_GEOMETRY_H

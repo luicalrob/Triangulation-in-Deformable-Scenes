@@ -71,8 +71,8 @@ void bundleAdjustment(Map* pMap){
 
         //Set MapPoints
         vector<MapPoint_>& vMPs = pKF->getMapPoints();
-        for (size_t i = 0; i < vMPs.size(); i++) {
-            MapPoint_ pMP = vMPs[i];
+        for (size_t mpIndex = 0; mpIndex < vMPs.size(); mpIndex++) {
+            MapPoint_ pMP = vMPs[mpIndex];
             if (!pMP) continue;
 
             //Check if this MapPoint has been already added to the optimization
@@ -89,8 +89,8 @@ void bundleAdjustment(Map* pMap){
             }
 
             //Set edge
-            cv::Point2f uv = pKF->getKeyPoint(i).pt;
-            int octave = pKF->getKeyPoint(i).octave;
+            cv::Point2f uv = pKF->getKeyPoint(mpIndex).pt;
+            int octave = pKF->getKeyPoint(mpIndex).octave;
             Eigen::Matrix<double,2,1> obs;
             obs << uv.x, uv.y;
 
@@ -157,15 +157,15 @@ int poseOnlyOptimization(Frame& currFrame){
     vector<EdgeSE3ProjectXYZOnlyPose*> vVertex(vMapPoints.size(),nullptr);
     vector<bool> vInlier(vMapPoints.size(),false);
 
-    for(size_t i = 0; i < vMapPoints.size(); i++){
-        MapPoint_ pMP = vMapPoints[i];
+    for(size_t mpIndex = 0; mpIndex < vMapPoints.size(); mpIndex++){
+        MapPoint_ pMP = vMapPoints[mpIndex];
 
         if(!pMP){
             continue;
         }
 
-        cv::Point2f uv = currFrame.getKeyPoint(i).pt;
-        int octave = currFrame.getKeyPoint(i).octave;
+        cv::Point2f uv = currFrame.getKeyPoint(mpIndex).pt;
+        int octave = currFrame.getKeyPoint(mpIndex).octave;
         Eigen::Matrix<double,2,1> obs;
         obs << uv.x, uv.y;
 
@@ -183,11 +183,11 @@ int poseOnlyOptimization(Frame& currFrame){
         e->Xworld = pMP->getWorldPosition().cast<double>();
 
         optimizer.addEdge(e);
-        vVertex[i] = e;
-        vInlier[i] = true;
+        vVertex[mpIndex] = e;
+        vInlier[mpIndex] = true;
     }
 
-    for(int i = 0; i < 4; i++){
+    for(int mpIndex = 0; mpIndex < 4; mpIndex++){
         vSE3->setEstimate(g2o::SE3Quat(fPose.unit_quaternion().cast<double>(),fPose.translation().cast<double>()));
 
         optimizer.initializeOptimization(0);
@@ -199,7 +199,7 @@ int poseOnlyOptimization(Frame& currFrame){
             if(!e)
                 continue;
 
-            if(!vInlier[i])
+            if(!vInlier[mpIndex])
                 e->computeError();
 
             const float chi2 = e->chi2();
@@ -213,16 +213,16 @@ int poseOnlyOptimization(Frame& currFrame){
                 e->setLevel(0);
             }
 
-            if(i == 2){
+            if(mpIndex == 2){
                 e->setRobustKernel(0);
             }
         }
     }
 
     int nGood = 0;
-    for(int i = 0; i < vInlier.size(); i++){
-        if(!vInlier[i]){
-            currFrame.setMapPoint(i, nullptr);
+    for(int mpIndex = 0; mpIndex < vInlier.size(); mpIndex++){
+        if(!vInlier[mpIndex]){
+            currFrame.setMapPoint(mpIndex, nullptr);
         }
         else{
             nGood++;
@@ -287,8 +287,8 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
 
         //Set MapPoints
         vector<MapPoint_>& vMPs = pKF->getMapPoints();
-        for (size_t i = 0; i < vMPs.size(); i++) {
-            MapPoint_ pMP = vMPs[i];
+        for (size_t mpIndex = 0; mpIndex < vMPs.size(); mpIndex++) {
+            MapPoint_ pMP = vMPs[mpIndex];
             if (!pMP) continue;
 
 
@@ -307,8 +307,8 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
             }
 
             //Set edge
-            cv::Point2f uv = pKF->getKeyPoint(i).pt;
-            int octave = pKF->getKeyPoint(i).octave;
+            cv::Point2f uv = pKF->getKeyPoint(mpIndex).pt;
+            int octave = pKF->getKeyPoint(mpIndex).octave;
             Eigen::Matrix<double,2,1> obs;
             obs << uv.x, uv.y;
 
@@ -328,7 +328,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
             vEdges.push_back(e);
             vEdgesKF.push_back(kfID);
             vEdgesMP.push_back(pMP->getId());
-            vMpInKf.push_back(i);
+            vMpInKf.push_back(mpIndex);
 
             optimizer.addEdge(e);
         }
@@ -352,16 +352,16 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
 
         //Set MapPoints
         vector<MapPoint_>& vMPs = pKF->getMapPoints();
-        for (size_t i = 0; i < vMPs.size(); i++) {
-            MapPoint_ pMP = vMPs[i];
+        for (size_t mpIndex = 0; mpIndex < vMPs.size(); mpIndex++) {
+            MapPoint_ pMP = vMPs[mpIndex];
             if (!pMP) continue;
             if(sLocalMapPoints.count(pMP->getId()) == 0) continue;
 
             assert(mMapPointId.count(pMP) > 0);
 
             //Set edge
-            cv::Point2f uv = pKF->getKeyPoint(i).pt;
-            int octave = pKF->getKeyPoint(i).octave;
+            cv::Point2f uv = pKF->getKeyPoint(mpIndex).pt;
+            int octave = pKF->getKeyPoint(mpIndex).octave;
             Eigen::Matrix<double,2,1> obs;
             obs << uv.x, uv.y;
 
@@ -381,7 +381,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
             vEdges.push_back(e);
             vEdgesKF.push_back(fixedKFId);
             vEdgesMP.push_back(pMP->getId());
-            vMpInKf.push_back(i);
+            vMpInKf.push_back(mpIndex);
 
             optimizer.addEdge(e);
         }
@@ -392,8 +392,8 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     optimizer.optimize(5);
 
     //Remove outliers
-    for(size_t i = 0; i < vEdges.size(); i++){
-        EdgeSE3ProjectXYZ* e = vEdges[i];
+    for(size_t mpIndex = 0; mpIndex < vEdges.size(); mpIndex++){
+        EdgeSE3ProjectXYZ* e = vEdges[mpIndex];
 
         if(e->chi2() > 5.991 || !e->isDepthPositive()){
             e->setLevel(1);
@@ -406,18 +406,18 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     optimizer.optimize(10);
 
     //Remove outlier observations from map
-    for(size_t i = 0; i < vEdges.size(); i++){
-        EdgeSE3ProjectXYZ* e = vEdges[i];
+    for(size_t mpIndex = 0; mpIndex < vEdges.size(); mpIndex++){
+        EdgeSE3ProjectXYZ* e = vEdges[mpIndex];
 
         //Remove observation
         if(e->chi2() > 5.991 || !e->isDepthPositive()){
             //Remove from KeyFrame
-            pMap->getKeyFrame(vEdgesKF[i])->setMapPoint(vMpInKf[i], nullptr);
+            pMap->getKeyFrame(vEdgesKF[mpIndex])->setMapPoint(vMpInKf[mpIndex], nullptr);
 
             //Remove from map
-            pMap->removeObservation(vEdgesKF[i],vEdgesMP[i]);
+            pMap->removeObservation(vEdgesKF[mpIndex],vEdgesMP[mpIndex]);
 
-            pMap->checkKeyFrame(vEdgesKF[i]);
+            pMap->checkKeyFrame(vEdgesKF[mpIndex]);
         }
     }
 
@@ -461,6 +461,8 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
     const float thHuber2D = sqrt(5.99);
     const float deltaMono = sqrt(100.991);
 
+    Sophus::SE3f T_global;
+
     size_t currId = 0;
 
     //Set optimization
@@ -500,9 +502,8 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
 
             //std::vector<Sophus::SO3d> Rs(tetra_mesh->tetras_.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
             //std::vector<RotationMatrix_> Rs(mesh->triangles_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
-            std::vector<Sophus::SO3d> Rs(v1Positions.size(),Sophus::SO3d(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
 
-            Sophus::SE3f T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
+            T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
 
             Eigen::Matrix3d rotation;
             Eigen::Vector3d translation;
@@ -523,6 +524,9 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                 invertedPosIndexes[pair.second] = pair.first;
             }
 
+            std::vector<Sophus::SO3d> Rs(v1Positions.size(),Sophus::SO3d(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
+            computeR(mesh, v1Positions, v2Positions, Rs);
+
             // Visualize OPEN3D the meshes
             // open3d::visualization::Visualizer visualizer;
             // visualizer.CreateVisualizerWindow("Mesh Visualization");
@@ -532,23 +536,23 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
             // visualizer.Run();
             // visualizer.DestroyVisualizerWindow();
 
-            TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
+            // TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
 
-            g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-            vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
-            vSE3->setId(currId);
-            optimizer.addVertex(vSE3);
-            mTGlobalId[T] = currId;
-            currId++;
+            // g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+            // vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
+            // vSE3->setId(currId);
+            // optimizer.addVertex(vSE3);
+            // mTGlobalId[T] = currId;
+            // currId++;
 
-            for (size_t i = 0; i < v1MPs.size(); i++) {
-                MapPoint_ pMPi1 = v1MPs[i];
-                MapPoint_ pMPi2 = v2MPs[i];
+            for (size_t mpIndex = 0; mpIndex < v1MPs.size(); mpIndex++) {
+                MapPoint_ pMPi1 = v1MPs[mpIndex];
+                MapPoint_ pMPi2 = v2MPs[mpIndex];
                 if (!pMPi1) continue;
                 if (!pMPi2) continue;
 
                 MapPoint_ firstPointToOptimize = pMPi1;
-                //RotationMatrix_ Rot = std::make_shared<Sophus::SO3d>(Rs[i]);
+                //RotationMatrix_ Rot = std::make_shared<Sophus::SO3d>(Rs[mpIndex]);
                 MapPoint_ secondPointToOptimize = pMPi2;
 
                 //Check if this MapPoint has been already added to the optimization
@@ -580,8 +584,8 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                 }
 
                 //Set fisrt projection edge
-                cv::Point2f uv = pKF1->getKeyPoint(i).pt;
-                int octave = pKF1->getKeyPoint(i).octave;
+                cv::Point2f uv = pKF1->getKeyPoint(mpIndex).pt;
+                int octave = pKF1->getKeyPoint(mpIndex).octave;
                 Eigen::Matrix<double,2,1> obs;
                 // obs << uv.x, uv.y;
 
@@ -602,8 +606,8 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                 // optimizer.addEdge(eKF1);
 
                 //Set second projection edge
-                uv = pKF2->getKeyPoint(i).pt;
-                octave = pKF2->getKeyPoint(i).octave;
+                uv = pKF2->getKeyPoint(mpIndex).pt;
+                octave = pKF2->getKeyPoint(mpIndex).octave;
                 obs << uv.x, uv.y;
 
                 EdgeSE3ProjectXYZPerKeyFrameOnlyPoints* eKF2 = new EdgeSE3ProjectXYZPerKeyFrameOnlyPoints();
@@ -622,45 +626,26 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
 
                 optimizer.addEdge(eKF2);
 
-                auto it = invertedPosIndexes.find(i);
-                size_t meshIndex = 0;
+                auto it = invertedPosIndexes.find(mpIndex);
+                size_t i = 0;
                 if (it != invertedPosIndexes.end()) {
-                    meshIndex = it->second;
-                    // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
-                    // std::cout << "v2Position: (" << v2Positions[i][0] << ", " << v2Positions[i][1] << ", " << v2Positions[i][2] << ")\n";
-                    // std::cout << "point mesh: (" << mesh->vertices_[meshIndex][0] << ", " << mesh->vertices_[meshIndex][1] << ", " << mesh->vertices_[meshIndex][2] << ")\n";
-                    // std::cout << "index: (" << i << ")\n";
+                    i = it->second;
+                    // std::cout << "v1Position: (" << v1Positions[mpIndex][0] << ", " << v1Positions[mpIndex][1] << ", " << v1Positions[mpIndex][2] << ")\n";
+                    // std::cout << "v2Position: (" << v2Positions[mpIndex][0] << ", " << v2Positions[mpIndex][1] << ", " << v2Positions[mpIndex][2] << ")\n";
+                    // std::cout << "point mesh: (" << mesh->vertices_[i][0] << ", " << mesh->vertices_[i][1] << ", " << mesh->vertices_[i][2] << ")\n";
+                    // std::cout << "index: (" << mpIndex << ")\n";
                 } else {
                     continue;
                 }
 
-                EdgeTransformation* eT = new EdgeTransformation();
-
-                //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
-                
-                eT->Xi1world = mesh->vertices_[meshIndex];
-                
-                Eigen::Matrix<double, 1, 1> informationMatrixT;
-                informationMatrixT(0, 0) = globalBalanceWeight / mesh->vertices_.size();
-                eT->setInformation(informationMatrixT);
-                
-                double measurementT = 0.0;
-                eT->setMeasurement(measurementT);
-
-                optimizer.addEdge(eT);
-
-                std::unordered_set<int> jIndexes = mesh->adjacency_list_[meshIndex];
+                std::unordered_set<int> jIndexes = mesh->adjacency_list_[i];
 
                 if (jIndexes.empty()) continue;
-
-                Rs[i] = computeR(meshIndex, jIndexes, posIndexes, v1Positions, v2Positions, edge_weights);
 
                 for (int j : jIndexes) {
 
                     // Eigen::Vector3d distancesInvTipDesv;
-                    // distancesInvTipDesv = getInvUncertainty(i, jIndexes, posIndexes, v1Positions, v2Positions);
+                    // distancesInvTipDesv = getInvUncertainty(mpIndex, jIndexes, posIndexes, v1Positions, v2Positions);
                     // // double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
                     // // Eigen::Matrix<double, 1, 1> informationMatrix;
                     // // informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
@@ -694,25 +679,56 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                     size_t newMeshIndex = static_cast<size_t>(j);
                     std::unordered_set<int> newjIndexes = jIndexes;
                     newjIndexes.erase(j);
-                    newjIndexes.insert(static_cast<int>(meshIndex)); 
-
-                    //Sophus::SO3d Rj = computeR(newMeshIndex, newjIndexes, posIndexes, v1Positions, v2Positions, edge_weights);
+                    newjIndexes.insert(static_cast<int>(i)); 
 
                     eArap->Ri = Rs[i];
-                    //eArap->Rj = Rj;
-                    eArap->Xi1world = v1Positions[i];
+                    eArap->Rj = Rs[j];
+                    eArap->Xi1world = v1Positions[mpIndex];
                     eArap->Xj1world = v1Positions[posIndexes[j]];
                     eArap->Xj2world = v2Positions[posIndexes[j]];
-                    eArap->weight = edge_weights[GetOrderedEdge(meshIndex, j)];
+                    eArap->weight = edge_weights[GetOrderedEdge(i, j)];
 
                     Eigen::Matrix<double, 1, 1> informationMatrixArap;
-                    informationMatrixArap(0, 0) = arapBalanceWeight / mesh->triangles_.size() * mesh->vertices_.size();
+                    informationMatrixArap(0, 0) = arapBalanceWeight * std::pow(mesh->triangles_.size(), 2);
 
                     eArap->setInformation(informationMatrixArap);
                     double measurementArap = 0.0;
                     eArap->setMeasurement(measurementArap);
 
                     optimizer.addEdge(eArap);
+
+
+                    EdgeTransformation* eTi = new EdgeTransformation();
+
+                    //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                    eTi->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                    //eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
+                    eTi->Xi1world =  mesh->vertices_[i];
+                    
+                    Eigen::Matrix<double, 1, 1> informationMatrixTi;
+                    informationMatrixTi(0, 0) = globalBalanceWeight / std::pow(mesh->vertices_.size(), 2);
+                    eTi->setInformation(informationMatrixTi);
+                    
+                    double measurementTi = 0.0;
+                    eTi->setMeasurement(measurementTi);
+                    optimizer.addEdge(eTi);
+
+
+                    EdgeTransformation* eTj = new EdgeTransformation();
+
+                    //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                    eTj->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[jPointToOptimize])));
+                    //eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
+                    eTj->Xi1world = v1Positions[posIndexes[j]];
+                    eTj->T = T_global;
+                    
+                    Eigen::Matrix<double, 1, 1> informationMatrixTj;
+                    informationMatrixTj(0, 0) = globalBalanceWeight / std::pow(mesh->vertices_.size(), 2);
+                    eTj->setInformation(informationMatrixTj);
+                    
+                    double measurementTj = 0.0;
+                    eTj->setMeasurement(measurementTj);
+                    optimizer.addEdge(eTj);
                 }
             }
         }
@@ -748,15 +764,15 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
         // std::cout << "Rotation matrix:\n" << Rotation << std::endl;
     }
 
-    Sophus::SE3f TGlobal;
+    // Sophus::SE3f TGlobal;
 
-    for(pair<TransformationMatrix_,ID> pairTransformationGlobalMatrixId : mTGlobalId){
-        TransformationMatrix_ T = pairTransformationGlobalMatrixId.first;
-        g2o::VertexSE3Expmap* mT = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pairTransformationGlobalMatrixId.second));
-        TGlobal = Sophus::SE3f(mT->estimate().to_homogeneous_matrix().cast<float>());
-        //std::cout << "Global Rotation matrix:\n" << Rotation << std::endl;
-    }
-    pMap->insertGlobalKeyFramesTransformation(0, 1, TGlobal);
+    // for(pair<TransformationMatrix_,ID> pairTransformationGlobalMatrixId : mTGlobalId){
+    //     TransformationMatrix_ T = pairTransformationGlobalMatrixId.first;
+    //     g2o::VertexSE3Expmap* mT = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pairTransformationGlobalMatrixId.second));
+    //     TGlobal = Sophus::SE3f(mT->estimate().to_homogeneous_matrix().cast<float>());
+    //     //std::cout << "Global Rotation matrix:\n" << Rotation << std::endl;
+    // }
+    pMap->insertGlobalKeyFramesTransformation(0, 1, T_global);
 }
 
 void arapOpen3DOptimization(Map* pMap){
@@ -802,9 +818,9 @@ void arapOpen3DOptimization(Map* pMap){
 
             std::vector<int> constraint_vertex_indices(10);  // Initialize vector with 200 elements
 
-            // for (int i = 0; i < 10; ++i) {
-            //     //constraint_vertex_indices[i] = distrib(gen);  // Assign values from 0 to 199
-            //     constraint_vertex_indices[i] = i;
+            // for (int mpIndex = 0; mpIndex < 10; ++mpIndex) {
+            //     //constraint_vertex_indices[mpIndex] = distrib(gen);  // Assign values from 0 to 199
+            //     constraint_vertex_indices[mpIndex] = mpIndex;
             // }
 
             std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh->DeformAsRigidAsPossible(
@@ -813,17 +829,17 @@ void arapOpen3DOptimization(Map* pMap){
             );
             // std::shared_ptr<open3d::geometry::TriangleMesh> deformed_mesh = mesh->DeformAsRigidAsPossible();
 
-            for (size_t i = 0; i < v1MPs.size(); i++) {
-                MapPoint_ pMPi1 = v1MPs[i];
-                MapPoint_ pMPi2 = v2MPs[i];
+            for (size_t mpIndex = 0; mpIndex < v1MPs.size(); mpIndex++) {
+                MapPoint_ pMPi1 = v1MPs[mpIndex];
+                MapPoint_ pMPi2 = v2MPs[mpIndex];
 
-                auto it1 = invertedPosIndexes1.find(i);
+                auto it1 = invertedPosIndexes1.find(mpIndex);
                 size_t meshIndex1 = 0;
                 if (it1 != invertedPosIndexes1.end()) {
                     meshIndex1 = it1->second;
-                    // std::cout << "v1Position: (" << v1Positions[i][0] << ", " << v1Positions[i][1] << ", " << v1Positions[i][2] << ")\n";
+                    // std::cout << "v1Position: (" << v1Positions[mpIndex][0] << ", " << v1Positions[mpIndex][1] << ", " << v1Positions[mpIndex][2] << ")\n";
                     // std::cout << "point mesh: (" << mesh->vertices_[meshIndex1][0] << ", " << mesh->vertices_[meshIndex1][1] << ", " << mesh->vertices_[meshIndex1][2] << ")\n";
-                    // std::cout << "index: (" << i << ")\n";
+                    // std::cout << "index: (" << mpIndex << ")\n";
                 } else {
                     continue;
                 }
@@ -855,16 +871,16 @@ void arapOpen3DOptimization(Map* pMap){
     }
 }
 
-Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions){
+Eigen::Vector3d getInvUncertainty(int mpIndex, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions){
 
     std::vector<Eigen::Vector3d> errors;
     Eigen::Vector3d meanError = Eigen::Vector3d::Zero();
     size_t validPairs = 0;
 
     for (int j : adjacencyList) {
-        Eigen::Vector3d pi1 = v1Positions[i];
+        Eigen::Vector3d pi1 = v1Positions[mpIndex];
         Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
-        Eigen::Vector3d pi2 = v2Positions[i];
+        Eigen::Vector3d pi2 = v2Positions[mpIndex];
         Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
 
         if (!pi1.allFinite() || !pj1.allFinite() || !pi2.allFinite() || !pj2.allFinite()) continue;

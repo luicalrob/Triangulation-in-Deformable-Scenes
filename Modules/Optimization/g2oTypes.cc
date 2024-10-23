@@ -290,19 +290,24 @@ bool EdgeARAP::write(std::ostream& os) const {
 }
 
 
-// void EdgeARAP::linearizeOplus() {
-//     //VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-//     VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-//     VertexSBAPointXYZ* v3 = static_cast<VertexSBAPointXYZ*>(_vertices[1]);
+void EdgeARAP::linearizeOplus() {
+    //VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+    VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+    VertexSBAPointXYZ* v3 = static_cast<VertexSBAPointXYZ*>(_vertices[1]);
 
-//     Eigen::Vector3d undeformed_eij = Xi1world - Xj1world;
-//     Eigen::Vector3d deformed_eij = v2->estimate() - v3->estimate();
+    Eigen::Vector3d firstUndeformed_eij = Xi1world - Xj1world;
+    Eigen::Vector3d firstDeformed_eij = v2->estimate() - v3->estimate();
 
-//     Eigen::Vector3d jacobian = 4.0 * weight * (deformed_eij - ((Ri.matrix()+Rj.matrix()) * undeformed_eij)/2.0);
+    Eigen::Vector3d firstJacobian = 4.0 * weight * (firstDeformed_eij - ((Ri.matrix()+Rj.matrix()) * firstUndeformed_eij)/2.0);
 
-//     _jacobianOplusXi = jacobian; //1x3
-//     _jacobianOplusXj = jacobian;
-// }
+    _jacobianOplusXi = firstJacobian; //1x3
+
+    Eigen::Vector3d secondUndeformed_eij = Xj1world - Xi1world;
+    Eigen::Vector3d secondDeformed_eij = v3->estimate() - v2->estimate();
+
+    Eigen::Vector3d secondJacobian = 4.0 * weight * (secondDeformed_eij - ((Ri.matrix()+Rj.matrix()) * secondUndeformed_eij)/2.0);
+    _jacobianOplusXj = secondJacobian;
+}
 
 EdgeTransformation::EdgeTransformation(){
 }
@@ -324,69 +329,18 @@ bool EdgeTransformation::write(std::ostream& os) const {
     return os.good();
 }
 
-// void EdgeTransformation::linearizeOplus() {
-//     //VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-//     VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-//     VertexSO3* vR = static_cast<VertexSO3*>(_vertices[1]);
-//     g2o::VertexSE3Expmap* vT = static_cast<g2o::VertexSE3Expmap*>(_vertices[2]);
-
-//     Eigen::Vector3d obs(_measurement);
-//     //double obs(_measurement);
-//     Eigen::Vector3d arap_diff;
-
-//     Eigen::Matrix3d R = vR->estimate().matrix();
-//     g2o::SE3Quat T_global =  vT->estimate();
-//     Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
-//     Eigen::Vector3d t = T_global.translation();
-
-//     //diff = weight*((v2->estimate() - Xj2world) - (R * (Xi1world - Xj1world))^2 + (Rg * (v2->estimate() - Xi1world) - t)^2);
-//     arap_diff = (v2->estimate() - Xj2world) - (R * (Xi1world - Xj1world));
-    
-//     Eigen::Vector3d J_v1_3x1_FT = -2 * weight * (arap_diff.transpose() * R).transpose();
-//     Eigen::Vector3d J_v2_3x1_FT = 2 * weight * arap_diff;
-//     Eigen::Matrix3d J_R_mat3_FT = -2 * weight * (arap_diff * Xi1world.transpose());
-
-//     Eigen::Vector3d global_diff = (v2->estimate() - Xi1world);
-//     Eigen::Vector3d transfomrationTerm = Rg * global_diff - t;
-
-//     Eigen::Vector3d J_v1_3x1_ST = -2 * weight * (transfomrationTerm.transpose() * Rg).transpose();
-//     Eigen::Vector3d J_v2_3x1_ST = 2 * weight * (transfomrationTerm.transpose() * Rg).transpose();
-//     Eigen::Matrix3d J_Rg_mat3_ST = -2 * weight * Rg * global_diff * global_diff.transpose();
-//     Eigen::Vector3d J_tg_mat3_ST = -2 * weight * transfomrationTerm;
-
-//     // Eigen::Matrix3d J_v1_3x1_FT;
-//     // J_v1_3x1_FT.setZero();
-//     // Eigen::Vector3d J_v2_3x1_FT;
-//     // J_v2_3x1_FT.setZero();
-//     // Eigen::Matrix3d J_R_mat3_FT;
-//     // J_R_mat3_FT.setZero();
-
-//     // Eigen::Matrix3d J_v1_3x1_ST;
-//     // Eigen::Matrix3d J_v2_3x1_ST;
-//     // Eigen::Matrix3d J_Rg_mat3_ST;
-//     // Eigen::Vector3d J_tg_mat3_ST;
-
-//     // J_v1_3x1_ST.setZero();
-//     // J_v2_3x1_ST.setZero();
-//     // J_Rg_mat3_ST.setZero();
-//     // J_tg_mat3_ST.setZero();
+void EdgeTransformation::linearizeOplus() {
+    // VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+    VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+    //const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[1]);
 
 
-//     Eigen::Matrix3d J_v1_3x1 = J_v1_3x1_FT.asDiagonal().toDenseMatrix() + J_v1_3x1_ST.asDiagonal().toDenseMatrix();
-//     Eigen::Matrix3d J_v2_3x1 = J_v2_3x1_FT.asDiagonal().toDenseMatrix() + J_v2_3x1_ST.asDiagonal().toDenseMatrix();
-//     Eigen::Matrix3d J_R_mat3 = J_R_mat3_FT;
-//     Eigen::Matrix3d J_G_mat3 = J_Rg_mat3_ST + J_tg_mat3_ST.asDiagonal().toDenseMatrix();
+    Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
+    Eigen::Vector3d t = T.translation().cast<double>();
 
-//     Eigen::Matrix<double, 3, 3> J_v1_mat = J_v1_3x1;
-//     Eigen::Matrix<double, 3, 3> J_v2_mat = J_v2_3x1;
-//     Eigen::Matrix<double, 3, 3> J_R = J_R_mat3; 
-//     Eigen::Matrix<double, 3, 6> J_global;// = J_G_mat3; 
-//     J_global.block<3,3>(0,0) = J_Rg_mat3_ST;
-//     J_global.block<3,3>(0,3) = J_tg_mat3_ST.asDiagonal(); 
-//     //J_global.setZero(); 
+    Eigen::Vector3d diffGlobalT = (Rg * v2->estimate() - t) - Xi1world;
 
-//     //_jacobianOplus[0] = J_v1_mat;
-//     _jacobianOplus[0] = J_v2_mat;
-//     _jacobianOplus[1] = J_R;
-//     _jacobianOplus[2] = J_global;
-// }
+    Eigen::Vector3d jacobianP = 2.0 * Rg * diffGlobalT;
+
+    _jacobianOplusXi = jacobianP; //1x3
+}

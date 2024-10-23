@@ -235,6 +235,7 @@ std::vector<Eigen::Vector3d> extractPositions(const std::vector<std::shared_ptr<
         positions.push_back(p3D);
     }
 
+    positions.shrink_to_fit();
     return positions;
 }
 
@@ -509,7 +510,6 @@ void EstimateRotationAndTranslation(const std::vector<Eigen::Vector3d>& v1Positi
     Eigen::Vector3d centroid1 = ComputeCentroid(v1Positions);
     Eigen::Vector3d centroid2 = ComputeCentroid(v2Positions);
 
-    // 2. Center both sets by subtracting their centroids
     std::vector<Eigen::Vector3d> centeredV1(n);
     std::vector<Eigen::Vector3d> centeredV2(n);
     
@@ -518,66 +518,78 @@ void EstimateRotationAndTranslation(const std::vector<Eigen::Vector3d>& v1Positi
         centeredV2[i] = v2Positions[i] - centroid2;
     }
 
-    // 3. Compute the covariance matrix H
     Eigen::Matrix3d H = Eigen::Matrix3d::Zero();
     for (size_t i = 0; i < n; ++i) {
         H += centeredV1[i] * centeredV2[i].transpose();
     }
 
-    // 4. Perform Singular Value Decomposition (SVD) of H
     Eigen::JacobiSVD<Eigen::Matrix3d> svd(H, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::Matrix3d U = svd.matrixU();
     Eigen::Matrix3d V = svd.matrixV();
-
-    // 5. Compute the optimal rotation matrix
+    
     rotation = V * U.transpose();
-
-    // Handle the case where the determinant of the rotation is negative (reflection)
+    
     if (rotation.determinant() < 0) {
-        Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
-        I(2, 2) = -1; // Flip the sign of the last singular value
-        rotation = V * I * U.transpose();
+        U.col(2) *= -1; // Flip the sign of the last column of U
+        rotation = V * U.transpose();
     }
 
-    // 6. Compute the translation vector
-    translation = centroid2 - rotation * centroid1;
+    translation = rotation * centroid2 - centroid1;
 }
 
-Sophus::SO3d computeR(size_t& i, std::unordered_set<int>& jIndexes, 
-                        std::map<size_t, size_t> posIndexes,
+void computeR(std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
                         std::vector<Eigen::Vector3d>& v1Positions, 
-                        std::vector<Eigen::Vector3d>& v2Positions,
-                        std::unordered_map<Eigen::Vector2i,
+                        std::vector<Eigen::Vector3d>& v2Positions, 
+                        std::vector<Sophus::SO3d>& Rs) {
+    auto posIndexes = createVectorMap(mesh->vertices_, v1Positions);
+    std::map<size_t, size_t> invertedPosIndexes;
+    for (const auto& pair : posIndexes) {
+        invertedPosIndexes[pair.second] = pair.first;
+    }
+
+    std::unordered_map<Eigen::Vector2i,
                         double,
-                        open3d::utility::hash_eigen<Eigen::Vector2i>>& edge_weights) {
-    
-    Eigen::Matrix3d Si = Eigen::Matrix3d::Zero();
-    
-    for (int j : jIndexes) {
-        double weight = edge_weights[GetOrderedEdge(i, j)];
+                        open3d::utility::hash_eigen<Eigen::Vector2i>> edge_weights = ComputeEdgeWeightsCot(mesh, 0);
 
-        Eigen::Vector3d pi1 = v1Positions[posIndexes[i]];
-        Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
-        Eigen::Vector3d pi2 = v2Positions[posIndexes[i]];
-        Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
+    for (int posIndex = 0; posIndex < v1Positions.size(); posIndex++){
+        auto it = invertedPosIndexes.find(posIndex);
+        size_t i = 0;
+        if (it != invertedPosIndexes.end()) {
+            i = it->second;
+        } else {
+            continue;
+        }
 
-        Eigen::Vector3d undeformed_eij = pi1 - pj1;
-        Eigen::Vector3d deformed_eij = pi2 - pj2;
+        std::unordered_set<int> jIndexes = mesh->adjacency_list_[i];
 
-        Si += weight * undeformed_eij * deformed_eij.transpose();
+        Eigen::Matrix3d Si = Eigen::Matrix3d::Zero();
+        
+        for (int j : jIndexes) {
+            double weight = edge_weights[GetOrderedEdge(i, j)];
+
+            Eigen::Vector3d pi1 = v1Positions[posIndexes[i]];
+            Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
+            Eigen::Vector3d pi2 = v2Positions[posIndexes[i]];
+            Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
+
+            Eigen::Vector3d undeformed_eij = pi1 - pj1;
+            Eigen::Vector3d deformed_eij = pi2 - pj2;
+
+            Si += weight * undeformed_eij * deformed_eij.transpose();
+        }
+
+        Eigen::JacobiSVD<Eigen::Matrix3d> svd(Si, Eigen::ComputeFullU | Eigen::ComputeFullV);
+        Eigen::Matrix3d U = svd.matrixU();
+        Eigen::Matrix3d V = svd.matrixV();
+        
+        Eigen::Matrix3d Ri = V * U.transpose();
+        
+        if (Ri.determinant() < 0) {
+            U.col(2) *= -1; // Flip the sign of the last column of U
+            Ri = V * U.transpose();
+        }
+        
+        Sophus::SO3d rotation(Ri);
+        Rs[i] = Ri;
     }
-
-    Eigen::JacobiSVD<Eigen::Matrix3d> svd(Si, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    Eigen::Matrix3d U = svd.matrixU();
-    Eigen::Matrix3d V = svd.matrixV();
-    
-    Eigen::Matrix3d Ri = V * U.transpose();
-    
-    if (Ri.determinant() < 0) {
-        U.col(2) *= -1; // Flip the sign of the last column of U
-        Ri = V * U.transpose();
-    }
-    
-    Sophus::SO3d rotation(Ri);
-    return rotation;
 }

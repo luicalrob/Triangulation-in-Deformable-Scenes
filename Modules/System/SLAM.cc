@@ -337,93 +337,87 @@ void SLAM::mapping() {
     measureRelativeErrors();
     measureAbsoluteErrors();
 
-    // correct error
-    if (OptSelection_ == "open3DArap") {
-        arapOpen3DOptimization(pMap_.get());
-    } else if(OptSelection_ == "twoOptimizations") {
-        if (OptWeightsSelection_ == "nlopt") {
-            nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
-            
-            std::vector<double> lb = {NloptGlobalLowerBound_, NloptArapLowerBound_};
-            std::vector<double> ub = {NloptGlobalUpperBound_, NloptArapUpperBound_};
-            opt.set_lower_bounds(lb);
-            opt.set_upper_bounds(ub);
+    for(int i = 1; i <= nOptimizations_; i++){ 
+        // correct error
+        if (OptSelection_ == "open3DArap") {
+            arapOpen3DOptimization(pMap_.get());
+        } else if(OptSelection_ == "twoOptimizations") {
+            if (OptWeightsSelection_ == "nlopt") {
+                nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
+                
+                std::vector<double> lb = {NloptGlobalLowerBound_, NloptArapLowerBound_};
+                std::vector<double> ub = {NloptGlobalUpperBound_, NloptArapUpperBound_};
+                opt.set_lower_bounds(lb);
+                opt.set_upper_bounds(ub);
 
-            OptimizationData optData;
-            optData.pMap = pMap_->clone();
-            optData.nOptIterations = nOptIterations_;
-            optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
+                OptimizationData optData;
+                optData.pMap = pMap_->clone();
+                optData.nOptIterations = nOptIterations_;
+                optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
 
-            opt.set_min_objective(outerObjective, &optData);
+                opt.set_min_objective(outerObjective, &optData);
 
-            std::vector<double> x = {globalBalanceWeight_, arapBalanceWeight_};
+                std::vector<double> x = {globalBalanceWeight_, arapBalanceWeight_};
 
-            opt.set_xtol_rel(NloptRelTolerance_);
-            opt.set_xtol_abs(NloptAbsTolerance_);
-            opt.set_maxeval(NloptnOptimizations_);
+                opt.set_xtol_rel(NloptRelTolerance_);
+                opt.set_xtol_abs(NloptAbsTolerance_);
+                opt.set_maxeval(NloptnOptimizations_);
 
-            double minf;
-            nlopt::result result = opt.optimize(x, minf);
+                double minf;
+                nlopt::result result = opt.optimize(x, minf);
 
-            std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
-            std::cout << "Optimized globalBalanceWeight: " << x[0] << std::endl;
-            std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
-            std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
+                std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
+                std::cout << "Optimized globalBalanceWeight: " << x[0] << std::endl;
+                std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+                std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
 
-            std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+                std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-            arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+                arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+            } else {
+                Eigen::VectorXd x(2);
+                // Initial values
+                x[0] = globalBalanceWeight_;
+                x[1] = arapBalanceWeight_;
+
+                EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_); 
+                
+                Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
+                Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
+                levenbergMarquardt.parameters.ftol = 1e-3;   // Loosen tolerance for function value change
+                levenbergMarquardt.parameters.xtol = 1e-3;   // Loosen tolerance for parameter change
+                levenbergMarquardt.parameters.gtol = 1e-3;   // Loosen tolerance for gradient
+                levenbergMarquardt.parameters.maxfev = 10;  // Maintain maximum number of function evaluations
+                //levenbergMarquardt.parameters.epsilon = 1e-5;
+
+
+                int ret = levenbergMarquardt.minimize(x);
+                std::cout << "Return code: " << ret << std::endl;
+
+                std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
+
+                std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
+                std::cout << "Optimized globalBalanceWeight: " << x[0] << std::endl;
+                std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+
+                std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+
+                arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+            }
         } else {
-            Eigen::VectorXd x(2);
-            // Initial values
-            x[0] = globalBalanceWeight_;
-            x[1] = arapBalanceWeight_;
-
-            EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_); 
-            
-            Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
-            Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
-            levenbergMarquardt.parameters.ftol = 1e-3;   // Loosen tolerance for function value change
-            levenbergMarquardt.parameters.xtol = 1e-3;   // Loosen tolerance for parameter change
-            levenbergMarquardt.parameters.gtol = 1e-3;   // Loosen tolerance for gradient
-            levenbergMarquardt.parameters.maxfev = 10;  // Maintain maximum number of function evaluations
-            //levenbergMarquardt.parameters.epsilon = 1e-5;
-
-
-            int ret = levenbergMarquardt.minimize(x);
-            std::cout << "Return code: " << ret << std::endl;
-
-            std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
-
-            std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
-            std::cout << "Optimized globalBalanceWeight: " << x[0] << std::endl;
-            std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
-
-            std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
-
-            arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+            arapOptimization(pMap_.get(), globalBalanceWeight_, arapBalanceWeight_, nOptIterations_);
         }
-    } else {
-        arapOptimization(pMap_.get(), globalBalanceWeight_, arapBalanceWeight_, nOptIterations_);
+
+        std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;
+
+        mapVisualizer_->update(drawRaysSelection_);
+        mapVisualizer_->updateCurrentPose(Tcw_);
+
+        measureRelativeErrors();
+        measureAbsoluteErrors();
     }
 
     //arapBundleAdjustment(pMap_.get());
-
-    std::cout << "\nBundle adjustment completed... fisrt " << nOptIterations_ << " iterations." << std::endl;
-
-    if (nOptimizations_ > 1) {
-        for(int i = 1; i < nOptimizations_; i++){ 
-            measureRelativeErrors();
-            measureAbsoluteErrors();
-
-            mapVisualizer_->update(drawRaysSelection_);
-            mapVisualizer_->updateCurrentPose(Tcw_);
-
-            arapOptimization(pMap_.get(), globalBalanceWeight_, arapBalanceWeight_, nOptIterations_);
-            
-            std::cout << "\nBundle adjustment completed... other " << nOptIterations_ << " iterations: (" << i + 1 << " time)" << std::endl;
-        }
-    }
 
     // visualize
     mapVisualizer_->update(drawRaysSelection_);

@@ -280,37 +280,6 @@ public:
     //float balance;
 };
 
-
-// class EdgeArapRotations: public g2o::BaseUnaryEdge<1,double,g2o::VertexSE3Expmap>{
-// public:
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-//     EdgeArapRotations();
-
-//     bool read(std::istream& is);
-
-//     bool write(std::ostream& os) const;
-
-//     void computeError()  {
-//         const g2o::VertexSE3Expmap* v1 = static_cast<const g2o::VertexSE3Expmap*>(_vertices[0]);
-//         Eigen::Vector2d obs(_measurement);  //Observed point in the image
-//         g2o::SE3Quat Tcw = v1->estimate();  //Preficted camera pose
-
-//         // Project the 3D point onto the image plane using the camera pose
-//         Eigen::Vector3d p3Dc = Tcw.map(Xworld);
-//         Eigen::Vector2f projected;
-//         pCamera->project(p3Dc.cast<float>(), projected);
-
-//         // Compute the reprojection error
-//         _error = obs  - projected.cast<double>();
-//     }
-
-//     virtual void linearizeOplus();
-
-//     Eigen::Vector3d Xworld;
-//     std::shared_ptr<CameraModel> pCamera;
-// };
-
 class EdgeARAP: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexSBAPointXYZ>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -327,27 +296,28 @@ public:
         const VertexSBAPointXYZ* v3 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
 
         double obs(_measurement);
-        Eigen::Vector3d diffArap;
+        Eigen::Vector3d firstDiffArap;
+        Eigen::Vector3d secondDiffArap;
 
-        diffArap = (v2->estimate() - v3->estimate()) - (Ri * (Xi1world - Xj1world));
+        firstDiffArap = (v2->estimate() - v3->estimate()) - (Ri * (Xi1world - Xj1world));
+        secondDiffArap = (v3->estimate() - v2->estimate()) - (Rj * (Xj1world -Xi1world));
 
-        double energyArap = diffArap.norm();
-        double totalEnergy = weight * energyArap;
+        double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm());
 
-        _error[0] = totalEnergy - obs;   
+        _error[0] = energyArap - obs;   
     }
 
-    // virtual void linearizeOplus();
+    virtual void linearizeOplus();
 
     Sophus::SO3d Ri;
-    //Sophus::SO3d Rj;
+    Sophus::SO3d Rj;
     Eigen::Vector3d Xi1world;
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;
     double weight;
 };
 
-class EdgeTransformation: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, g2o::VertexSE3Expmap>{
+class EdgeTransformation: public  g2o::BaseUnaryEdge<1, double, VertexSBAPointXYZ>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -358,29 +328,25 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        ///const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[1]);
 
         double obs(_measurement);
-        Eigen::Vector3d diffArap;
         Eigen::Vector3d diffGlobalT;
 
-        g2o::SE3Quat T_global =  vT->estimate();
-        Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
-        Eigen::Vector3d t = T_global.translation();
+        Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
+        Eigen::Vector3d t = T.translation().cast<double>();
 
-        diffGlobalT = (Rg * (v2->estimate() - Xi1world) - t);
+        diffGlobalT = (Rg * v2->estimate() - t) - Xi1world;
 
-        double energyGlobalT = diffGlobalT.norm();
-        double totalEnergy = energyGlobalT;
+        double energyGlobalT = diffGlobalT.squaredNorm();
 
-        _error[0] = totalEnergy - obs;   
+        _error[0] = energyGlobalT - obs;   
     }
 
-    // virtual void linearizeOplus();
+    virtual void linearizeOplus();
 
     Eigen::Vector3d Xi1world;
+    Sophus::SE3f T;
     double weight;
 };
 
