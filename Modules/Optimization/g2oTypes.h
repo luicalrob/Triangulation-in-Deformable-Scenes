@@ -280,7 +280,7 @@ public:
     //float balance;
 };
 
-class EdgeARAP: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexSBAPointXYZ>{
+class EdgeARAP: public  g2o::BaseMultiEdge<1, double>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -291,33 +291,31 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        ///const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSBAPointXYZ* v3 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        const VertexSBAPointXYZ* v1i = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2i = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        const VertexSBAPointXYZ* v1j = static_cast<const VertexSBAPointXYZ*>(_vertices[2]);
+        const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
 
         double obs(_measurement);
         Eigen::Vector3d firstDiffArap;
         Eigen::Vector3d secondDiffArap;
 
-        firstDiffArap = (v2->estimate() - v3->estimate()) - (Ri * (Xi1world - Xj1world));
-        secondDiffArap = (v3->estimate() - v2->estimate()) - (Rj * (Xj1world -Xi1world));
+        firstDiffArap = (v2i->estimate() - v2j->estimate()) - (Ri * (v1i->estimate() - v1j->estimate()));
+        secondDiffArap = (v2j->estimate() - v2i->estimate()) - (Rj * (v1j->estimate() - v1i->estimate()));
 
         double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm());
 
         _error[0] = energyArap - obs;   
     }
 
-    virtual void linearizeOplus();
+    // virtual void linearizeOplus();
 
     Sophus::SO3d Ri;
     Sophus::SO3d Rj;
-    Eigen::Vector3d Xi1world;
-    Eigen::Vector3d Xj1world;
-    Eigen::Vector3d Xj2world;
     double weight;
 };
 
-class EdgeTransformation: public  g2o::BaseUnaryEdge<1, double, VertexSBAPointXYZ>{
+class EdgeTransformation: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexSBAPointXYZ>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -328,7 +326,8 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
 
         double obs(_measurement);
         Eigen::Vector3d diffGlobalT;
@@ -336,16 +335,15 @@ public:
         Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
         Eigen::Vector3d t = T.translation().cast<double>();
 
-        diffGlobalT = (Rg * v2->estimate() - t) - Xi1world;
+        diffGlobalT = (Rg * v2->estimate() - t) - v1->estimate();
 
         double energyGlobalT = diffGlobalT.squaredNorm();
 
         _error[0] = energyGlobalT - obs;   
     }
 
-    virtual void linearizeOplus();
+    // virtual void linearizeOplus();
 
-    Eigen::Vector3d Xi1world;
     Sophus::SE3f T;
     double weight;
 };

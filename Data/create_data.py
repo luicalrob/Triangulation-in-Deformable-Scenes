@@ -56,7 +56,7 @@ def rotate_points(points, angle_x, angle_y, angle_z):
 def save_points(filename, points):
     np.savetxt(filename, points, delimiter=' ')
 
-num_points = 200  # Number of points in the dataset
+num_points = 120  # Number of points in the dataset
 
 # Original points position
 x_mean, x_std = 0.0, 0.2

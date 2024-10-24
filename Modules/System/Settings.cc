@@ -97,6 +97,7 @@ Settings::Settings(const std::string& configFile) {
     SimulatedRepError_ = fSettings["Keypoints.RepError"];
     DecimalsRepError_ = fSettings["Keypoints.decimalsApproximation"];
 
+    OptRepWeight_ = fSettings["Optimization.rep"];
     OptArapWeight_ = fSettings["Optimization.arap"];
     OptGlobalWeight_ = fSettings["Optimization.global"];
 
@@ -110,6 +111,8 @@ Settings::Settings(const std::string& configFile) {
     NloptnOptimizations_ = fSettings["Optimization.nlopt.numberOfIterations"];
     NloptRelTolerance_ = fSettings["Optimization.nlopt.relTolerance"];
     NloptAbsTolerance_ = fSettings["Optimization.nlopt.absTolerance"];
+    NloptRepLowerBound_ = fSettings["Optimization.nlopt.rep.lowerBound"];
+    NloptRepUpperBound_ = fSettings["Optimization.nlopt.rep.upperBound"];
     NloptGlobalLowerBound_ = fSettings["Optimization.nlopt.global.lowerBound"];
     NloptGlobalUpperBound_ = fSettings["Optimization.nlopt.global.upperBound"];
     NloptArapLowerBound_ = fSettings["Optimization.nlopt.arap.lowerBound"];
@@ -250,6 +253,10 @@ int Settings::getDecimalsRepError(){
     return DecimalsRepError_;
 }
 
+double Settings::getOptRepWeight(){
+    return OptRepWeight_;
+}
+
 double Settings::getOptArapWeight(){
     return OptArapWeight_;
 }
@@ -288,6 +295,14 @@ double Settings::getNloptRelTolerance(){
 
 double Settings::getNloptAbsTolerance(){
     return NloptAbsTolerance_;
+}
+
+double Settings::getNloptRepLowerBound(){
+    return NloptRepLowerBound_;
+}
+
+double Settings::getNloptRepUpperBound(){
+    return NloptRepUpperBound_;
 }
 
 double Settings::getNloptGlobalLowerBound(){

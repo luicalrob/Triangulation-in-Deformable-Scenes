@@ -270,6 +270,7 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 
 EdgeARAP::EdgeARAP(){
+    resize(4);
 }
 
 bool EdgeARAP::read(std::istream& is) {
@@ -290,24 +291,30 @@ bool EdgeARAP::write(std::ostream& os) const {
 }
 
 
-void EdgeARAP::linearizeOplus() {
-    //VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-    VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-    VertexSBAPointXYZ* v3 = static_cast<VertexSBAPointXYZ*>(_vertices[1]);
+// void EdgeARAP::linearizeOplus() {
+//     const VertexSBAPointXYZ* v1i = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+//     const VertexSBAPointXYZ* v2i = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+//     const VertexSBAPointXYZ* v1j = static_cast<const VertexSBAPointXYZ*>(_vertices[2]);
+//     const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
 
-    Eigen::Vector3d firstUndeformed_eij = Xi1world - Xj1world;
-    Eigen::Vector3d firstDeformed_eij = v2->estimate() - v3->estimate();
+//     Eigen::Vector3d firstUndeformed_eij = v1i->estimate() - v1j->estimate();
+//     Eigen::Vector3d firstDeformed_eij = v2i->estimate() - v2j->estimate();
 
-    Eigen::Vector3d firstJacobian = 4.0 * weight * (firstDeformed_eij - ((Ri.matrix()+Rj.matrix()) * firstUndeformed_eij)/2.0);
+//     Eigen::Vector3d firstJacobian = 4.0 * weight * (firstDeformed_eij - ((Ri.matrix()+Rj.matrix()) * firstUndeformed_eij)/2.0);
+//     _jacobianOplus[0] = firstJacobian; //1x3
 
-    _jacobianOplusXi = firstJacobian; //1x3
+//     Eigen::Vector3d secondJacobian = 4.0 * weight * (firstDeformed_eij - ((Ri.matrix()+Rj.matrix()) * firstUndeformed_eij)/2.0);
+//     _jacobianOplus[1] = secondJacobian; //1x3
 
-    Eigen::Vector3d secondUndeformed_eij = Xj1world - Xi1world;
-    Eigen::Vector3d secondDeformed_eij = v3->estimate() - v2->estimate();
+//     Eigen::Vector3d secondUndeformed_eij = v1j->estimate() - v1i->estimate();
+//     Eigen::Vector3d secondDeformed_eij = v2j->estimate() - v2i->estimate();
 
-    Eigen::Vector3d secondJacobian = 4.0 * weight * (secondDeformed_eij - ((Ri.matrix()+Rj.matrix()) * secondUndeformed_eij)/2.0);
-    _jacobianOplusXj = secondJacobian;
-}
+//     Eigen::Vector3d thirdJacobian = 4.0 * weight * (secondDeformed_eij - ((Ri.matrix()+Rj.matrix()) * secondUndeformed_eij)/2.0);
+//     _jacobianOplus[2] = thirdJacobian;
+
+//     Eigen::Vector3d fourthJacobian = 4.0 * weight * (secondDeformed_eij - ((Ri.matrix()+Rj.matrix()) * secondUndeformed_eij)/2.0);
+//     _jacobianOplus[3] = fourthJacobian;
+// }
 
 EdgeTransformation::EdgeTransformation(){
 }
@@ -329,18 +336,17 @@ bool EdgeTransformation::write(std::ostream& os) const {
     return os.good();
 }
 
-void EdgeTransformation::linearizeOplus() {
-    // VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-    VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-    //const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[1]);
+// void EdgeTransformation::linearizeOplus() {
+//     VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+//     VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[1]);
+//     //const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[1]);
 
 
-    Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
-    Eigen::Vector3d t = T.translation().cast<double>();
+//     Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
+//     Eigen::Vector3d t = T.translation().cast<double>();
 
-    Eigen::Vector3d diffGlobalT = (Rg * v2->estimate() - t) - Xi1world;
+//     Eigen::Vector3d diffGlobalT = (Rg * v2->estimate() - t) - v1->estimate();
 
-    Eigen::Vector3d jacobianP = 2.0 * Rg * diffGlobalT;
-
-    _jacobianOplusXi = jacobianP; //1x3
-}
+//     _jacobianOplusXi = 2.0 * Rg * diffGlobalT; //1x3
+//     _jacobianOplusXj = -2.0 * diffGlobalT; //1x3
+// }

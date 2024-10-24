@@ -39,17 +39,17 @@ struct EigenOptimizationFunctor : Functor<double> {
     int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const {   
         std::shared_ptr<Map> pMapCopy = pMap->clone();
 
-        std::cout << "Current x values: " << x[0] << ", " << x[1] << std::endl;
+        std::cout << "Current x values: " << x[0] << ", " << x[1] << ", " << x[2] << std::endl;
         
-        arapOptimization(pMapCopy.get(), x(0), x(1), nIterations);
+        arapOptimization(pMapCopy.get(), x(0), x(1), x(2), nIterations);
         
         PixelsError pixelsErrors;
         calculatePixelsStandDev(pMapCopy, pixelsErrors);
         std::cout << "stanDeviation1: " << pixelsErrors.desvc1 << "\n";
         std::cout << "stanDeviation2: " << pixelsErrors.desvc2 << "\n";
 
-        double errorC1 = std::pow(repErrorStanDesv - pixelsErrors.desvc1, 2);
-        double errorC2 = std::pow(repErrorStanDesv - pixelsErrors.desvc2, 2);
+        double errorC1 = std::pow(std::log(pixelsErrors.desvc1), 2);
+        double errorC2 = std::pow(std::log(pixelsErrors.desvc2), 2);
 
         std::cout << "errorC1: " << errorC1 << "\n";
         std::cout << "errorC2: " << errorC2 << "\n";
