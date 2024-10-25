@@ -467,6 +467,9 @@ void SLAM::measureAbsoluteErrors() {
     float total_error_original = 0.0f;
     float total_error_moved = 0.0f;
     float total_error = 0.0f;
+    float total_squared_error_original = 0.0f;
+    float total_squared_error_moved = 0.0f;
+    float total_squared_error = 0.0f;
     int point_count = insertedIndexes_.size()*2;
 
     for(size_t i = 0, j = 0; j < insertedIndexes_.size(); i += 2, j++) {
@@ -484,10 +487,18 @@ void SLAM::measureAbsoluteErrors() {
         float error_magnitude_movement = movement.norm();
         float error_magnitude_original = original_error.norm();
         float error_magnitude_moved = moved_error.norm();
+
+        float squared_error_magnitude_original = original_error.squaredNorm();
+        float squared_error_magnitude_moved = moved_error.squaredNorm();
+        
         total_movement += error_magnitude_movement;
         total_error_original += error_magnitude_original;
         total_error_moved += error_magnitude_moved;
         total_error += error_magnitude_moved + error_magnitude_original;
+        
+        total_squared_error_original += squared_error_magnitude_original;
+        total_squared_error_moved += squared_error_magnitude_moved;
+        total_squared_error += squared_error_magnitude_original + squared_error_magnitude_moved;
 
         // std::cout << "\nError for point: " << mapPoint1->getId() << " and " << mapPoint2->getId() << "\n";
         // std::cout << "Position " << insertedIndexes_[j] << "\n";
@@ -513,7 +524,9 @@ void SLAM::measureAbsoluteErrors() {
         //std::cout << "Average error in MOVED 3D: " << average_error_moved << std::endl;
         float average_error = total_error / point_count;
         //std::cout << "\nTotal error in 3D: " << total_error << std::endl;
-        std::cout << "Average error in 3D: " << average_error << "\n" << std::endl;
+        float rmse = std::sqrt(total_squared_error / point_count);
+        std::cout << "Average error in 3D: " << average_error << std::endl;
+        std::cout << "RMSE in 3D: " << rmse << "\n" << std::endl;
     } else {
         std::cout << "No points to compare." << std::endl;
     }

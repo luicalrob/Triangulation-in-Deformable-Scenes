@@ -644,16 +644,9 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
 
                 if (jIndexes.empty()) continue;
 
+                double distancesInvTipDesv = getInvUncertainty(mesh, v1Positions, v2Positions, i);
+
                 for (int j : jIndexes) {
-
-                    // Eigen::Vector3d distancesInvTipDesv;
-                    // distancesInvTipDesv = getInvUncertainty(mpIndex, jIndexes, posIndexes, v1Positions, v2Positions);
-                    // // double scalarInformation = distancesInvTipDesv.mean(); // or use another method to combine the values
-                    // // Eigen::Matrix<double, 1, 1> informationMatrix;
-                    // // informationMatrix(0, 0) = scalarInformation * (1.0/arapBalanceWeight);
-
-                    // Eigen::Matrix3d informationMatrix = distancesInvTipDesv.asDiagonal() * (1.0/arapBalanceWeight);
-
                     MapPoint_ pMPj1 = v1MPs[posIndexes[j]];
                     MapPoint_ pMPj2 = v2MPs[posIndexes[j]];
                     if (!pMPj1) continue;
@@ -706,7 +699,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                     eArap->weight = edge_weights[GetOrderedEdge(i, j)];
 
                     Eigen::Matrix<double, 1, 1> informationMatrixArap;
-                    informationMatrixArap(0, 0) = arapBalanceWeight * std::pow(mesh->triangles_.size(), 2);
+                    informationMatrixArap(0, 0) = arapBalanceWeight * distancesInvTipDesv * std::pow(mesh->triangles_.size(), 2);
 
                     eArap->setInformation(informationMatrixArap);
                     double measurementArap = 0.0;
@@ -889,47 +882,33 @@ void arapOpen3DOptimization(Map* pMap){
     }
 }
 
-Eigen::Vector3d getInvUncertainty(int mpIndex, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions){
+double getInvUncertainty(std::shared_ptr<open3d::geometry::TriangleMesh> mesh, 
+                        std::vector<Eigen::Vector3d> v1Positions, 
+                        std::vector<Eigen::Vector3d> v2Positions,
+                        size_t i){
+    auto posIndexes = createVectorMap(mesh->vertices_, v1Positions);
 
-    std::vector<Eigen::Vector3d> errors;
-    Eigen::Vector3d meanError = Eigen::Vector3d::Zero();
-    size_t validPairs = 0;
+    std::unordered_map<Eigen::Vector2i,
+                        double,
+                        open3d::utility::hash_eigen<Eigen::Vector2i>> edge_weights = ComputeEdgeWeightsCot(mesh, 0);
 
-    for (int j : adjacencyList) {
-        Eigen::Vector3d pi1 = v1Positions[mpIndex];
+    double Si = 0.0;
+
+    std::unordered_set<int> jIndexes = mesh->adjacency_list_[i];
+    
+    for (int j : jIndexes) {
+        double weight = edge_weights[GetOrderedEdge(i, j)];
+
+        Eigen::Vector3d pi1 = v1Positions[posIndexes[i]];
         Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
-        Eigen::Vector3d pi2 = v2Positions[mpIndex];
+        Eigen::Vector3d pi2 = v2Positions[posIndexes[i]];
         Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
 
-        if (!pi1.allFinite() || !pj1.allFinite() || !pi2.allFinite() || !pj2.allFinite()) continue;
+        Eigen::Vector3d undeformed_eij = pi1 - pj1;
+        Eigen::Vector3d deformed_eij = pi2 - pj2;
 
-        Eigen::Vector3d d1 = pi1 - pj1;
-        Eigen::Vector3d d2 = pi2 - pj2;
-
-        Eigen::Vector3d diff = d1 - d2;
-        
-        errors.push_back(diff);      
-        meanError += diff;
-        validPairs++;
+        Si += weight * undeformed_eij.transpose() * deformed_eij;
     }
 
-    if (validPairs > 1) {
-        meanError /= static_cast<double>(validPairs);
-
-        // Calculate the sum of the differences squared
-        Eigen::Vector3d sumSquaredDiffs = Eigen::Vector3d::Zero();
-        for (const Eigen::Vector3d& error : errors) {
-            Eigen::Vector3d diffFromMean = error - meanError;
-            sumSquaredDiffs += diffFromMean.cwiseProduct(diffFromMean); // (e_i - e_mean)^2
-        }
-
-        Eigen::Vector3d variance = sumSquaredDiffs / static_cast<double>(validPairs - 1);
-
-        Eigen::Vector3d stdDev = variance.cwiseSqrt();
-        
-        return stdDev.cwiseInverse();
-    } else {
-        return Eigen::Vector3d::Constant(std::numeric_limits<double>::infinity());
-    }
-        size_t meshIndex1 = 0;
+    return Si;
 }

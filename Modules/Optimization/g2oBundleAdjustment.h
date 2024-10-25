@@ -70,6 +70,9 @@ void arapOpen3DOptimization(Map* pMap);
 /*
  * Compute the tipical desviation of the distances between two objects given two mappoints to compare
  */
-Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions);
+double getInvUncertainty(std::shared_ptr<open3d::geometry::TriangleMesh> mesh, 
+                        std::vector<Eigen::Vector3d> v1Positions, 
+                        std::vector<Eigen::Vector3d> v2Positions,
+                        size_t i);
 
 #endif //SLAM_G2OBUNDLEADJUSTMENT_H
