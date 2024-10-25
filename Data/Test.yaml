@@ -50,9 +50,9 @@ Triangulation.minCos: 0.9998
 Camera.FirstPose.x: 0.0
 Camera.FirstPose.y: 0.0
 Camera.FirstPose.z: 0.0
-Camera.SecondPose.x: 0.30
-Camera.SecondPose.y: 0.02
-Camera.SecondPose.z: -0.08
+Camera.SecondPose.x: 0.14
+Camera.SecondPose.y: 0.01
+Camera.SecondPose.z: 0.06
 
 #Simulated typical desviation reprojection error for keypoints
 Keypoints.RepError: 1.0
@@ -65,8 +65,8 @@ Keypoints.decimalsApproximation: 1
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 30000
-Optimization.arap: 525000
+Optimization.global: 100
+Optimization.arap: 400000
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
@@ -75,7 +75,7 @@ Optimization.numberOfIterations: 50
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 20
+Optimization.nlopt.numberOfIterations: 35
 Optimization.nlopt.relTolerance: 1.5e-4
 Optimization.nlopt.absTolerance: 1.5e-4
 Optimization.nlopt.rep.lowerBound: 1
@@ -95,4 +95,4 @@ Triangulation.selection: "InRays" # InRays TwoPoints Projection ORBSLAM
 
 # Visualization
 MapVisualizer.drawRays: "false"
-Visualizer.showSolution: "false"
+Visualizer.showSolution: "true"

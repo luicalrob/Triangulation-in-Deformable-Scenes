@@ -422,9 +422,6 @@ void SLAM::mapping() {
 
         mapVisualizer_->update(drawRaysSelection_);
         mapVisualizer_->updateCurrentPose(Tcw_);
-
-        measureRelativeErrors();
-        measureAbsoluteErrors();
     }
 
     //arapBundleAdjustment(pMap_.get());

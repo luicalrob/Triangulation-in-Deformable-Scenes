@@ -146,15 +146,14 @@ void triangulateTwoPoints(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2
 void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
                         Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2, Eigen::Matrix3f& K1, Eigen::Matrix3f& K2,
                         Eigen::Vector3f& point1, Eigen::Vector3f& point2) {
-    Eigen::MatrixXf A(4, 4);
-    
     Eigen::Matrix<float, 3, 4> P1 = computeProjection(Tcw1, K1);
-    Eigen::Matrix<float, 3, 4> P2 = computeProjection(Tcw2, K2);
+    Eigen::Matrix<float, 3, 4> P2 = computeProjection(Tcw2, K2);    
 
-    A.row(0) = P1.row(2) * xn1(0) - P1.row(0);
-    A.row(1) = P1.row(2) * xn1(1) - P1.row(1);
-    A.row(2) = P2.row(2) * xn2(0) - P2.row(0);
-    A.row(3) = P2.row(2) * xn2(1) - P2.row(1);
+    Eigen::MatrixXf A(4, 4);
+    A.row(0) = xn1(0) * P1.row(2) - P1.row(0);
+    A.row(1) = xn1(1) * P1.row(2) - P1.row(1);
+    A.row(2) = xn2(0) * P2.row(2) - P2.row(0);
+    A.row(3) = xn2(1) * P2.row(2) - P2.row(1);
 
     Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeFullV);
     Eigen::Vector4f x3D = svd.matrixV().col(3);
@@ -162,6 +161,9 @@ void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn
     if (x3D(3) != 0) {
         point1 = x3D.head<3>() / x3D(3);
         point2 = x3D.head<3>() / x3D(3);
+
+        // point1 = Tcw1.inverse() * point1;
+        // point2 = Tcw2.inverse() * point2;
     } else {
         point1.setZero();
         point2.setZero();

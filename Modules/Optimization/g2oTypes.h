@@ -315,7 +315,7 @@ public:
     double weight;
 };
 
-class EdgeTransformation: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexSBAPointXYZ>{
+class EdgeTransformation: public  g2o::BaseMultiEdge<1, double>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -328,12 +328,17 @@ public:
     void computeError() {
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[2]);
 
         double obs(_measurement);
         Eigen::Vector3d diffGlobalT;
 
-        Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
-        Eigen::Vector3d t = T.translation().cast<double>();
+        // Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
+        // Eigen::Vector3d t = T.translation().cast<double>();
+
+        g2o::SE3Quat T_global =  vT->estimate();
+        Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
+        Eigen::Vector3d t = T_global.translation();
 
         diffGlobalT = (Rg * v2->estimate() - t) - v1->estimate();
 
@@ -344,7 +349,7 @@ public:
 
     // virtual void linearizeOplus();
 
-    Sophus::SE3f T;
+    // Sophus::SE3f T;
     double weight;
 };
 

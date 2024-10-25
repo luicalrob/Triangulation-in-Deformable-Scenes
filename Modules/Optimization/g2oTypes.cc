@@ -317,6 +317,7 @@ bool EdgeARAP::write(std::ostream& os) const {
 // }
 
 EdgeTransformation::EdgeTransformation(){
+    resize(3);
 }
 
 bool EdgeTransformation::read(std::istream& is) {
