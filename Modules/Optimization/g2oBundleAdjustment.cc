@@ -510,9 +510,11 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
 
             if (T_global.translation().norm() == 0 &&  T_global.rotationMatrix().isApprox(Eigen::Matrix3f::Identity())) {
                 // std::cout << "Estimate initial Rotation and Translation \n";
-                EstimateRotationAndTranslation(v1Positions, v2Positions, rotation, translation);
+                // EstimateRotationAndTranslation(v1Positions, v2Positions, rotation, translation);
                 // std::cout << "Rotation: " << rotation << "\n";
                 // std::cout << "translation: " << translation << "\n";
+                rotation.setIdentity();
+                translation.setZero();
                 T_global = Sophus::SE3f(rotation.cast<float>(), translation.cast<float>());
             }
 
@@ -536,14 +538,14 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
             // visualizer.Run();
             // visualizer.DestroyVisualizerWindow();
 
-            // TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
+            TransformationMatrix_ T = std::make_shared<Sophus::SE3f>(T_global);
 
-            // g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-            // vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
-            // vSE3->setId(currId);
-            // optimizer.addVertex(vSE3);
-            // mTGlobalId[T] = currId;
-            // currId++;
+            g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+            vSE3->setEstimate(g2o::SE3Quat(T_global.unit_quaternion().cast<double>(),T_global.translation().cast<double>()));
+            vSE3->setId(currId);
+            optimizer.addVertex(vSE3);
+            mTGlobalId[T] = currId;
+            currId++;
 
             for (size_t mpIndex = 0; mpIndex < v1MPs.size(); mpIndex++) {
                 MapPoint_ pMPi1 = v1MPs[mpIndex];
@@ -642,6 +644,21 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
 
                 if (jIndexes.empty()) continue;
 
+                EdgeTransformation* eTi = new EdgeTransformation();
+
+                //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                eTi->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                eTi->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
+                eTi->Xi1world =  mesh->vertices_[i];
+                
+                Eigen::Matrix<double, 1, 1> informationMatrixTi;
+                informationMatrixTi(0, 0) = globalBalanceWeight / std::pow(mesh->vertices_.size(), 2);
+                eTi->setInformation(informationMatrixTi);
+                
+                double measurementTi = 0.0;
+                eTi->setMeasurement(measurementTi);
+                optimizer.addEdge(eTi);
+
                 for (int j : jIndexes) {
 
                     // Eigen::Vector3d distancesInvTipDesv;
@@ -696,39 +713,6 @@ void arapOptimization(Map* pMap, double globalBalanceWeight, double arapBalanceW
                     eArap->setMeasurement(measurementArap);
 
                     optimizer.addEdge(eArap);
-
-
-                    EdgeTransformation* eTi = new EdgeTransformation();
-
-                    //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    eTi->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    //eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
-                    eTi->Xi1world =  mesh->vertices_[i];
-                    
-                    Eigen::Matrix<double, 1, 1> informationMatrixTi;
-                    informationMatrixTi(0, 0) = globalBalanceWeight / std::pow(mesh->vertices_.size(), 2);
-                    eTi->setInformation(informationMatrixTi);
-                    
-                    double measurementTi = 0.0;
-                    eTi->setMeasurement(measurementTi);
-                    optimizer.addEdge(eTi);
-
-
-                    EdgeTransformation* eTj = new EdgeTransformation();
-
-                    //eT->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    eTj->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[jPointToOptimize])));
-                    //eT->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
-                    eTj->Xi1world = v1Positions[posIndexes[j]];
-                    eTj->T = T_global;
-                    
-                    Eigen::Matrix<double, 1, 1> informationMatrixTj;
-                    informationMatrixTj(0, 0) = globalBalanceWeight / std::pow(mesh->vertices_.size(), 2);
-                    eTj->setInformation(informationMatrixTj);
-                    
-                    double measurementTj = 0.0;
-                    eTj->setMeasurement(measurementTj);
-                    optimizer.addEdge(eTj);
                 }
             }
         }

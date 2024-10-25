@@ -329,18 +329,18 @@ bool EdgeTransformation::write(std::ostream& os) const {
     return os.good();
 }
 
-void EdgeTransformation::linearizeOplus() {
-    // VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-    VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-    //const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[1]);
+// void EdgeTransformation::linearizeOplus() {
+//     // VertexSBAPointXYZ* v1 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+//     VertexSBAPointXYZ* v2 = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
+//     //const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[1]);
 
 
-    Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
-    Eigen::Vector3d t = T.translation().cast<double>();
+//     Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
+//     Eigen::Vector3d t = T.translation().cast<double>();
 
-    Eigen::Vector3d diffGlobalT = (Rg * v2->estimate() - t) - Xi1world;
+//     Eigen::Vector3d diffGlobalT = (Rg * v2->estimate() - t) - Xi1world;
 
-    Eigen::Vector3d jacobianP = 2.0 * Rg * diffGlobalT;
+//     Eigen::Vector3d jacobianP = 2.0 * Rg * diffGlobalT;
 
-    _jacobianOplusXi = jacobianP; //1x3
-}
+//     _jacobianOplusXi = jacobianP; //1x3
+// }
