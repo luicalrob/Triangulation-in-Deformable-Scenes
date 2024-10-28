@@ -48,8 +48,8 @@ int main(){
         SLAM.mapping();
     }
 
-    // SLAM.measureRelativeErrors();
-    // SLAM.measureAbsoluteErrors();
+    SLAM.measureRelativeErrors();
+    SLAM.measureAbsoluteErrors();
 
     return 0;
 }
