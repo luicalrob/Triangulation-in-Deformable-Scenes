@@ -300,11 +300,11 @@ public:
         Eigen::Vector3d firstDiffArap;
         Eigen::Vector3d secondDiffArap;
 
-        firstDiffArap = (v2i->estimate() - v2j->estimate()) - (Ri * (v1i->estimate() - v1j->estimate()));
-        secondDiffArap = (v2j->estimate() - v2i->estimate()) - (Rj * (v1j->estimate() - v1i->estimate()));
+        firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
+        secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
 
         double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm());
-
+        
         _error[0] = energyArap - obs;   
     }
 
@@ -313,6 +313,8 @@ public:
     Sophus::SO3d Ri;
     Sophus::SO3d Rj;
     double weight;
+    double alpha;   // Bulk deformation parameter
+    double beta;    // Shear deformation parameter
 };
 
 class EdgeTransformation: public  g2o::BaseMultiEdge<1, double>{

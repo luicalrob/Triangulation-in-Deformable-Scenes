@@ -16,8 +16,10 @@ double outerObjective(unsigned int n, const double* x, double* grad, void* data)
     std::shared_ptr<Map> pMapCopy = pData->pMap->clone();
     int& nOptIterations = pData->nOptIterations;
     float repErrorStanDesv = pData->repErrorStanDesv;
+    double alpha = pData->alpha;
+    double beta = pData->beta;
 
-    arapOptimization(pMapCopy.get(), repBalanceWeight, globalBalanceWeight, arapBalanceWeight, nOptIterations);
+    arapOptimization(pMapCopy.get(), repBalanceWeight, globalBalanceWeight, arapBalanceWeight, alpha, beta, nOptIterations);
 
     PixelsError pixelsErrors;
     calculatePixelsStandDev(pMapCopy, pixelsErrors);

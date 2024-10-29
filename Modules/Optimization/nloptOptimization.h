@@ -19,6 +19,8 @@ struct OptimizationData {
     std::shared_ptr<Map> pMap;
     int nOptIterations;
     float repErrorStanDesv;
+    double alpha;
+    double beta;
 };
 
 //double outerObjective(const std::vector<double>& x, std::vector<double>& grad, void* data);

@@ -93,8 +93,6 @@ void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
     // point, rayOrigin, rayDir
     x3D_1 = x3D_w;
     x3D_2 = x3D_w_test;
-    // x3D_1 = findClosestPointOnRay(x3D_w, T1w.translation(), T1w.rotationMatrix() * xn1);
-    // x3D_2 = findClosestPointOnRay(x3D_w_test, T2w.translation(), T2w.rotationMatrix() * xn2);
 }
 
 void triangulateInRaysNearPrevSolution(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
@@ -141,6 +139,46 @@ void triangulateTwoPoints(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2
 
     x3D_1 = T2w.inverse() * p3D1;
     x3D_2 = T2w.inverse() * p3D1;
+}
+
+void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
+                 const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2) {
+    // Data definition using the paper variable naming.
+    Eigen::Vector3f f0 = xn1;
+    Eigen::Vector3f f1 = xn2;
+
+    Eigen::Vector3f f0_hat = xn1.normalized();
+    Eigen::Vector3f f1_hat = xn2.normalized();
+
+    Sophus::SE3f T21 = T2w * T1w.inverse();
+    Eigen::Vector3f t = T21.translation();
+    Eigen::Matrix3f R = T21.rotationMatrix();
+
+    // Depth computation.
+    Eigen::Vector3f p = (R * f0_hat).cross(f1_hat);
+    Eigen::Vector3f q = (R * f0_hat).cross(t);
+    Eigen::Vector3f r = f1_hat.cross(t);
+
+    float lambda0 = r.norm() / p.norm();
+    float lambda1 = q.norm() / p.norm();
+
+    // Adequacy test.
+    Eigen::Vector3f point0 = lambda0 * R * f0_hat;
+    Eigen::Vector3f point1 = lambda1 * f1_hat;
+
+    float v1 = (t + point0 + point1).squaredNorm();
+    float v2 = (t - point0 - point1).squaredNorm();
+    float v3 = (t - point0 + point1).squaredNorm();
+
+    float minv = fmin(v1,fmin(v2,v3));
+
+    // Inverse Depth Weighted MidPoint.
+    Eigen::Vector3f x1 = q.norm() / (q.norm() + r.norm()) * (t + r.norm() / p.norm() * (R * f0_hat + f1_hat));
+
+    // x3D_1 = T2w.inverse() * x1;
+    // x3D_2 = T2w.inverse() * x1;
+    x3D_1 = T2w.inverse() * (t + point0);
+    x3D_2 = T2w.inverse() * point1;
 }
 
 void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,

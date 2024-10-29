@@ -79,6 +79,8 @@ public:
     double getOptRepWeight();
     double getOptArapWeight();
     double getOptGlobalWeight();
+    double getOptAlphaWeight();
+    double getOptBetaWeight();
 
     std::string getOptSelection();
     std::string getOptWeightsSelection();
@@ -135,6 +137,8 @@ private:
     double OptRepWeight_;
     double OptArapWeight_;
     double OptGlobalWeight_;
+    double OptAlphaWeight_;
+    double OptBetaWeight_;
 
     std::string OptSelection_;
     std::string OptWeightsSelection_;

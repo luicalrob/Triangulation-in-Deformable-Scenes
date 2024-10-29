@@ -437,7 +437,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     }
 }
 
-void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWeight, double arapBalanceWeight, int nOptIterations){
+void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWeight, double arapBalanceWeight, double alphaWeight, double betaWeight, int nOptIterations){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
     unordered_map<RotationMatrix_,size_t> mRotId;
@@ -713,6 +713,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                     eArap->Ri = Rs[i];
                     eArap->Rj = Rs[j];
                     eArap->weight = edge_weights[GetOrderedEdge(i, j)];
+                    eArap->alpha = alphaWeight;
+                    eArap->beta = betaWeight;
 
                     Eigen::Matrix<double, 1, 1> informationMatrixArap;
                     informationMatrixArap(0, 0) = arapBalanceWeight * std::pow(mesh->triangles_.size(), 2); // * distancesInvTipDesv;

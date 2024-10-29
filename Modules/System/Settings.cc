@@ -100,6 +100,8 @@ Settings::Settings(const std::string& configFile) {
     OptRepWeight_ = fSettings["Optimization.rep"];
     OptArapWeight_ = fSettings["Optimization.arap"];
     OptGlobalWeight_ = fSettings["Optimization.global"];
+    OptAlphaWeight_ = fSettings["Optimization.alpha"];
+    OptBetaWeight_ = fSettings["Optimization.beta"];
 
     fSettings["Optimization.selection"] >> OptSelection_;
     fSettings["Optimization.weightsSelection"] >> OptWeightsSelection_;
@@ -263,6 +265,14 @@ double Settings::getOptArapWeight(){
 
 double Settings::getOptGlobalWeight(){
     return OptGlobalWeight_;
+}
+
+double Settings::getOptAlphaWeight(){
+    return OptAlphaWeight_;
+}
+
+double Settings::getOptBetaWeight(){
+    return OptBetaWeight_;
 }
 
 std::string Settings::getOptSelection(){

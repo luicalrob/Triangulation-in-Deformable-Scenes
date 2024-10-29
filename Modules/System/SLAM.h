@@ -148,6 +148,8 @@ private:
     double repBalanceWeight_;
     double arapBalanceWeight_;
     double globalBalanceWeight_;
+    double alphaWeight_;
+    double betaWeight_;
 
     std::string OptSelection_;
     std::string OptWeightsSelection_;

@@ -68,6 +68,8 @@ SLAM::SLAM(const std::string &settingsFile) {
     repBalanceWeight_ = settings_.getOptRepWeight();
     arapBalanceWeight_ = settings_.getOptArapWeight();
     globalBalanceWeight_ = settings_.getOptGlobalWeight();
+    alphaWeight_ = settings_.getOptAlphaWeight();
+    betaWeight_ = settings_.getOptBetaWeight();
 
     OptSelection_ = settings_.getOptSelection();
     OptWeightsSelection_ = settings_.getOptWeightsSelection();
@@ -269,8 +271,8 @@ void SLAM::mapping() {
 
         if (TrianSelection_ == "TwoPoints") {
             triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-        } else if (TrianSelection_ == "Projection") {
-            triangulateProjection(xn1, xn2, T1w, T2w, K1, K2, x3D_1, x3D_2);
+        } else if (TrianSelection_ == "NRSLAM") {
+            triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         } else if (TrianSelection_ == "ORBSLAM") {
             triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
         } else {
@@ -357,6 +359,8 @@ void SLAM::mapping() {
                 optData.pMap = pMap_->clone();
                 optData.nOptIterations = nOptIterations_;
                 optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
+                optData.alpha = alphaWeight_;
+                optData.beta = betaWeight_;
 
                 opt.set_min_objective(outerObjective, &optData);
 
@@ -377,7 +381,7 @@ void SLAM::mapping() {
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], nOptIterations_);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_);
 
                 repBalanceWeight_ = x[0];
                 globalBalanceWeight_ = x[1];
@@ -389,7 +393,7 @@ void SLAM::mapping() {
                 x[1] = globalBalanceWeight_;
                 x[2] = arapBalanceWeight_;
 
-                EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_); 
+                EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_, alphaWeight_, betaWeight_); 
                 
                 Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
                 Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
@@ -412,10 +416,10 @@ void SLAM::mapping() {
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], nOptIterations_);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_);
             }
         } else {
-            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, nOptIterations_);
+            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_, nOptIterations_);
         }
 
         std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;

@@ -66,7 +66,9 @@ Keypoints.decimalsApproximation: 1
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 100
-Optimization.arap: 400000
+Optimization.arap: 4000
+Optimization.alpha: 1
+Optimization.beta: 1
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
@@ -75,9 +77,9 @@ Optimization.numberOfIterations: 50
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 35
-Optimization.nlopt.relTolerance: 1.5e-4
-Optimization.nlopt.absTolerance: 1.5e-4
+Optimization.nlopt.numberOfIterations: 15
+Optimization.nlopt.relTolerance: 1.5e-2
+Optimization.nlopt.absTolerance: 1.5e-2
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
 Optimization.nlopt.global.lowerBound: 0.00001
@@ -86,13 +88,13 @@ Optimization.nlopt.arap.lowerBound: 0.000001
 Optimization.nlopt.arap.upperBound: 150000000
 
 #Method selection
-Triangulation.selection: "InRays" # InRays TwoPoints Projection ORBSLAM
+Triangulation.selection: "NRSLAM" # InRays TwoPoints NRSLAM ORBSLAM
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
-# Projection: use Projection matrices
+# NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
 
 
 # Visualization
 MapVisualizer.drawRays: "false"
-Visualizer.showSolution: "true"
+Visualizer.showSolution: "false"
