@@ -297,13 +297,14 @@ public:
         const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
 
         double obs(_measurement);
-        Eigen::Vector3d firstDiffArap;
-        Eigen::Vector3d secondDiffArap;
 
-        firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
-        secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
+        // firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
+        // secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
+        Eigen::Vector3d numerator = (v2i->estimate() - v2j->estimate());
+        Eigen::Vector3d denominator = (v1i->estimate() - v1j->estimate());
+        double lamdaij = numerator.norm() / denominator.norm();
 
-        double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm());
+        double energyArap = alpha * (std::pow(lamdaij, 2) - 1) + beta * (std::pow(lamdaij, 4) - 1);
         
         _error[0] = energyArap - obs;   
     }

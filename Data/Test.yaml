@@ -66,15 +66,15 @@ Keypoints.decimalsApproximation: 1
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 100
-Optimization.arap: 4000
-Optimization.alpha: 1
-Optimization.beta: 1
+Optimization.arap: 0.02
+Optimization.alpha: 1.030
+Optimization.beta: 0.114
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
 Optimization.numberOfIterations: 50
 
-Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
+Optimization.selection: "g2oArap" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
 Optimization.nlopt.numberOfIterations: 15
