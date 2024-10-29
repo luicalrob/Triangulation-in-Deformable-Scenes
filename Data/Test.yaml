@@ -66,7 +66,7 @@ Keypoints.decimalsApproximation: 1
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 100
-Optimization.arap: 4000
+Optimization.arap: 0.01
 Optimization.alpha: 1
 Optimization.beta: 1
 

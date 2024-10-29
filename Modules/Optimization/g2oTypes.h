@@ -300,10 +300,14 @@ public:
         Eigen::Vector3d firstDiffArap;
         Eigen::Vector3d secondDiffArap;
 
-        firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
-        secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
+        // firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
+        // secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
 
-        double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm());
+        Eigen::Vector3d elasticNumerator = (v2i->estimate() - v2j->estimate()) - (Ri * (v1i->estimate() - v1j->estimate()));
+        Eigen::Vector3d elasticDenominator = (Ri * (v1i->estimate() - v1j->estimate()));
+
+
+        double energyArap = weight * (elasticNumerator.squaredNorm() / elasticDenominator.squaredNorm());
         
         _error[0] = energyArap - obs;   
     }
