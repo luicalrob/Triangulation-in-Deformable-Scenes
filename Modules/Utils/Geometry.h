@@ -27,14 +27,11 @@
 #include <Eigen/Core>
 #include <sophus/se3.hpp>
 #include <opencv2/opencv.hpp>
+#include <g2o/types/sba/types_sba.h>
+#include <g2o/types/sba/types_six_dof_expmap.h>
+#include "open3d/Open3D.h"
 #include "Map/Map.h"
 #include "Utils/CommonTypes.h"
-#include "Optimization/g2oBundleAdjustment.h"
-#include "Optimization/g2oTypes.h"
-
-#include "open3d/Open3D.h"
-#include "open3d/geometry/Qhull.h"
-#include "open3d/geometry/TetraMesh.h"
 
 /*
  * Computes the cosine of the parallax angle between 2 rays
@@ -49,24 +46,22 @@ float cosRayParallax(const Eigen::Vector3f& a, const Eigen::Vector3f& b);
 void triangulate(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
                  const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, Eigen::Vector3f &x3D);
 
-void triangulateInRays(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
-                 const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
+void triangulateClassic(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
+                 const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, std::string location);
+
+void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
+                 const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                 Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, std::string location);
+
+void triangulateORBSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
+                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2,
+                        Eigen::Vector3f& point1, Eigen::Vector3f& point2, std::string location);
 
 void triangulateInRaysNearPrevSolution(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
                         const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, Eigen::Vector3f& x3D_prev);
 
-void triangulateTwoPoints(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
-                 const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
-
 void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
                         Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2, Eigen::Matrix3f& K1, Eigen::Matrix3f& K2,
-                        Eigen::Vector3f& point1, Eigen::Vector3f& point2);
-
-void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                 const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
-
-void triangulateORBSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2,
                         Eigen::Vector3f& point1, Eigen::Vector3f& point2);
 /*
  * Squared reprojection error

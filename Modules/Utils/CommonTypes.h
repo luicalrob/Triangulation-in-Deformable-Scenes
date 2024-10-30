@@ -2,9 +2,7 @@
 
 #include "Map/KeyFrame.h"
 #include "Map/MapPoint.h"
-#include "Map/Map.h"
 #include "sophus/se3.hpp"
-
 
 #include <memory>
 

@@ -22,6 +22,7 @@
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
 #include "Utils/Conversions.h"
+#include "Utils/CommonTypes.h"
 #include "Optimization/nloptOptimization.h"
 #include "Optimization/EigenOptimization.h"
 
@@ -29,9 +30,7 @@
 #include <unsupported/Eigen/NumericalDiff>
 
 #include <nlopt.hpp>
-
 #include <memory>
-#include "Utils/CommonTypes.h"
 
 SLAM::SLAM(const std::string &settingsFile) {
     //Load settings from file
@@ -73,7 +72,8 @@ SLAM::SLAM(const std::string &settingsFile) {
 
     OptSelection_ = settings_.getOptSelection();
     OptWeightsSelection_ = settings_.getOptWeightsSelection();
-    TrianSelection_ = settings_.getTrianSelection();
+    TrianMethod_ = settings_.getTrianMethod();
+    TrianLocation_ = settings_.getTrianLocation();
 
     nOptimizations_ = settings_.getnOptimizations();
     nOptIterations_ = settings_.getnOptIterations();
@@ -269,14 +269,12 @@ void SLAM::mapping() {
 
         x3D_prev = originalPoints_[i];
 
-        if (TrianSelection_ == "TwoPoints") {
-            triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-        } else if (TrianSelection_ == "NRSLAM") {
-            triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-        } else if (TrianSelection_ == "ORBSLAM") {
-            triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+        if (TrianMethod_ == "Classic") {
+            triangulateClassic(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
+        } else if (TrianMethod_ == "ORBSLAM") {
+            triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         } else {
-            triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+            triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         }
         
         //x3D_1 = x3D_prev; 

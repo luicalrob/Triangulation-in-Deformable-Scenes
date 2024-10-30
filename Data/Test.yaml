@@ -65,9 +65,9 @@ Keypoints.decimalsApproximation: 1
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 100
-Optimization.arap: 4000
-Optimization.alpha: 1
+Optimization.global: 5000
+Optimization.arap: 80000
+Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
@@ -77,7 +77,7 @@ Optimization.numberOfIterations: 50
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 15
+Optimization.nlopt.numberOfIterations: 10
 Optimization.nlopt.relTolerance: 1.5e-2
 Optimization.nlopt.absTolerance: 1.5e-2
 Optimization.nlopt.rep.lowerBound: 1
@@ -88,7 +88,8 @@ Optimization.nlopt.arap.lowerBound: 0.000001
 Optimization.nlopt.arap.upperBound: 150000000
 
 #Method selection
-Triangulation.selection: "NRSLAM" # InRays TwoPoints NRSLAM ORBSLAM
+Triangulation.seed.method: "NRSLAM" # Classic NRSLAM ORBSLAM
+Triangulation.seed.location: "TwoPoints" # InRays TwoPoints
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # NRSLAM: use NRSLAM weighted midpoint method

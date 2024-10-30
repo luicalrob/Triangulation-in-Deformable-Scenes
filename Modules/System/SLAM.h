@@ -154,6 +154,8 @@ private:
     std::string OptSelection_;
     std::string OptWeightsSelection_;
     std::string TrianSelection_;
+    std::string TrianMethod_;
+    std::string TrianLocation_;
 
     int nOptimizations_;
     int nOptIterations_;
