@@ -1,13 +1,8 @@
 #include "Utils/Conversions.h"
-
 #include <random> 
 
 using namespace std;
 
-
-#include <sophus/se3.hpp>
-#include <Eigen/Core>
-#include <opencv2/opencv.hpp>
 
 cv::Mat convertSE3fToMat(const Sophus::SE3f& se3) {
     cv::Mat mat = cv::Mat::eye(4, 4, CV_32F);

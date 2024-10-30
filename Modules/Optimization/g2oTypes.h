@@ -25,7 +25,6 @@
 #define SLAM_G2OTYPES_H
 
 #include "Calibration/CameraModel.h"
-#include "Optimization/Tet.h"
 #include "Utils/CommonTypes.h"
 
 #include <g2o/core/base_unary_edge.h>
@@ -34,7 +33,6 @@
 #include <g2o/types/sba/types_six_dof_expmap.h>
 
 #include <Eigen/Geometry>
-
 #include <memory>
 
 class  VertexSBAPointXYZ : public g2o::BaseVertex<3, Eigen::Vector3d>
@@ -297,15 +295,27 @@ public:
         const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
 
         double obs(_measurement);
-        Eigen::Vector3d firstDiffArap;
-        Eigen::Vector3d secondDiffArap;
+        double mu = alpha;
+        double alp = beta;
 
-        firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
-        secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
+        Eigen::Vector3d numerator = (v2i->estimate() - v2j->estimate());
+        Eigen::Vector3d denominator = (v1i->estimate() - v1j->estimate());
+        double lamdaij = numerator.norm() / denominator.norm();
+        //double lambda_ij = std::sqrt(std::pow(numerator, 2) + std::pow(denominator, 2));
 
-        double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm());
-        
-        _error[0] = energyArap - obs;   
+        ////tension in shear
+        //double energy = (2 * mu / alp) * ((pow(lamdaij, alp)) - pow((1 / (lamdaij*lamdaij)), alp));
+
+        ////tension in Planar
+        //double energy = (2 * mu / alp) * ((pow(lamdaij, alp)) - pow((1 / lamdaij),alp));
+
+        ////tension in Tensile
+        //double energy = (2 * mu / alp) * ((pow(lamdaij, alp)) - pow((1 / sqrt(lamdaij)), alp));
+
+        ///Deformation
+        double energy = (mu / alp) * (2 * (pow(lamdaij, alp)) + pow((lamdaij),-(2*alp)) - 3);
+
+        _error[0] = energy - obs;   
     }
 
     // virtual void linearizeOplus();
