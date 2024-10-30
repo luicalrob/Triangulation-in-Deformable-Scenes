@@ -4,9 +4,7 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <unsupported/Eigen/NumericalDiff>
-#include "Optimization/EigenOptimization.h"
 #include "Utils/Geometry.h"
-#include "Optimization/nloptOptimization.h"
 #include "Utils/CommonTypes.h"
 
 template<typename _Scalar, int NX = Eigen::Dynamic, int NY = Eigen::Dynamic>

@@ -84,7 +84,8 @@ public:
 
     std::string getOptSelection();
     std::string getOptWeightsSelection();
-    std::string getTrianSelection();
+    std::string getTrianMethod();
+    std::string getTrianLocation();
 
     int getnOptimizations();
     int getnOptIterations();
@@ -142,7 +143,8 @@ private:
 
     std::string OptSelection_;
     std::string OptWeightsSelection_;
-    std::string TrianSelection_;
+    std::string TrianMethod_;
+    std::string TrianLocation_;
 
     int NloptnOptimizations_;
     double NloptRelTolerance_;
