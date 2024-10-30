@@ -17,15 +17,17 @@
 
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Optimization/g2oTypes.h"
-#include "Optimization/Tet.h"
-#include "Optimization/Triangle.h"
-
 #include "Utils/Geometry.h"
-#include "open3d/Open3D.h"
-#include "open3d/geometry/Qhull.h"
-#include "open3d/geometry/TetraMesh.h"
-
 #include "Utils/CommonTypes.h"
+
+#include <g2o/core/block_solver.h>
+#include <g2o/core/optimization_algorithm_levenberg.h>
+#include <g2o/solvers/eigen/linear_solver_eigen.h>
+#include <g2o/types/sba/types_sba.h>
+#include <g2o/types/sba/types_six_dof_expmap.h>
+#include <g2o/core/robust_kernel_impl.h>
+#include <g2o/solvers/csparse/linear_solver_csparse.h>
+#include <g2o/solvers/dense/linear_solver_dense.h>
 
 #include <random> 
 
@@ -491,14 +493,12 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                         double,
                         open3d::utility::hash_eigen<Eigen::Vector2i>> edge_weights = ComputeEdgeWeightsCot(mesh, 0);
 
-            // Perform Delaunay Reconstruction
-
             //std::shared_ptr<open3d::geometry::PointCloud> cloud = convertToOpen3DPointCloud(v1Positions);
-            std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh;
-            std::vector<size_t> pt_map;
+            // std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh;
+            // std::vector<size_t> pt_map;
 
-            std::tie(tetra_mesh, pt_map) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
-            std::cout << "mesh size: (" << mesh->vertices_.size() << ")\n";
+            // std::tie(tetra_mesh, pt_map) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
+            // std::cout << "mesh size: (" << mesh->vertices_.size() << ")\n";
 
             //std::vector<Sophus::SO3d> Rs(tetra_mesh->tetras_.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
             //std::vector<RotationMatrix_> Rs(mesh->triangles_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));

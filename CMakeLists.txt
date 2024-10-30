@@ -16,6 +16,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #Compilation flags:
 #   -Flag for code optimizations: -O3
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+#set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -43,8 +44,14 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/NLopt/build")
   list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/NLopt/build")
 endif()
 
+
 # Add compile definition to use vendored Ceres
 add_definitions(-DG2O_USE_VENDORED_CERES)
 
 add_subdirectory(Modules)
 add_subdirectory(Execution)
+
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+endif()

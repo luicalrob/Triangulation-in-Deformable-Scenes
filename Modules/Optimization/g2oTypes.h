@@ -25,7 +25,6 @@
 #define SLAM_G2OTYPES_H
 
 #include "Calibration/CameraModel.h"
-#include "Optimization/Tet.h"
 #include "Utils/CommonTypes.h"
 
 #include <g2o/core/base_unary_edge.h>

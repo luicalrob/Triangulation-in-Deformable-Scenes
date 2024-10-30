@@ -4,10 +4,6 @@
 #include <Eigen/Core>
 #include <sophus/se3.hpp>
 #include <opencv2/opencv.hpp>
-#include "Map/Map.h"
-#include "Utils/CommonTypes.h"
-#include "Optimization/g2oBundleAdjustment.h"
-#include "Optimization/g2oTypes.h"
 
 
 

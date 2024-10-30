@@ -1,9 +1,6 @@
 #include "Optimization/g2oBundleAdjustment.h"
-#include "Optimization/g2oTypes.h"
-
 #include "Utils/Geometry.h"
 #include "Optimization/nloptOptimization.h"
-#include "Utils/CommonTypes.h"
 
 double outerObjective(unsigned int n, const double* x, double* grad, void* data){
     double repBalanceWeight = x[0];
