@@ -22,6 +22,7 @@
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
 #include "Utils/Conversions.h"
+#include "Utils/CommonTypes.h"
 #include "Optimization/nloptOptimization.h"
 #include "Optimization/EigenOptimization.h"
 
@@ -29,9 +30,7 @@
 #include <unsupported/Eigen/NumericalDiff>
 
 #include <nlopt.hpp>
-
 #include <memory>
-#include "Utils/CommonTypes.h"
 
 SLAM::SLAM(const std::string &settingsFile) {
     //Load settings from file
@@ -65,12 +64,16 @@ SLAM::SLAM(const std::string &settingsFile) {
     simulatedRepErrorStanDesv_ = settings_.getSimulatedRepError();
     decimalsRepError_ = settings_.getDecimalsRepError();
 
+    repBalanceWeight_ = settings_.getOptRepWeight();
     arapBalanceWeight_ = settings_.getOptArapWeight();
     globalBalanceWeight_ = settings_.getOptGlobalWeight();
+    alphaWeight_ = settings_.getOptAlphaWeight();
+    betaWeight_ = settings_.getOptBetaWeight();
 
     OptSelection_ = settings_.getOptSelection();
     OptWeightsSelection_ = settings_.getOptWeightsSelection();
-    TrianSelection_ = settings_.getTrianSelection();
+    TrianMethod_ = settings_.getTrianMethod();
+    TrianLocation_ = settings_.getTrianLocation();
 
     nOptimizations_ = settings_.getnOptimizations();
     nOptIterations_ = settings_.getnOptIterations();
@@ -78,6 +81,8 @@ SLAM::SLAM(const std::string &settingsFile) {
     NloptnOptimizations_ = settings_.getNloptnOptimizations();
     NloptRelTolerance_ = settings_.getNloptRelTolerance();
     NloptAbsTolerance_ = settings_.getNloptAbsTolerance();
+    NloptRepLowerBound_ = settings_.getNloptRepLowerBound();
+    NloptRepUpperBound_ = settings_.getNloptRepUpperBound();
     NloptGlobalLowerBound_ = settings_.getNloptGlobalLowerBound();
     NloptGlobalUpperBound_ = settings_.getNloptGlobalUpperBound();
     NloptArapLowerBound_ = settings_.getNloptArapLowerBound();
@@ -264,14 +269,12 @@ void SLAM::mapping() {
 
         x3D_prev = originalPoints_[i];
 
-        if (TrianSelection_ == "TwoPoints") {
-            triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-        } else if (TrianSelection_ == "Projection") {
-            triangulateProjection(xn1, xn2, T1w, T2w, K1, K2, x3D_1, x3D_2);
-        } else if (TrianSelection_ == "ORBSLAM") {
-            triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+        if (TrianMethod_ == "Classic") {
+            triangulateClassic(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
+        } else if (TrianMethod_ == "ORBSLAM") {
+            triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         } else {
-            triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
+            triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         }
         
         x3D_1 = x3D_prev; 
@@ -343,10 +346,10 @@ void SLAM::mapping() {
             arapOpen3DOptimization(pMap_.get());
         } else if(OptSelection_ == "twoOptimizations") {
             if (OptWeightsSelection_ == "nlopt") {
-                nlopt::opt opt(nlopt::LN_NELDERMEAD, 2);
+                nlopt::opt opt(nlopt::LN_NELDERMEAD, 3);
                 
-                std::vector<double> lb = {NloptGlobalLowerBound_, NloptArapLowerBound_};
-                std::vector<double> ub = {NloptGlobalUpperBound_, NloptArapUpperBound_};
+                std::vector<double> lb = {NloptRepLowerBound_, NloptGlobalLowerBound_, NloptArapLowerBound_};
+                std::vector<double> ub = {NloptRepUpperBound_, NloptGlobalUpperBound_, NloptArapUpperBound_};
                 opt.set_lower_bounds(lb);
                 opt.set_upper_bounds(ub);
 
@@ -354,10 +357,12 @@ void SLAM::mapping() {
                 optData.pMap = pMap_->clone();
                 optData.nOptIterations = nOptIterations_;
                 optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
+                optData.alpha = alphaWeight_;
+                optData.beta = betaWeight_;
 
                 opt.set_min_objective(outerObjective, &optData);
 
-                std::vector<double> x = {globalBalanceWeight_, arapBalanceWeight_};
+                std::vector<double> x = {repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_};
 
                 opt.set_xtol_rel(NloptRelTolerance_);
                 opt.set_xtol_abs(NloptAbsTolerance_);
@@ -367,20 +372,26 @@ void SLAM::mapping() {
                 nlopt::result result = opt.optimize(x, minf);
 
                 std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
-                std::cout << "Optimized globalBalanceWeight: " << x[0] << std::endl;
-                std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+                std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
+                std::cout << "Optimized globalBalanceWeight: " << x[1] << std::endl;
+                std::cout << "Optimized arapBalanceWeight: " << x[2] << std::endl;
                 std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
-            } else {
-                Eigen::VectorXd x(2);
-                // Initial values
-                x[0] = globalBalanceWeight_;
-                x[1] = arapBalanceWeight_;
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_);
 
-                EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_); 
+                repBalanceWeight_ = x[0];
+                globalBalanceWeight_ = x[1];
+                arapBalanceWeight_ = x[2];
+            } else {
+                Eigen::VectorXd x(3);
+                // Initial values
+                x[0] = repBalanceWeight_;
+                x[1] = globalBalanceWeight_;
+                x[2] = arapBalanceWeight_;
+
+                EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_, alphaWeight_, betaWeight_); 
                 
                 Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
                 Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
@@ -397,24 +408,22 @@ void SLAM::mapping() {
                 std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
 
                 std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
-                std::cout << "Optimized globalBalanceWeight: " << x[0] << std::endl;
-                std::cout << "Optimized arapBalanceWeight: " << x[1] << std::endl;
+                std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
+                std::cout << "Optimized globalBalanceWeight: " << x[1] << std::endl;
+                std::cout << "Optimized arapBalanceWeight: " << x[2] << std::endl;
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], nOptIterations_);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_);
             }
         } else {
-            arapOptimization(pMap_.get(), globalBalanceWeight_, arapBalanceWeight_, nOptIterations_);
+            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_, nOptIterations_);
         }
 
         std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;
 
         mapVisualizer_->update(drawRaysSelection_);
         mapVisualizer_->updateCurrentPose(Tcw_);
-
-        measureRelativeErrors();
-        measureAbsoluteErrors();
     }
 
     //arapBundleAdjustment(pMap_.get());
@@ -452,7 +461,6 @@ void SLAM::measureAbsoluteErrors() {
 
     // 3D Error measurement in map points
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
-
 
     float total_movement = 0.0f;
     float total_error_original = 0.0f;

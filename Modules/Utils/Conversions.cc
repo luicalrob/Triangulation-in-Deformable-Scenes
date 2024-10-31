@@ -1,13 +1,8 @@
 #include "Utils/Conversions.h"
-
 #include <random> 
 
 using namespace std;
 
-
-#include <sophus/se3.hpp>
-#include <Eigen/Core>
-#include <opencv2/opencv.hpp>
 
 cv::Mat convertSE3fToMat(const Sophus::SE3f& se3) {
     cv::Mat mat = cv::Mat::eye(4, 4, CV_32F);
@@ -56,13 +51,12 @@ Eigen::Vector3f convertMatToVector3f(const cv::Mat& mat) {
     return vec;
 }
 
-Eigen::Matrix<float, 3, 4> computeProjection(const Sophus::SE3f& Tcw1, const Eigen::Matrix3f& K_c) {
-    Eigen::Matrix<float, 3, 4> P1;
-    P1.block<3, 3>(0, 0) = Eigen::Matrix3f::Identity();
-    P1.block<3, 1>(0, 3) = Eigen::Vector3f(0, 0, 0);
+Eigen::Matrix<float, 3, 4> computeProjection(const Sophus::SE3f& T, const Eigen::Matrix3f& K_c) {
+    Eigen::Matrix<float, 3, 4> P_aux;
+    P_aux.block<3, 3>(0, 0) = Eigen::Matrix3f::Identity();
+    P_aux.block<3, 1>(0, 3) = Eigen::Vector3f(0, 0, 0);
 
-    Eigen::Matrix<float, 3, 4> P_aux = P1 * Tcw1.matrix();
-    Eigen::Matrix<float, 3, 4> P = K_c * P_aux;
+    Eigen::Matrix<float, 3, 4> P = K_c * P_aux * T.matrix();
 
     return P;
 }

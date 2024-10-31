@@ -4,10 +4,6 @@
 #include <Eigen/Core>
 #include <sophus/se3.hpp>
 #include <opencv2/opencv.hpp>
-#include "Map/Map.h"
-#include "Utils/CommonTypes.h"
-#include "Optimization/g2oBundleAdjustment.h"
-#include "Optimization/g2oTypes.h"
 
 
 
@@ -20,7 +16,7 @@ cv::Mat convertVector3fToMat(const Eigen::Vector3f& vec);
 Eigen::Vector3f convertMatToVector3f(const cv::Mat& mat); 
 
 
-Eigen::Matrix<float, 3, 4> computeProjection(const Sophus::SE3f& Tcw1, const Eigen::Matrix3f& K_c);
+Eigen::Matrix<float, 3, 4> computeProjection(const Sophus::SE3f& T, const Eigen::Matrix3f& K_c);
 
 
 double roundToDecimals(double value, int decimals);

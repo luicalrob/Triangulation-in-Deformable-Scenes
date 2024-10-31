@@ -4,9 +4,7 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <unsupported/Eigen/NumericalDiff>
-#include "Optimization/EigenOptimization.h"
 #include "Utils/Geometry.h"
-#include "Optimization/nloptOptimization.h"
 #include "Utils/CommonTypes.h"
 
 template<typename _Scalar, int NX = Eigen::Dynamic, int NY = Eigen::Dynamic>
@@ -30,26 +28,28 @@ struct Functor {
 };
 
 struct EigenOptimizationFunctor : Functor<double> {
-    EigenOptimizationFunctor(std::shared_ptr<Map> map, int iterations, double error): Functor<double>(2,2), pMap(map), nIterations(iterations), repErrorStanDesv(error) {}
+    EigenOptimizationFunctor(std::shared_ptr<Map> map, int iterations, double error, double alpha, double beta): Functor<double>(2,2), pMap(map), nIterations(iterations), repErrorStanDesv(error), alphaWeight(alpha), betaWeight(beta) {}
 
     std::shared_ptr<Map> pMap;           // Pointer to a Map object
     int nIterations;     // Number of iterations
     double repErrorStanDesv; // Standard deviation of error
+    double alphaWeight; 
+    double betaWeight; 
 
     int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const {   
         std::shared_ptr<Map> pMapCopy = pMap->clone();
 
-        std::cout << "Current x values: " << x[0] << ", " << x[1] << std::endl;
+        std::cout << "Current x values: " << x[0] << ", " << x[1] << ", " << x[2] << std::endl;
         
-        arapOptimization(pMapCopy.get(), x(0), x(1), nIterations);
+        arapOptimization(pMapCopy.get(), x(0), x(1), x(2), alphaWeight, betaWeight, nIterations);
         
         PixelsError pixelsErrors;
         calculatePixelsStandDev(pMapCopy, pixelsErrors);
         std::cout << "stanDeviation1: " << pixelsErrors.desvc1 << "\n";
         std::cout << "stanDeviation2: " << pixelsErrors.desvc2 << "\n";
 
-        double errorC1 = std::pow(repErrorStanDesv - pixelsErrors.desvc1, 2);
-        double errorC2 = std::pow(repErrorStanDesv - pixelsErrors.desvc2, 2);
+        double errorC1 = std::pow(std::log(pixelsErrors.desvc1), 2);
+        double errorC2 = std::pow(std::log(pixelsErrors.desvc2), 2);
 
         std::cout << "errorC1: " << errorC1 << "\n";
         std::cout << "errorC2: " << errorC2 << "\n";

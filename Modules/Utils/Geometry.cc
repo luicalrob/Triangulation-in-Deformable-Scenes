@@ -59,8 +59,9 @@ void triangulate(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
     x3D = T2w.inverse() * p3D1;
 }
 
-void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
-                 const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2){
+void triangulateClassic(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
+                 const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, 
+                 Eigen::Vector3f &x3D_2, std::string location){
     Sophus::SE3f T21 = T2w * T1w.inverse();
     Eigen::Vector3f m0 = T21.rotationMatrix() * xn1;
     Eigen::Vector3f m1 = xn2;
@@ -80,21 +81,135 @@ void triangulateInRays(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
 
     Eigen::Vector3f z = m1_.cross(m0_);
     float lambda0 = z.dot(T21.translation().cross(m1_))/(z.squaredNorm());
-    Eigen::Vector3f p3D1 = T21.translation() + lambda0*m0;
-
     float lambda1 = z.dot(T21.translation().cross(m0_))/(z.squaredNorm());
-    Eigen::Vector3f p3D2 = lambda1 * m1;
 
-    Eigen::Vector3f x3D_w = T2w.inverse() * p3D1;
+    // point, rayOrigin, rayDir
+    Eigen::Vector3f p3D1, p3D2;
+
+    if(location == "TwoPoints"){
+        p3D1 = T21.translation() + lambda0*m0_;
+        p3D2 = T21.translation() + lambda0*m0_;
+        //p3D2 = lambda1 * m1_;
+    } else {
+        p3D1 = T21.translation() + lambda0*m0;
+        p3D2 = lambda1 * m1;
+    }
+
     // std::cout << "x3D_1: x:" << x3D_w.x() << " y: " << x3D_w.y() << " z: " << x3D_w.z() << "\n";
-    Eigen::Vector3f x3D_w_test = T2w.inverse() * p3D2;
     // std::cout << "x3D_2: x:" << x3D_w_test.x() << " y: " << x3D_w_test.y() << " z: " << x3D_w_test.z() << "\n";
 
     // point, rayOrigin, rayDir
-    x3D_1 = x3D_w;
-    x3D_2 = x3D_w_test;
-    // x3D_1 = findClosestPointOnRay(x3D_w, T1w.translation(), T1w.rotationMatrix() * xn1);
-    // x3D_2 = findClosestPointOnRay(x3D_w_test, T2w.translation(), T2w.rotationMatrix() * xn2);
+    x3D_1 = T2w.inverse() * p3D1;
+    x3D_2 = T2w.inverse() * p3D2;
+}
+
+void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
+                 const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, 
+                 Eigen::Vector3f& x3D_2, std::string location) {
+    // Data definition using the paper variable naming.
+    Eigen::Vector3f f0 = xn1;
+    Eigen::Vector3f f1 = xn2;
+
+    Eigen::Vector3f f0_hat = xn1.normalized();
+    Eigen::Vector3f f1_hat = xn2.normalized();
+
+    Sophus::SE3f T21 = T2w * T1w.inverse();
+    Eigen::Vector3f t = T21.translation();
+    Eigen::Matrix3f R = T21.rotationMatrix();
+
+    // Depth computation.
+    Eigen::Vector3f p = (R * f0_hat).cross(f1_hat);
+    Eigen::Vector3f q = (R * f0_hat).cross(t);
+    Eigen::Vector3f r = f1_hat.cross(t);
+
+    float lambda0 = r.norm() / p.norm();
+    float lambda1 = q.norm() / p.norm();
+
+    // Adequacy test.
+    Eigen::Vector3f point0 = lambda0 * R * f0_hat;
+    Eigen::Vector3f point1 = lambda1 * f1_hat;
+
+    float v1 = (t + point0 + point1).squaredNorm();
+    float v2 = (t - point0 - point1).squaredNorm();
+    float v3 = (t - point0 + point1).squaredNorm();
+
+    float minv = fmin(v1,fmin(v2,v3));
+
+    // Inverse Depth Weighted MidPoint.
+    Eigen::Vector3f x1 = q.norm() / (q.norm() + r.norm()) * (t + r.norm() / p.norm() * (R * f0_hat + f1_hat));
+
+    Eigen::Vector3f p3D1, p3D2;
+
+    if(location == "TwoPoints"){
+        p3D1 = x1;
+        p3D2 = x1;
+    } else {
+        p3D1 = (t + point0);
+        p3D2 = point1;
+    }
+    
+    x3D_1 = T2w.inverse() * p3D1;
+    x3D_2 = T2w.inverse() * p3D2;
+}
+
+void triangulateORBSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
+                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2,
+                        Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, std::string location) {
+    cv::Mat Tcw1_cv = convertSE3fToMat(Tcw1);
+    cv::Mat Tcw2_cv = convertSE3fToMat(Tcw2);
+    cv::Mat xn1_cv = convertVector3fToMat(xn1);
+    cv::Mat xn2_cv = convertVector3fToMat(xn2);
+
+    cv::Mat A(4, 4, CV_32F);
+    
+    A.row(0) = xn1_cv.at<float>(0) * Tcw1_cv.row(2) - Tcw1_cv.row(0);
+    A.row(1) = xn1_cv.at<float>(1) * Tcw1_cv.row(2) - Tcw1_cv.row(1);
+    A.row(2) = xn2_cv.at<float>(0) * Tcw2_cv.row(2) - Tcw2_cv.row(0);
+    A.row(3) = xn2_cv.at<float>(1) * Tcw2_cv.row(2) - Tcw2_cv.row(1);
+
+    cv::Mat w,u,vt;
+    cv::SVD::compute(A,w,u,vt,cv::SVD::MODIFY_A| cv::SVD::FULL_UV);
+
+    cv::Mat x3D = vt.row(3).t();
+    
+    Eigen::Vector3f point1, point2;
+
+    if (x3D.at<float>(3) != 0) {
+        cv::Mat x3D_dehomog = x3D.rowRange(0, 3) / x3D.at<float>(3);
+
+        point1 = convertMatToVector3f(x3D_dehomog);
+        point2 = convertMatToVector3f(x3D_dehomog);
+    } else {
+        point1.setZero();
+        point2.setZero();
+    }
+}
+
+void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
+                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2, Eigen::Matrix3f& K1, Eigen::Matrix3f& K2,
+                        Eigen::Vector3f& point1, Eigen::Vector3f& point2) {
+    Eigen::Matrix<float, 3, 4> P1 = computeProjection(Tcw1, K1);
+    Eigen::Matrix<float, 3, 4> P2 = computeProjection(Tcw2, K2);    
+
+    Eigen::MatrixXf A(4, 4);
+    A.row(0) = xn1(0) * P1.row(2) - P1.row(0);
+    A.row(1) = xn1(1) * P1.row(2) - P1.row(1);
+    A.row(2) = xn2(0) * P2.row(2) - P2.row(0);
+    A.row(3) = xn2(1) * P2.row(2) - P2.row(1);
+
+    Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeFullV);
+    Eigen::Vector4f x3D = svd.matrixV().col(3);
+
+    if (x3D(3) != 0) {
+        point1 = x3D.head<3>() / x3D(3);
+        point2 = x3D.head<3>() / x3D(3);
+
+        // point1 = Tcw1.inverse() * point1;
+        // point2 = Tcw2.inverse() * point2;
+    } else {
+        point1.setZero();
+        point2.setZero();
+    }
 }
 
 void triangulateInRaysNearPrevSolution(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
@@ -112,91 +227,6 @@ void triangulateInRaysNearPrevSolution(const Eigen::Vector3f &xn1, const Eigen::
     Eigen::Vector3f x3D_1_cam2 = T2w * x3D_1;  // Transform x3D_1 to camera 2 frame
     float lambda2 = xn2.dot(x3D_prev_cam2);                 // Projection of x3D_1_cam2 onto the direction of xn2
     x3D_2 = T2w.inverse() * (lambda2 * xn2);                       // Closest point on ray 2 in world frame
-}
-
-void triangulateTwoPoints(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                 const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2){
-    Sophus::SE3f T21 = T2w * T1w.inverse();
-    Eigen::Vector3f m0 = T21.rotationMatrix() * xn1;
-    Eigen::Vector3f m1 = xn2;
-
-    Eigen::Vector3f t = T21.translation().normalized();
-    Eigen::Matrix<float,3,2> M;
-    M.col(0) = m0.normalized();
-    M.col(1) = m1.normalized();
-
-    Eigen::Matrix<float,2,3> A = M.transpose() * (Eigen::Matrix3f::Identity() - t*t.transpose());
-    Eigen::JacobiSVD<Eigen::Matrix<float,2,3>> svd(A, Eigen::ComputeFullV);
-    Eigen::Vector3f n = svd.matrixV().col(1);
-
-    Eigen::Vector3f m0_ = m0 - (m0.dot(n)) * n;
-    Eigen::Vector3f m1_ = m1 - (m1.dot(n)) * n;
-
-    Eigen::Vector3f z = m1_.cross(m0_);
-    float lambda0 = z.dot(T21.translation().cross(m1_))/(z.squaredNorm());
-    Eigen::Vector3f p3D1 = T21.translation() + lambda0*m0_;
-
-    float lambda1 = z.dot(T21.translation().cross(m0_))/(z.squaredNorm());
-    Eigen::Vector3f test = lambda1 * m1_;
-
-    x3D_1 = T2w.inverse() * p3D1;
-    x3D_2 = T2w.inverse() * p3D1;
-}
-
-void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2, Eigen::Matrix3f& K1, Eigen::Matrix3f& K2,
-                        Eigen::Vector3f& point1, Eigen::Vector3f& point2) {
-    Eigen::MatrixXf A(4, 4);
-    
-    Eigen::Matrix<float, 3, 4> P1 = computeProjection(Tcw1, K1);
-    Eigen::Matrix<float, 3, 4> P2 = computeProjection(Tcw2, K2);
-
-    A.row(0) = P1.row(2) * xn1(0) - P1.row(0);
-    A.row(1) = P1.row(2) * xn1(1) - P1.row(1);
-    A.row(2) = P2.row(2) * xn2(0) - P2.row(0);
-    A.row(3) = P2.row(2) * xn2(1) - P2.row(1);
-
-    Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeFullV);
-    Eigen::Vector4f x3D = svd.matrixV().col(3);
-
-    if (x3D(3) != 0) {
-        point1 = x3D.head<3>() / x3D(3);
-        point2 = x3D.head<3>() / x3D(3);
-    } else {
-        point1.setZero();
-        point2.setZero();
-    }
-}
-
-void triangulateORBSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2,
-                        Eigen::Vector3f& point1, Eigen::Vector3f& point2) {
-    cv::Mat Tcw1_cv = convertSE3fToMat(Tcw1);
-    cv::Mat Tcw2_cv = convertSE3fToMat(Tcw2);
-    cv::Mat xn1_cv = convertVector3fToMat(xn1);
-    cv::Mat xn2_cv = convertVector3fToMat(xn2);
-
-    cv::Mat A(4, 4, CV_32F);
-    
-    A.row(0) = xn1_cv.at<float>(0) * Tcw1_cv.row(2) - Tcw1_cv.row(0);
-    A.row(1) = xn1_cv.at<float>(1) * Tcw1_cv.row(2) - Tcw1_cv.row(1);
-    A.row(2) = xn2_cv.at<float>(0) * Tcw2_cv.row(2) - Tcw2_cv.row(0);
-    A.row(3) = xn2_cv.at<float>(1) * Tcw2_cv.row(2) - Tcw2_cv.row(1);
-
-    cv::Mat w,u,vt;
-    cv::SVD::compute(A,w,u,vt,cv::SVD::MODIFY_A| cv::SVD::FULL_UV);
-
-    cv::Mat x3D = vt.row(3).t();
-
-    if (x3D.at<float>(3) != 0) {
-        cv::Mat x3D_dehomog = x3D.rowRange(0, 3) / x3D.at<float>(3);
-
-        point1 = convertMatToVector3f(x3D_dehomog);
-        point2 = convertMatToVector3f(x3D_dehomog);
-    } else {
-        point1.setZero();
-        point2.setZero();
-    }
 }
 
 float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2){

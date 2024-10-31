@@ -290,19 +290,18 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        ///const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSBAPointXYZ* v3 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        const VertexSBAPointXYZ* v2i = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
 
         double obs(_measurement);
         Eigen::Vector3d firstDiffArap;
         Eigen::Vector3d secondDiffArap;
 
-        firstDiffArap = (v2->estimate() - v3->estimate()) - (Ri * (Xi1world - Xj1world));
-        secondDiffArap = (v3->estimate() - v2->estimate()) - (Rj * (Xj1world -Xi1world));
+        firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (Xi1world - Xj1world));
+        secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (Xj1world - Xi1world));
 
         double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm());
-
+        
         _error[0] = energyArap - obs;   
     }
 
@@ -314,6 +313,8 @@ public:
     Eigen::Vector3d Xj1world;
     Eigen::Vector3d Xj2world;
     double weight;
+    double alpha;
+    double beta;
 };
 
 class EdgeTransformation: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, g2o::VertexSE3Expmap>{

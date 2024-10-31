@@ -97,12 +97,16 @@ Settings::Settings(const std::string& configFile) {
     SimulatedRepError_ = fSettings["Keypoints.RepError"];
     DecimalsRepError_ = fSettings["Keypoints.decimalsApproximation"];
 
+    OptRepWeight_ = fSettings["Optimization.rep"];
     OptArapWeight_ = fSettings["Optimization.arap"];
     OptGlobalWeight_ = fSettings["Optimization.global"];
+    OptAlphaWeight_ = fSettings["Optimization.alpha"];
+    OptBetaWeight_ = fSettings["Optimization.beta"];
 
     fSettings["Optimization.selection"] >> OptSelection_;
     fSettings["Optimization.weightsSelection"] >> OptWeightsSelection_;
-    fSettings["Triangulation.selection"] >> TrianSelection_;
+    fSettings["Triangulation.seed.method"] >> TrianMethod_;
+    fSettings["Triangulation.seed.location"] >> TrianLocation_;
 
     nOptimizations_ = fSettings["Optimization.numberOfOptimizations"];
     nOptIterations_ = fSettings["Optimization.numberOfIterations"];
@@ -110,6 +114,8 @@ Settings::Settings(const std::string& configFile) {
     NloptnOptimizations_ = fSettings["Optimization.nlopt.numberOfIterations"];
     NloptRelTolerance_ = fSettings["Optimization.nlopt.relTolerance"];
     NloptAbsTolerance_ = fSettings["Optimization.nlopt.absTolerance"];
+    NloptRepLowerBound_ = fSettings["Optimization.nlopt.rep.lowerBound"];
+    NloptRepUpperBound_ = fSettings["Optimization.nlopt.rep.upperBound"];
     NloptGlobalLowerBound_ = fSettings["Optimization.nlopt.global.lowerBound"];
     NloptGlobalUpperBound_ = fSettings["Optimization.nlopt.global.upperBound"];
     NloptArapLowerBound_ = fSettings["Optimization.nlopt.arap.lowerBound"];
@@ -250,12 +256,24 @@ int Settings::getDecimalsRepError(){
     return DecimalsRepError_;
 }
 
+double Settings::getOptRepWeight(){
+    return OptRepWeight_;
+}
+
 double Settings::getOptArapWeight(){
     return OptArapWeight_;
 }
 
 double Settings::getOptGlobalWeight(){
     return OptGlobalWeight_;
+}
+
+double Settings::getOptAlphaWeight(){
+    return OptAlphaWeight_;
+}
+
+double Settings::getOptBetaWeight(){
+    return OptBetaWeight_;
 }
 
 std::string Settings::getOptSelection(){
@@ -266,8 +284,12 @@ std::string Settings::getOptWeightsSelection(){
     return OptWeightsSelection_;
 }
 
-std::string Settings::getTrianSelection(){
-    return TrianSelection_;
+std::string Settings::getTrianMethod(){
+    return TrianMethod_;
+}
+
+std::string Settings::getTrianLocation(){
+    return TrianLocation_;
 }
 
 int Settings::getnOptimizations(){
@@ -288,6 +310,14 @@ double Settings::getNloptRelTolerance(){
 
 double Settings::getNloptAbsTolerance(){
     return NloptAbsTolerance_;
+}
+
+double Settings::getNloptRepLowerBound(){
+    return NloptRepLowerBound_;
+}
+
+double Settings::getNloptRepUpperBound(){
+    return NloptRepUpperBound_;
 }
 
 double Settings::getNloptGlobalLowerBound(){

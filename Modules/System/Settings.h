@@ -76,12 +76,16 @@ public:
     float getSimulatedRepError();
     int getDecimalsRepError();
 
+    double getOptRepWeight();
     double getOptArapWeight();
     double getOptGlobalWeight();
+    double getOptAlphaWeight();
+    double getOptBetaWeight();
 
     std::string getOptSelection();
     std::string getOptWeightsSelection();
-    std::string getTrianSelection();
+    std::string getTrianMethod();
+    std::string getTrianLocation();
 
     int getnOptimizations();
     int getnOptIterations();
@@ -89,6 +93,8 @@ public:
     int getNloptnOptimizations();
     double getNloptRelTolerance();
     double getNloptAbsTolerance();
+    double getNloptRepLowerBound();
+    double getNloptRepUpperBound();
     double getNloptGlobalLowerBound();
     double getNloptGlobalUpperBound();
     double getNloptArapLowerBound();
@@ -129,16 +135,22 @@ private:
     float SimulatedRepError_;
     int DecimalsRepError_;
 
+    double OptRepWeight_;
     double OptArapWeight_;
     double OptGlobalWeight_;
+    double OptAlphaWeight_;
+    double OptBetaWeight_;
 
     std::string OptSelection_;
     std::string OptWeightsSelection_;
-    std::string TrianSelection_;
+    std::string TrianMethod_;
+    std::string TrianLocation_;
 
     int NloptnOptimizations_;
     double NloptRelTolerance_;
     double NloptAbsTolerance_;
+    double NloptRepLowerBound_;
+    double NloptRepUpperBound_;
     double NloptGlobalLowerBound_;
     double NloptGlobalUpperBound_;
     double NloptArapLowerBound_;

@@ -145,12 +145,17 @@ private:
     float simulatedRepErrorStanDesv_;
     int decimalsRepError_;
 
+    double repBalanceWeight_;
     double arapBalanceWeight_;
     double globalBalanceWeight_;
+    double alphaWeight_;
+    double betaWeight_;
 
     std::string OptSelection_;
     std::string OptWeightsSelection_;
     std::string TrianSelection_;
+    std::string TrianMethod_;
+    std::string TrianLocation_;
 
     int nOptimizations_;
     int nOptIterations_;
@@ -158,6 +163,8 @@ private:
     int NloptnOptimizations_;
     double NloptRelTolerance_;
     double NloptAbsTolerance_;
+    double NloptRepLowerBound_;
+    double NloptRepUpperBound_;
     double NloptGlobalLowerBound_;
     double NloptGlobalUpperBound_;
     double NloptArapLowerBound_;
