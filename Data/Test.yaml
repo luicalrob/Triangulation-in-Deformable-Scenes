@@ -65,10 +65,10 @@ Keypoints.decimalsApproximation: 1
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 0.25
-Optimization.arap: 25
-Optimization.alpha:  0.390367
-Optimization.beta: 1.43289
+Optimization.global: 0.05
+Optimization.arap: 0.5
+Optimization.alpha:  1
+Optimization.beta: 1
 
 #Optimization values
 Optimization.numberOfOptimizations: 1
