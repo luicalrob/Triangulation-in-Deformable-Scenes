@@ -65,8 +65,8 @@ Keypoints.decimalsApproximation: 1
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 5000
-Optimization.arap: 80000
+Optimization.global: 50000
+Optimization.arap: 1000000
 Optimization.alpha:  1
 Optimization.beta: 1
 
@@ -89,7 +89,7 @@ Optimization.nlopt.arap.upperBound: 150000000
 
 #Method selection
 Triangulation.seed.method: "NRSLAM" # Classic NRSLAM ORBSLAM
-Triangulation.seed.location: "TwoPoints" # InRays TwoPoints
+Triangulation.seed.location: "InRays" # InRays TwoPoints
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # NRSLAM: use NRSLAM weighted midpoint method
@@ -98,4 +98,4 @@ Triangulation.seed.location: "TwoPoints" # InRays TwoPoints
 
 # Visualization
 MapVisualizer.drawRays: "false"
-Visualizer.showSolution: "false"
+Visualizer.showSolution: "true"
