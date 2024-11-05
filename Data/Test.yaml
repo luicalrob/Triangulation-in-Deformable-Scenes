@@ -71,13 +71,13 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 1
+Optimization.numberOfOptimizations: 10
 Optimization.numberOfIterations: 50
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 10
+Optimization.nlopt.numberOfIterations: 5
 Optimization.nlopt.relTolerance: 1.5e-2
 Optimization.nlopt.absTolerance: 1.5e-2
 Optimization.nlopt.rep.lowerBound: 1
@@ -98,4 +98,4 @@ Triangulation.seed.location: "InRays" # InRays TwoPoints
 
 # Visualization
 MapVisualizer.drawRays: "false"
-Visualizer.showSolution: "true"
+Visualizer.showSolution: "false"
