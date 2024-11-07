@@ -65,8 +65,8 @@ Keypoints.decimalsApproximation: 1
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 50000
-Optimization.arap: 1000000
+Optimization.global: 5
+Optimization.arap: 100
 Optimization.alpha:  1
 Optimization.beta: 1
 
@@ -77,15 +77,15 @@ Optimization.numberOfIterations: 50
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 5
+Optimization.nlopt.numberOfIterations: 8
 Optimization.nlopt.relTolerance: 1.5e-2
 Optimization.nlopt.absTolerance: 1.5e-2
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
 Optimization.nlopt.global.lowerBound: 0.00001
-Optimization.nlopt.global.upperBound: 100000
+Optimization.nlopt.global.upperBound: 10000000
 Optimization.nlopt.arap.lowerBound: 0.000001
-Optimization.nlopt.arap.upperBound: 150000000
+Optimization.nlopt.arap.upperBound: 10000000000
 
 #Method selection
 Triangulation.seed.method: "NRSLAM" # Classic NRSLAM ORBSLAM
@@ -98,4 +98,4 @@ Triangulation.seed.location: "InRays" # InRays TwoPoints
 
 # Visualization
 MapVisualizer.drawRays: "false"
-Visualizer.showSolution: "false"
+Visualizer.showSolution: "true"
