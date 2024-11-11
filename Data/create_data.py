@@ -75,19 +75,19 @@ def save_points(filename, points):
 num_points = 120  # Number of points in the dataset
 
 # Original points position
-x_mean, x_std = 0.0, 0.03
-y_mean, y_std = 0.0, 0.001
-z_mean, z_std = 0.2, 0.01
+x_mean, x_std = 0.0, 0.2
+y_mean, y_std = 0.0, 0.006
+z_mean, z_std = 1.5, 0.08
 # Rotation angles
 angle_x, angle_y, angle_z = -45, -0, 45  # in degrees
 
 # Movement
-rigid_movement = 0.010  # Scale of movement for the moved points
-gaussian_movement = 0.010  # Scale of movement for the moved points
+rigid_movement = 0.01  # Scale of movement for the moved points
+gaussian_movement = 0.01  # Scale of movement for the moved points
 
 original_points, moved_points = generate_points(num_points, rigid_movement, gaussian_movement, x_mean, 
                                                 x_std, y_mean, y_std, z_mean, z_std, angle_x, angle_y, angle_z,
-                                                'y', 15.0, False, False)
+                                                'y', 25.0, False, False)
 
 save_points('Data/original_points.csv', original_points)
 save_points('Data/moved_points.csv', moved_points)
