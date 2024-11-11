@@ -93,7 +93,7 @@ SLAM::SLAM(const std::string &settingsFile) {
     drawRaysSelection_ = settings_.getDrawRaysSelection();
     showSolution_ = settings_.getShowSolution();
 
-    filePath_ = "./Modules/Results/Experiment.txt";
+    filePath_ = "./Data/Experiment.txt";
     outFile_.imbue(std::locale("es_ES.UTF-8"));
 }
 
@@ -566,11 +566,14 @@ void SLAM::measureAbsoluteErrors(bool stop) {
         
         outFile_.open(filePath_, std::ios::app);
         if (outFile_.is_open()) {
+            if (stop) {
+                outFile_ << "Av. movement: " << average_movement * 1000 << '\n';
+            }
             outFile_ << "Av. error: " << average_error * 1000 << '\n';
             outFile_ << "RMSE: " << rmse * 1000 << "\n\n";
 
             outFile_.close();
-            std::cout << "Data has been written to ../Results/Experiment.txt" << std::endl;
+            std::cout << "Data has been written to Experiment.txt" << std::endl;
         } else {
             std::cerr << "Unable to open file for writing" << std::endl;
         }
@@ -702,7 +705,7 @@ void SLAM::measureRelativeErrors(){
                     outFile_ << "Rel. error: " << meanSquaredNormRelativeError << '\n';
 
                     outFile_.close();
-                    std::cout << "Data has been written to ../Results/Experiment.txt" << std::endl;
+                    std::cout << "Data has been written to Experiment.txt" << std::endl;
                 } else {
                     std::cerr << "Unable to open file for writing" << std::endl;
                 }
