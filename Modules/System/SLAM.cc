@@ -703,6 +703,8 @@ void SLAM::measureRelativeErrors(){
                     outFile_ << "C1 standard desv: " << pixelsErrors.desvc1 << '\n';
                     outFile_ << "C2 standard desv: " << pixelsErrors.desvc2 << '\n';
                     outFile_ << "Rel. error: " << meanSquaredNormRelativeError << '\n';
+                    outFile_ << "Global rotation: " << Rs_global << '\n';
+                    outFile_ << "Global translation: " << Ts << '\n';
 
                     outFile_.close();
                     std::cout << "Data has been written to Experiment.txt" << std::endl;

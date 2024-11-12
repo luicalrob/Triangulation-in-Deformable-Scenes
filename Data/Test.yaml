@@ -65,8 +65,8 @@ Keypoints.decimalsApproximation: 1
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 5
-Optimization.arap: 100000
+Optimization.global: 50
+Optimization.arap: 100
 Optimization.alpha:  1
 Optimization.beta: 1
 
@@ -98,4 +98,4 @@ Triangulation.seed.location: "InRays" # InRays TwoPoints
 
 # Visualization
 MapVisualizer.drawRays: "false"
-Visualizer.showSolution: "true"
+Visualizer.showSolution: "false"
