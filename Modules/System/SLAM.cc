@@ -93,7 +93,7 @@ SLAM::SLAM(const std::string &settingsFile) {
     drawRaysSelection_ = settings_.getDrawRaysSelection();
     showSolution_ = settings_.getShowSolution();
 
-    filePath_ = "./Modules/Results/Experiment.txt";
+    filePath_ = "./Data/Experiment.txt";
     outFile_.imbue(std::locale("es_ES.UTF-8"));
 }
 
@@ -551,7 +551,7 @@ void SLAM::measureAbsoluteErrors(bool stop) {
 
         float average_movement = total_movement / insertedIndexes_.size();
         //std::cout << "\nTotal movement: " << total_movement << std::endl;
-        std::cout << "Average movement: " << average_movement << std::endl;
+        std::cout << "Average movement: " << average_movement * 1000 << std::endl;
         float average_error_original = total_error_original / insertedIndexes_.size();
         //std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
         //std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
@@ -566,11 +566,14 @@ void SLAM::measureAbsoluteErrors(bool stop) {
         
         outFile_.open(filePath_, std::ios::app);
         if (outFile_.is_open()) {
+            if (stop) {
+                outFile_ << "Av. movement: " << average_movement * 1000 << '\n';
+            }
             outFile_ << "Av. error: " << average_error * 1000 << '\n';
             outFile_ << "RMSE: " << rmse * 1000 << "\n\n";
 
             outFile_.close();
-            std::cout << "Data has been written to ../Results/Experiment.txt" << std::endl;
+            std::cout << "Data has been written to Experiment.txt" << std::endl;
         } else {
             std::cerr << "Unable to open file for writing" << std::endl;
         }
@@ -700,9 +703,11 @@ void SLAM::measureRelativeErrors(){
                     outFile_ << "C1 standard desv: " << pixelsErrors.desvc1 << '\n';
                     outFile_ << "C2 standard desv: " << pixelsErrors.desvc2 << '\n';
                     outFile_ << "Rel. error: " << meanSquaredNormRelativeError << '\n';
+                    outFile_ << "Global rotation: " << Rs_global << '\n';
+                    outFile_ << "Global translation: " << Ts << '\n';
 
                     outFile_.close();
-                    std::cout << "Data has been written to ../Results/Experiment.txt" << std::endl;
+                    std::cout << "Data has been written to Experiment.txt" << std::endl;
                 } else {
                     std::cerr << "Unable to open file for writing" << std::endl;
                 }
