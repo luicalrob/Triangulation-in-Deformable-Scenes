@@ -644,21 +644,21 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
 
                 if (jIndexes.empty()) continue;
 
-                EdgeTransformation* eTi = new EdgeTransformation();
+                // EdgeTransformation* eTi = new EdgeTransformation();
 
-                eTi->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                eTi->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                eTi->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
-                //eTi->Xi1world =  mesh->vertices_[i];
-                // eTi->T = T_global;
+                // eTi->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                // eTi->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                // eTi->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
+                // //eTi->Xi1world =  mesh->vertices_[i];
+                // // eTi->T = T_global;
                 
-                Eigen::Matrix<double, 1, 1> informationMatrixTi;
-                informationMatrixTi(0, 0) = globalBalanceWeight / mesh->vertices_.size();
-                eTi->setInformation(informationMatrixTi);
+                // Eigen::Matrix<double, 1, 1> informationMatrixTi;
+                // informationMatrixTi(0, 0) = globalBalanceWeight / mesh->vertices_.size();
+                // eTi->setInformation(informationMatrixTi);
                 
-                double measurementTi = 0.0;
-                eTi->setMeasurement(measurementTi);
-                optimizer.addEdge(eTi);
+                // double measurementTi = 0.0;
+                // eTi->setMeasurement(measurementTi);
+                // optimizer.addEdge(eTi);
 
                 double distancesInvTipDesv = getInvUncertainty(mesh, v1Positions, v2Positions, i);
 
@@ -704,11 +704,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                     eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
                     eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstjPointToOptimize])));
                     eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondjPointToOptimize])));
-                    
-                    size_t newMeshIndex = static_cast<size_t>(j);
-                    std::unordered_set<int> newjIndexes = jIndexes;
-                    newjIndexes.erase(j);
-                    newjIndexes.insert(static_cast<int>(i)); 
+                    eArap->setVertex(4, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
 
                     eArap->Ri = Rs[i];
                     eArap->Rj = Rs[j];

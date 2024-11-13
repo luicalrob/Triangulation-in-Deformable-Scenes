@@ -294,6 +294,14 @@ public:
         const VertexSBAPointXYZ* v2i = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
         const VertexSBAPointXYZ* v1j = static_cast<const VertexSBAPointXYZ*>(_vertices[2]);
         const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
+        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[4]);
+
+        g2o::SE3Quat T_global =  vT->estimate();
+        Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
+        Eigen::Vector3d t = T_global.translation();
+
+        Eigen::Vector3d diffGlobalT = ((Rg * v2i->estimate() - t) - v1i->estimate()) + ((Rg * v2j->estimate() - t) - v1j->estimate());
+        double energyGlobalT = diffGlobalT.squaredNorm();
 
         double obs(_measurement);
         Eigen::Vector3d firstDiffArap;
@@ -302,7 +310,7 @@ public:
         firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
         secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
 
-        double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm());
+        double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm()) + energyGlobalT;
         
         _error[0] = energyArap - obs;   
     }

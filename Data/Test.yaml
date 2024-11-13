@@ -66,7 +66,7 @@ Keypoints.decimalsApproximation: 1
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 50
-Optimization.arap: 1000
+Optimization.arap: 1
 Optimization.alpha:  1
 Optimization.beta: 1
 
@@ -82,14 +82,14 @@ Optimization.nlopt.relTolerance: 1.5e-2
 Optimization.nlopt.absTolerance: 1.5e-2
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
-Optimization.nlopt.global.lowerBound: 0.00001
-Optimization.nlopt.global.upperBound: 10000000
+Optimization.nlopt.global.lowerBound: 50
+Optimization.nlopt.global.upperBound: 50
 Optimization.nlopt.arap.lowerBound: 0.000001
 Optimization.nlopt.arap.upperBound: 10000000000
 
 #Method selection
 Triangulation.seed.method: "NRSLAM" # Classic NRSLAM ORBSLAM
-Triangulation.seed.location: "InRays" # InRays TwoPoints
+Triangulation.seed.location: "TwoPoints" # InRays TwoPoints
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # NRSLAM: use NRSLAM weighted midpoint method
