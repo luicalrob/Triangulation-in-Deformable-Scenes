@@ -66,12 +66,12 @@ Keypoints.decimalsApproximation: 1
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 50
-Optimization.arap: 1
+Optimization.arap: 0.1
 Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 10
+Optimization.numberOfOptimizations: 8
 Optimization.numberOfIterations: 50
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations

@@ -296,13 +296,11 @@ public:
         const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
         const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[4]);
 
-        Eigen::Vector3d diffGlobalT;
-
         g2o::SE3Quat T_global =  vT->estimate();
         Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
         Eigen::Vector3d t = T_global.translation();
 
-        Eigen::Vector3d diffGlobalT = (Rg * v2->estimate() - t) - v1->estimate();
+        Eigen::Vector3d diffGlobalT = (Rg * v2i->estimate() - t) - v1i->estimate();
         double energyGlobalT = diffGlobalT.squaredNorm();
 
         double obs(_measurement);
@@ -312,13 +310,17 @@ public:
         // firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
         // secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
 
-        Eigen::Vector3d elasticNumerator = (v2i->estimate() - v2j->estimate()) - (Ri * (v1i->estimate() - v1j->estimate()));
-        Eigen::Vector3d elasticDenominator = (Ri * (v1i->estimate() - v1j->estimate()));
+        Eigen::Vector3d firstElasticNumerator = (v2i->estimate() - v2j->estimate()) - (Ri * (v1i->estimate() - v1j->estimate()));
+        Eigen::Vector3d firstElasticDenominator = (Ri * (v1i->estimate() - v1j->estimate()));
 
+        Eigen::Vector3d secondElasticNumerator = (v2j->estimate() - v2i->estimate()) - (Rj * (v1j->estimate() - v1i->estimate()));
+        Eigen::Vector3d secondElasticDenominator = (Ri * (v1j->estimate() - v1i->estimate()));
 
-        double energyArap = weight * (elasticNumerator.squaredNorm() / elasticDenominator.squaredNorm()) + energyGlobalT;
+        double firstTerm = (firstElasticNumerator.squaredNorm() / firstElasticDenominator.squaredNorm());
+        double secondTerm = (secondElasticNumerator.squaredNorm() / secondElasticDenominator.squaredNorm());
+        double energyElastic = weight * firstTerm + energyGlobalT;
         
-        _error[0] = energyArap - obs;   
+        _error[0] = energyElastic - obs;   
     }
 
     // virtual void linearizeOplus();
