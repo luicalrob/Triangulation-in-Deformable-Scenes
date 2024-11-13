@@ -65,8 +65,8 @@ Keypoints.decimalsApproximation: 1
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 50
-Optimization.arap: 10000
+Optimization.global: 1
+Optimization.arap: 1000
 Optimization.alpha:  0.390367
 Optimization.beta: 1.43289
 
@@ -77,13 +77,13 @@ Optimization.numberOfIterations: 25
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 8
+Optimization.nlopt.numberOfIterations: 20
 Optimization.nlopt.relTolerance: 1.5e-2
 Optimization.nlopt.absTolerance: 1.5e-2
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
-Optimization.nlopt.global.lowerBound: 50
-Optimization.nlopt.global.upperBound: 50
+Optimization.nlopt.global.lowerBound: 1
+Optimization.nlopt.global.upperBound: 1
 Optimization.nlopt.arap.lowerBound: 0.000001
 Optimization.nlopt.arap.upperBound: 150000000
 

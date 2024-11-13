@@ -696,35 +696,29 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                         currId++;
                     }
 
-                    //Set ARAP edge
-                    EdgeARAP* eArap = new EdgeARAP();
+                    //Set Odgen edge
+                    EdgeOdgen* eOdgen = new EdgeOdgen();
 
-                    //eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    eArap->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                    eArap->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                    eArap->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstjPointToOptimize])));
-                    eArap->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondjPointToOptimize])));
-                    eArap->setVertex(4, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
-                    
-                    size_t newMeshIndex = static_cast<size_t>(j);
-                    std::unordered_set<int> newjIndexes = jIndexes;
-                    newjIndexes.erase(j);
-                    newjIndexes.insert(static_cast<int>(i)); 
+                    eOdgen->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                    eOdgen->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                    eOdgen->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstjPointToOptimize])));
+                    eOdgen->setVertex(3, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondjPointToOptimize])));
+                    eOdgen->setVertex(4, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
 
-                    eArap->Ri = Rs[i];
-                    eArap->Rj = Rs[j];
-                    eArap->weight = edge_weights[GetOrderedEdge(i, j)];
-                    eArap->alpha = alphaWeight;
-                    eArap->beta = betaWeight;
+                    eOdgen->Ri = Rs[i];
+                    eOdgen->Rj = Rs[j];
+                    eOdgen->weight = edge_weights[GetOrderedEdge(i, j)];
+                    eOdgen->alpha = alphaWeight;
+                    eOdgen->beta = betaWeight;
 
                     Eigen::Matrix<double, 1, 1> informationMatrixArap;
                     informationMatrixArap(0, 0) = arapBalanceWeight * std::pow(mesh->triangles_.size(), 2); // * distancesInvTipDesv;
 
-                    eArap->setInformation(informationMatrixArap);
+                    eOdgen->setInformation(informationMatrixArap);
                     double measurementArap = 0.0;
-                    eArap->setMeasurement(measurementArap);
+                    eOdgen->setMeasurement(measurementArap);
 
-                    optimizer.addEdge(eArap);
+                    optimizer.addEdge(eOdgen);
                 }
             }
         }
