@@ -314,11 +314,11 @@ public:
         Eigen::Vector3d firstElasticDenominator = (Ri * (v1i->estimate() - v1j->estimate()));
 
         Eigen::Vector3d secondElasticNumerator = (v2j->estimate() - v2i->estimate()) - (Rj * (v1j->estimate() - v1i->estimate()));
-        Eigen::Vector3d secondElasticDenominator = (Ri * (v1j->estimate() - v1i->estimate()));
+        Eigen::Vector3d secondElasticDenominator = (Rj * (v1j->estimate() - v1i->estimate()));
 
         double firstTerm = (firstElasticNumerator.squaredNorm() / firstElasticDenominator.squaredNorm());
         double secondTerm = (secondElasticNumerator.squaredNorm() / secondElasticDenominator.squaredNorm());
-        double energyElastic = weight * firstTerm + energyGlobalT;
+        double energyElastic = weight * (firstTerm + secondTerm) + energyGlobalT;
         
         _error[0] = energyElastic - obs;   
     }
