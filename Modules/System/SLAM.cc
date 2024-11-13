@@ -551,7 +551,7 @@ void SLAM::measureAbsoluteErrors(bool stop) {
 
         float average_movement = total_movement / insertedIndexes_.size();
         //std::cout << "\nTotal movement: " << total_movement << std::endl;
-        std::cout << "Average movement: " << average_movement << std::endl;
+        std::cout << "Average movement: " << average_movement * 1000 << std::endl;
         float average_error_original = total_error_original / insertedIndexes_.size();
         //std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
         //std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
