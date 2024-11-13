@@ -270,7 +270,7 @@ void EdgeSE3ProjectXYZPerKeyFrameOnlyPoints::linearizeOplus() {
 
 
 EdgeARAP::EdgeARAP(){
-    resize(4);
+    resize(5);
 }
 
 bool EdgeARAP::read(std::istream& is) {
@@ -315,6 +315,27 @@ bool EdgeARAP::write(std::ostream& os) const {
 //     Eigen::Vector3d fourthJacobian = 4.0 * weight * (secondDeformed_eij - ((Ri.matrix()+Rj.matrix()) * secondUndeformed_eij)/2.0);
 //     _jacobianOplus[3] = fourthJacobian;
 // }
+
+EdgeOdgen::EdgeOdgen(){
+    resize(4);
+}
+
+bool EdgeOdgen::read(std::istream& is) {
+    is >> _measurement;
+
+    double info;
+    is >> info;
+    information()(0, 0) = info;
+
+    return true;
+}
+
+bool EdgeOdgen::write(std::ostream& os) const {
+    os << _measurement << " ";
+
+    os << information()(0, 0);
+    return os.good();
+}
 
 EdgeTransformation::EdgeTransformation(){
     resize(3);

@@ -293,6 +293,64 @@ public:
         const VertexSBAPointXYZ* v2i = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
         const VertexSBAPointXYZ* v1j = static_cast<const VertexSBAPointXYZ*>(_vertices[2]);
         const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
+        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[4]);
+
+        g2o::SE3Quat T_global =  vT->estimate();
+        Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
+        Eigen::Vector3d t = T_global.translation();
+
+        Eigen::Vector3d diffGlobalT = (Rg * v2i->estimate() - t) - v1i->estimate();
+
+        double energyGlobalT = diffGlobalT.squaredNorm();
+
+        double obs(_measurement);
+        double mu = alpha;
+        double alp = beta;
+
+        Eigen::Vector3d numerator = (v2i->estimate() - v2j->estimate());
+        Eigen::Vector3d denominator = (v1i->estimate() - v1j->estimate());
+        double lamdaij = numerator.norm() / denominator.norm();
+        //double lambda_ij = std::sqrt(std::pow(numerator, 2) + std::pow(denominator, 2));
+
+        ////tension in shear
+        //double energy = (2 * mu / alp) * ((pow(lamdaij, alp)) - pow((1 / (lamdaij*lamdaij)), alp));
+
+        ////tension in Planar
+        //double energy = (2 * mu / alp) * ((pow(lamdaij, alp)) - pow((1 / lamdaij),alp));
+
+        ////tension in Tensile
+        //double energy = (2 * mu / alp) * ((pow(lamdaij, alp)) - pow((1 / sqrt(lamdaij)), alp));
+
+        ///Deformation
+        double energy = (mu / alp) * (2 * (pow(lamdaij, alp)) + pow((lamdaij),-(2*alp)) - 3);
+
+        _error[0] = (energy + energyGlobalT) - obs;   
+    }
+
+    // virtual void linearizeOplus();
+
+    Sophus::SO3d Ri;
+    Sophus::SO3d Rj;
+    double weight;
+    double alpha;   // Bulk deformation parameter
+    double beta;    // Shear deformation parameter
+};
+
+class EdgeOdgen: public  g2o::BaseMultiEdge<1, double>{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    EdgeARAP();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError() {
+        const VertexSBAPointXYZ* v1i = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2i = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        const VertexSBAPointXYZ* v1j = static_cast<const VertexSBAPointXYZ*>(_vertices[2]);
+        const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
 
         double obs(_measurement);
         double mu = alpha;

@@ -31,6 +31,8 @@
 
 #include <nlopt.hpp>
 #include <memory>
+#include <iomanip>
+#include <locale>
 
 SLAM::SLAM(const std::string &settingsFile) {
     //Load settings from file
@@ -90,6 +92,9 @@ SLAM::SLAM(const std::string &settingsFile) {
 
     drawRaysSelection_ = settings_.getDrawRaysSelection();
     showSolution_ = settings_.getShowSolution();
+
+    filePath_ = "./Data/Experiment.txt";
+    outFile_.imbue(std::locale("es_ES.UTF-8"));
 }
 
 
@@ -106,8 +111,8 @@ void SLAM::loadPoints(const std::string &originalFile, const std::string &movedF
         return;
     }
 
-    originalPoints_.clear();  // Clear previous points if any
-    movedPoints_.clear();     // Clear previous points if any
+    originalPoints_.clear();
+    movedPoints_.clear();
 
     std::string line;
     while (std::getline(originalFileStream, line)) {
@@ -337,6 +342,15 @@ void SLAM::mapping() {
     }
 
     std::cout << "\nINITIAL MEASUREMENTS: \n";
+    outFile_.open(filePath_);
+    if (outFile_.is_open()) {
+        outFile_ << "INITIAL MEASUREMENTS: \n";
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
+
     measureRelativeErrors();
     measureAbsoluteErrors();
 
@@ -424,16 +438,39 @@ void SLAM::mapping() {
 
         mapVisualizer_->update(drawRaysSelection_);
         mapVisualizer_->updateCurrentPose(Tcw_);
+
+        if (i != nOptimizations_) {
+            std::cout << i << " / " << nOptimizations_ << " MEASUREMENTS: \n";
+            outFile_.open(filePath_, std::ios::app);
+            if (outFile_.is_open()) {
+                outFile_ << i << " / " << nOptimizations_ << " MEASUREMENTS: \n";
+
+                outFile_.close();
+            } else {
+                std::cerr << "Unable to open file for writing" << std::endl;
+            }
+
+            measureRelativeErrors();
+            measureAbsoluteErrors(false);
+        }
     }
 
     //arapBundleAdjustment(pMap_.get());
+    outFile_.open(filePath_, std::ios::app);
+    if (outFile_.is_open()) {
+        outFile_ << "FINAL MEASUREMENTS: \n";
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
 
     // visualize
     mapVisualizer_->update(drawRaysSelection_);
     mapVisualizer_->updateCurrentPose(Tcw_);
 }
 
-void SLAM::measureAbsoluteErrors() {
+void SLAM::measureAbsoluteErrors(bool stop) {
 
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
@@ -514,7 +551,7 @@ void SLAM::measureAbsoluteErrors() {
 
         float average_movement = total_movement / insertedIndexes_.size();
         //std::cout << "\nTotal movement: " << total_movement << std::endl;
-        std::cout << "Average movement: " << average_movement << std::endl;
+        std::cout << "Average movement: " << average_movement * 1000 << std::endl;
         float average_error_original = total_error_original / insertedIndexes_.size();
         //std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
         //std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
@@ -524,17 +561,33 @@ void SLAM::measureAbsoluteErrors() {
         float average_error = total_error / point_count;
         //std::cout << "\nTotal error in 3D: " << total_error << std::endl;
         float rmse = std::sqrt(total_squared_error / point_count);
-        std::cout << "Average error in 3D: " << average_error << std::endl;
-        std::cout << "RMSE in 3D: " << rmse << "\n" << std::endl;
+        std::cout << "Average error in 3D: " << average_error * 1000 << std::endl;
+        std::cout << "RMSE in 3D: " << rmse * 1000 << "\n" << std::endl;
+        
+        outFile_.open(filePath_, std::ios::app);
+        if (outFile_.is_open()) {
+            if (stop) {
+                outFile_ << "Av. movement: " << average_movement * 1000 << '\n';
+            }
+            outFile_ << "Av. error: " << average_error * 1000 << '\n';
+            outFile_ << "RMSE: " << rmse * 1000 << "\n\n";
+
+            outFile_.close();
+            std::cout << "Data has been written to Experiment.txt" << std::endl;
+        } else {
+            std::cerr << "Unable to open file for writing" << std::endl;
+        }
     } else {
         std::cout << "No points to compare." << std::endl;
     }
 
     // stop
     // Uncomment for step by step execution (pressing esc key)
-    std::cout << "Press esc to continue... " << std::endl;
-    while((cv::waitKey(10) & 0xEFFFFF) != 27){
-        mapVisualizer_->update(drawRaysSelection_);
+    if (stop) {
+        std::cout << "Press esc to continue... " << std::endl;
+        while((cv::waitKey(10) & 0xEFFFFF) != 27){
+            mapVisualizer_->update(drawRaysSelection_);
+        }
     }
 }
 
@@ -644,6 +697,21 @@ void SLAM::measureRelativeErrors(){
                 std::cout << "Pixels error (standard desv): " << pixelsErrors.desv << std::endl;
                 
                 std::cout << "Average squared norm relative error: " << meanSquaredNormRelativeError << std::endl;
+
+                outFile_.open(filePath_, std::ios::app);
+                if (outFile_.is_open()) {
+                    outFile_ << "C1 standard desv: " << pixelsErrors.desvc1 << '\n';
+                    outFile_ << "C2 standard desv: " << pixelsErrors.desvc2 << '\n';
+                    outFile_ << "Rel. error: " << meanSquaredNormRelativeError << '\n';
+                    outFile_ << "Global rotation: " << Rs_global << '\n';
+                    outFile_ << "Global translation: " << Ts << '\n';
+
+                    outFile_.close();
+                    std::cout << "Data has been written to Experiment.txt" << std::endl;
+                } else {
+                    std::cerr << "Unable to open file for writing" << std::endl;
+                }
+
             } else {
                 std::cout << "No points to compare." << std::endl;
             }
