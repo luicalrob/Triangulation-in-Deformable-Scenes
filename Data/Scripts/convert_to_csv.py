@@ -3,6 +3,7 @@ import csv
 import re
 import os
 import pandas as pd
+import argparse
 
 def process_value(value, key, precision=2, scientific=False):
     """
@@ -51,23 +52,30 @@ def setExperiment(experiment_type):
         raise ValueError("The type of experiment must be between 1 and 6.")
 
 
+parser = argparse.ArgumentParser(description="Set parameters for the experiment")
+parser.add_argument('--ExperimentType', type=int, choices=range(1, 7), help="Type of experiment (1 to 6)", required=False)
+args = parser.parse_args()
+
 #######  Inputs  ########
 
 # "ARAP_NoGlobal" "ARAP", "Elastic, HyperElastic"
-Model = "ARAP"      
+Model = "Elastic"      
 # "InRays" or "TwoPoints"            
-Triangulation = "TwoPoints"  
+Triangulation = "InRays"  
 # 20, 80, 150   
 Depth = 150       
 # "Planar" or "Gradual"               
-Shape = "Planar"   
+Shape = "Gradual"   
 # 0, 2.5, 10             
 gaussianMov = 2.5
 # 0, 2.5, 10            
 rigidMov = 0
 # or type of experiment # 1, 2, 3, 4, 5 or 6
 # Set as None if you prefer using gaussianMov and rigidMov values
-ExperimentType = 1
+if (args.ExperimentType):
+    ExperimentType = args.ExperimentType
+else:
+    ExperimentType = 1
 # 1, 2, 3, 4, 5  (Same experiment but different data)         
 Experiment = 1    
 
