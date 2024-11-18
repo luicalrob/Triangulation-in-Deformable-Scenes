@@ -1,0 +1,80 @@
+INITIAL MEASUREMENTS: 
+C1 standard desv: 0,939203
+C2 standard desv: 0,922126
+Rel. error: 0
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 2,5
+Av. error: 1,6428
+RMSE: 1,8172
+
+1 / 5 MEASUREMENTS: 
+C1 standard desv: 0,28601
+C2 standard desv: 0,276305
+Rel. error: 0,00102944
+Global rotation:            1  1,45408e-15  2,45805e-15
+-1,45408e-15            1  -1,1254e-14
+-2,45805e-15   1,1254e-14            1
+Global translation: -1,35345e-14
+ 5,44281e-14
+ -1,6423e-14
+Av. error: 1,47513
+RMSE: 1,7176
+
+2 / 5 MEASUREMENTS: 
+C1 standard desv: 0,293443
+C2 standard desv: 0,290859
+Rel. error: 0,00106583
+Global rotation:            1  7,89889e-15  2,21042e-14
+-7,89889e-15            1 -7,10663e-14
+-2,21042e-14  7,10663e-14            1
+Global translation: -1,14609e-13
+ 3,44809e-13
+ -1,6163e-13
+Av. error: 1,41593
+RMSE: 1,67514
+
+3 / 5 MEASUREMENTS: 
+C1 standard desv: 0,308446
+C2 standard desv: 0,300953
+Rel. error: 0,00106905
+Global rotation:            1   7,8989e-15  2,21043e-14
+ -7,8989e-15            1 -7,10664e-14
+-2,21043e-14  7,10664e-14            1
+Global translation:  -1,1461e-13
+  3,4481e-13
+-1,61631e-13
+Av. error: 1,39242
+RMSE: 1,65201
+
+4 / 5 MEASUREMENTS: 
+C1 standard desv: 0,332403
+C2 standard desv: 0,328442
+Rel. error: 0,00107614
+Global rotation:            1  7,89892e-15  2,21044e-14
+-7,89892e-15            1 -7,10667e-14
+-2,21044e-14  7,10667e-14            1
+Global translation:  -1,1461e-13
+ 3,44811e-13
+-1,61632e-13
+Av. error: 1,36326
+RMSE: 1,61775
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 0,332375
+C2 standard desv: 0,324913
+Rel. error: 0,00124251
+Global rotation:            1  1,41534e-10  1,41108e-09
+-1,41534e-10            1 -2,54518e-09
+-1,41108e-09  2,54518e-09            1
+Global translation: -6,49782e-09
+  1,2894e-08
+-1,23721e-08
+Av. movement: 2,5
+Av. error: 1,3422
+RMSE: 1,58203
+
