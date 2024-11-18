@@ -4,22 +4,76 @@ import re
 import os
 import pandas as pd
 
+def process_value(value, key, precision=2, scientific=False):
+    """
+    Processes a value extracted from a line and formats it according to the parameters.
+    
+    Args:
+        line (str): The input line in the format 'key: value'.
+        key (str): The key of the column to store in the dictionary.
+        decimal_separator (str): The decimal separator to use in the output (default ',').
+        precision (int): The number of decimal places to round.
+        scientific (bool): If True, formats the number in scientific notation.
+    
+    returns:
+        tuple: A key and a processed value ready to store in the dictionary.
+    """
+    
+    value_float = float(value.replace(',', '.'))
+    if scientific:
+        formatted_value = f"{value_float:.{precision}e}"
+    else:
+        formatted_value = f"{round(value_float, precision):.{precision}f}"
+    formatted_value = formatted_value.replace('.', ',')
+    return key, formatted_value
+
+def setExperiment(experiment_type):
+    """
+    Args:
+        experiment_type (int): The experiment type (1 a 6).
+    
+    Returns:
+        dict: gaussianMov and rigidMov values
+    """
+    # Diccionario de configuración
+    experiment_config = {
+        1: {"gaussian": 2.5, "rigid": 0},
+        2: {"gaussian": 0, "rigid": 2.5},
+        3: {"gaussian": 2.5, "rigid": 2.5},
+        4: {"gaussian": 10, "rigid": 0},
+        5: {"gaussian": 0, "rigid": 10},
+        6: {"gaussian": 10, "rigid": 10},
+    }
+    
+    try:
+        return experiment_config[experiment_type]
+    except KeyError:
+        raise ValueError("The type of experiment must be between 1 and 6.")
+
+
 #######  Inputs  ########
 
 # "ARAP_NoGlobal" "ARAP", "Elastic, HyperElastic"
 Model = "ARAP"      
 # "InRays" or "TwoPoints"            
-Triangulation = "InRays"  
+Triangulation = "TwoPoints"  
 # 20, 80, 150   
-Depth = 80       
+Depth = 150       
 # "Planar" or "Gradual"               
-Shape = "Gradual"   
+Shape = "Planar"   
 # 0, 2.5, 10             
-gaussianMov = 10  
+gaussianMov = 2.5
 # 0, 2.5, 10            
-rigidMov = 10     
-# 1, 2, 3, 4, 5           
-Experiment = 1           
+rigidMov = 0
+# or type of experiment # 1, 2, 3, 4, 5 or 6
+# Set as None if you prefer using gaussianMov and rigidMov values
+ExperimentType = 1
+# 1, 2, 3, 4, 5  (Same experiment but different data)         
+Experiment = 1    
+
+parameters = setExperiment(ExperimentType)
+gaussianMov = parameters["gaussian"]
+rigidMov = parameters["rigid"]
 
 if gaussianMov == 2.5 or rigidMov == 2.5:
     totalMov = "2_5"
@@ -72,13 +126,18 @@ while line_index < len(lines):
         current_measurement = {"Section": section}
     
     elif "C1 standard desv" in line:
-        current_measurement["C1 std dev"] = line.split(':')[1].strip().replace('.', ',')
-
+        value = line.split(':')[1].strip()
+        key, finalValue = process_value(value, "C1 std dev", precision=2)
+        current_measurement[key] = finalValue
     elif "C2 standard desv" in line:
-        current_measurement["C2 std dev"] = line.split(':')[1].strip().replace('.', ',')
+        value = line.split(':')[1].strip()
+        key, finalValue = process_value(value, "C2 std dev", precision=2)
+        current_measurement[key] = finalValue
 
     elif "Rel. error" in line:
-        current_measurement["Rel. error"] = line.split(':')[1].strip().replace('.', ',')
+        value = line.split(':')[1].strip()
+        key, finalValue = process_value(value, "Rel. error", precision=2, scientific=True)
+        current_measurement[key] = finalValue
 
     elif "Global rotation" in line:
         rotation_matrix = [
@@ -86,10 +145,14 @@ while line_index < len(lines):
             lines[line_index + 1].strip().split(),
             lines[line_index + 2].strip().split()
         ]
-        
-        current_measurement["Global rotation X"] = rotation_matrix[0][0].replace('.', ',')
-        current_measurement["Global rotation Y"] = rotation_matrix[1][1].replace('.', ',')
-        current_measurement["Global rotation Z"] = rotation_matrix[2][2].replace('.', ',')
+
+        key, finalValue = process_value(rotation_matrix[0][0], "Global rotation X", precision=2)
+        current_measurement[key] = finalValue
+        key, finalValue = process_value(rotation_matrix[1][1], "Global rotation Y", precision=2)
+        current_measurement[key] = finalValue
+        key, finalValue = process_value(rotation_matrix[2][2], "Global rotation Z", precision=2)
+        current_measurement[key] = finalValue
+
     elif "Global translation" in line:
         translation_values = [
             lines[line_index].strip().split()[2:],
@@ -99,29 +162,35 @@ while line_index < len(lines):
         
         flat_translation_values = [value for sublist in translation_values for value in sublist]
 
-        current_measurement["Global translation X"] = str(float(flat_translation_values[0].replace(',', '.')) * 1000).replace('.', ',')
-        current_measurement["Global translation Y"] = str(float(flat_translation_values[1].replace(',', '.')) * 1000).replace('.', ',')
-        current_measurement["Global translation Z"] = str(float(flat_translation_values[2].replace(',', '.')) * 1000).replace('.', ',')
+        current_measurement["Global translation X"] = str(round(float(flat_translation_values[0].replace(',', '.')) * 1000, 2)).replace('.', ',')
+        current_measurement["Global translation Y"] = str(round(float(flat_translation_values[1].replace(',', '.')) * 1000, 2)).replace('.', ',')
+        current_measurement["Global translation Z"] = str(round(float(flat_translation_values[2].replace(',', '.')) * 1000, 2)).replace('.', ',')
 
     elif "Av. movement" in line:
-        current_measurement["Av. movement"] = line.split(':')[1].strip().replace('.', ',')
+        value = line.split(':')[1].strip()
+        key, finalValue = process_value(value, "Av. movement", precision=2)
+        current_measurement[key] = finalValue
 
         if "INITIAL" in section:
-            av_movement = current_measurement.get("Av. movement", None)
+            av_movement = float(value.replace(',', '.'))
 
     elif "Av. error" in line:
-        current_measurement["Av. error"] = line.split(':')[1].strip().replace('.', ',')
+        value = line.split(':')[1].strip()
+        key, finalValue = process_value(value, "Av. error", precision=2)
+        current_measurement[key] = finalValue
 
         if "INITIAL" in section:
             # Track the "Initial" values
-            initial_av_error = current_measurement.get("Av. error", None)
+            initial_av_error = float(value.replace(',', '.'))
         
         elif "FINAL" in section:
             # Track the "Final" values
-            final_av_error = current_measurement.get("Av. error", None)
+            final_av_error = float(value.replace(',', '.'))
 
     elif "RMSE" in line:
-        current_measurement["RMSE"] = line.split(':')[1].strip().replace('.', ',')
+        value = line.split(':')[1].strip()
+        key, finalValue = process_value(value, "RMSE", precision=2)
+        current_measurement[key] = finalValue
     
     line_index += 1
 
@@ -132,8 +201,8 @@ if current_measurement:
 # Calculate values
 if initial_av_error is not None and final_av_error is not None:
     try:
-        improv_percentage = ((float(initial_av_error.replace(',', '.')) - float(final_av_error.replace(',', '.'))) / 
-                             float(initial_av_error.replace(',', '.'))) * 100
+        improv_percentage = ((initial_av_error - final_av_error) / 
+                             initial_av_error) * 100
     except ValueError:
         improv_percentage = None
 else:
@@ -141,8 +210,8 @@ else:
 
 if av_movement is not None and final_av_error is not None:
     try:
-        final_vs_mov_percentage = (float(final_av_error.replace(',', '.')) / 
-                                   float(av_movement.replace(',', '.'))) * 100
+        final_vs_mov_percentage = (final_av_error / 
+                                   av_movement) * 100
     except ValueError:
         final_vs_mov_percentage = None
 else:
@@ -220,8 +289,10 @@ print("CSV file created successfully with the selected section.")
 
 
 csv_file = out_file_path + '.csv'
-df = pd.read_csv(csv_file)
+df = pd.read_csv(csv_file, decimal=',')
+
 
 # Save the Data as an Excel file
 excel_file = out_file_path + '.xlsx'
 df.to_excel(excel_file, index=False, engine='openpyxl') 
+
