@@ -53,25 +53,46 @@ def setExperiment(experiment_type):
 
 
 parser = argparse.ArgumentParser(description="Set parameters for the experiment")
+parser.add_argument('--Model', type=str, choices=["ARAP_NoGlobal", "ARAP", "Elastic", "HyperElastic"] ,required=False, help="Model name (ARAP_NoGlobal, ARAP, Elastic or HyperElastic)")
+parser.add_argument('--Triangulation', type=str, choices=["InRays", "TwoPoints"], required=False, help="Triangulation type (InRays or TwoPoints)")
+parser.add_argument('--Depth', type=int, choices=[20, 80, 150], required=False, help="Depth value (20, 80, 150)")
+parser.add_argument('--Shape', type=str, choices=["Planar", "Gradual"], required=False, help="Shape type (Planar or Gradual)")
 parser.add_argument('--ExperimentType', type=int, choices=range(1, 7), help="Type of experiment (1 to 6)", required=False)
+parser.add_argument('--Experiment', type=int, choices=range(1, 6), required=False, help="Experiment number (1 to 5)")
 args = parser.parse_args()
 
 #######  Inputs  ########
 
 # "ARAP_NoGlobal" "ARAP", "Elastic, HyperElastic"
-Model = "ARAP_NoGlobal"      
-# "InRays" or "TwoPoints"            
-Triangulation = "InRays"  
+if (args.Model):
+    Model = args.Model
+else:
+    Model = "ARAP"
+
+# "InRays" or "TwoPoints" 
+if (args.Triangulation):
+    Triangulation = args.Triangulation
+else:           
+    Triangulation = "TwoPoints"  
+
 # 20, 80, 150   
-Depth = 150       
-# "Planar" or "Gradual"               
-Shape = "Gradual"   
+if (args.Depth):
+    Depth = args.Depth
+else:
+    Depth = 150       
+
+# "Planar" or "Gradual"    
+if (args.Shape):
+    Shape = args.Shape
+else:           
+    Shape = "Gradual" 
+
 # 0, 2.5, 10             
 gaussianMov = 2.5
 # 0, 2.5, 10            
 rigidMov = 0
+
 # or type of experiment # 1, 2, 3, 4, 5 or 6
-# Set as None if you prefer using gaussianMov and rigidMov values
 if (args.ExperimentType):
     ExperimentType = args.ExperimentType
 else:
