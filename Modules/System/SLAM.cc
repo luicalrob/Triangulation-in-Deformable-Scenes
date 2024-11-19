@@ -92,6 +92,7 @@ SLAM::SLAM(const std::string &settingsFile) {
 
     drawRaysSelection_ = settings_.getDrawRaysSelection();
     showSolution_ = settings_.getShowSolution();
+    stop_ = settings_.getStopExecutionOption();
 
     filePath_ = "./Data/Experiment.txt";
     outFile_.imbue(std::locale("es_ES.UTF-8"));
@@ -196,7 +197,9 @@ void SLAM::viusualizeSolution() {
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
-    cv::namedWindow("Test Window");
+    if(stop_) {
+        cv::namedWindow("Test Window");
+    }
 
     // visualize
     mapVisualizer_->update(drawRaysSelection_);
@@ -335,9 +338,13 @@ void SLAM::mapping() {
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
-    cv::namedWindow("Test Window");
-    std::cout << "Press esc to continue... " << std::endl;
-    while((cv::waitKey(10) & 0xEFFFFF) != 27){
+    if (stop_) {
+        cv::namedWindow("Test Window");
+        std::cout << "Press esc to continue... " << std::endl;
+        while((cv::waitKey(10) & 0xEFFFFF) != 27){
+            mapVisualizer_->update(drawRaysSelection_);
+        }
+    } else {
         mapVisualizer_->update(drawRaysSelection_);
     }
 
@@ -583,12 +590,17 @@ void SLAM::measureAbsoluteErrors(bool stop) {
 
     // stop
     // Uncomment for step by step execution (pressing esc key)
-    if (stop) {
-        std::cout << "Press esc to continue... " << std::endl;
-        while((cv::waitKey(10) & 0xEFFFFF) != 27){
-            mapVisualizer_->update(drawRaysSelection_);
+    if (stop_) {
+        if (stop) {
+            std::cout << "Press esc to continue... " << std::endl;
+            while((cv::waitKey(10) & 0xEFFFFF) != 27){
+                mapVisualizer_->update(drawRaysSelection_);
+            }
         }
+    } else {
+        mapVisualizer_->update(drawRaysSelection_);
     }
+    
 }
 
 void SLAM::measureRelativeErrors(){

@@ -102,6 +102,7 @@ public:
 
     bool getDrawRaysSelection();
     bool getShowSolution();
+    bool getStopExecutionOption();
 
 private:
     //Camera parameters
@@ -161,6 +162,7 @@ private:
 
     bool drawRaysSelection_;
     bool showSolution_;
+    bool stop_;
 };
 
 
