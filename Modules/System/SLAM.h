@@ -173,6 +173,7 @@ private:
 
     bool drawRaysSelection_;
     bool showSolution_;
+    bool stop_;
 
     std::ofstream outFile_;
     std::string filePath_;

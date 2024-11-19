@@ -50,8 +50,8 @@ Triangulation.minCos: 0.9998
 Camera.FirstPose.x: 0.0
 Camera.FirstPose.y: 0.0
 Camera.FirstPose.z: 0.0
-Camera.SecondPose.x: 0.24
-Camera.SecondPose.y: 0.01
+Camera.SecondPose.x: 0.34
+Camera.SecondPose.y: 0.08
 Camera.SecondPose.z: 0.06
 
 #Simulated typical desviation reprojection error for keypoints
@@ -65,7 +65,7 @@ Keypoints.decimalsApproximation: 1
 # 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 1
+Optimization.global: 50
 Optimization.arap: 1000
 Optimization.alpha:  0.390367
 Optimization.beta: 1.43289
@@ -77,15 +77,15 @@ Optimization.numberOfIterations: 25
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 20
-Optimization.nlopt.relTolerance: 1.5e-2
-Optimization.nlopt.absTolerance: 1.5e-2
+Optimization.nlopt.numberOfIterations: 8
+Optimization.nlopt.relTolerance: 1.5e-3
+Optimization.nlopt.absTolerance: 1.5e-3
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
-Optimization.nlopt.global.lowerBound: 1
-Optimization.nlopt.global.upperBound: 1
-Optimization.nlopt.arap.lowerBound: 0.000001
-Optimization.nlopt.arap.upperBound: 150000000
+Optimization.nlopt.global.lowerBound: 50
+Optimization.nlopt.global.upperBound: 50
+Optimization.nlopt.arap.lowerBound: 0.00000001
+Optimization.nlopt.arap.upperBound: 10000000000
 
 #Method selection
 Triangulation.seed.method: "NRSLAM" # Classic NRSLAM ORBSLAM
@@ -99,3 +99,4 @@ Triangulation.seed.location: "TwoPoints" # InRays TwoPoints
 # Visualization
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
+Execution.stop: "true"
