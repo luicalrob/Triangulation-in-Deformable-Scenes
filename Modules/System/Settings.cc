@@ -138,6 +138,15 @@ Settings::Settings(const std::string& configFile) {
     } else {
         showSolution_ = false;
     }
+
+    std::string stopString;
+    fSettings["Execution.stop"] >> stopString;
+
+    if (stopString == "true") {
+        stop_ = true;
+    } else {
+        stop_ = false;
+    }
 }
 
 ostream &operator<<(std::ostream& output, const Settings& settings){
@@ -342,4 +351,8 @@ bool Settings::getDrawRaysSelection(){
 
 bool Settings::getShowSolution(){
     return showSolution_;
+}
+
+bool Settings::getStopExecutionOption(){
+    return stop_;
 }
