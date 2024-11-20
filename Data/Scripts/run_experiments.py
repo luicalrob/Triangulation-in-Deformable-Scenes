@@ -109,6 +109,8 @@ for triangulation, depth, shape, experiment in product(triangulations, depths, s
                         file.write(f"Camera.SecondPose.z: {pose['z']}\n")
                     elif "Execution.stop:" in line:
                         file.write(f'Execution.stop: "false"\n')
+                    elif "Triangulation.seed.location:" in line:
+                        file.write(f'Triangulation.seed.location: {triangulation}\n')
                     else:
                         file.write(line)
 
