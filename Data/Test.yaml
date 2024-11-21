@@ -50,41 +50,46 @@ Triangulation.minCos: 0.9998
 Camera.FirstPose.x: 0.0
 Camera.FirstPose.y: 0.0
 Camera.FirstPose.z: 0.0
-Camera.SecondPose.x: 0.14
-Camera.SecondPose.y: 0.01
+Camera.SecondPose.x: 0.34
+Camera.SecondPose.y: 0.08
 Camera.SecondPose.z: 0.06
 
 #Simulated typical desviation reprojection error for keypoints
 Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
+# 100000000: 3 stand
+# 90000: 6.38
+# 1000: 14 stand
+# 1.5: 0 stand
+# 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 1 # 10000
-Optimization.arap: 10 # 100000
+Optimization.global: 50
+Optimization.arap: 1000
 Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 1
-Optimization.numberOfIterations: 50
+Optimization.numberOfOptimizations: 5
+Optimization.numberOfIterations: 25
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
-Optimization.nlopt.numberOfIterations: 10
+Optimization.nlopt.numberOfIterations: 20
 Optimization.nlopt.relTolerance: 1.5e-2
 Optimization.nlopt.absTolerance: 1.5e-2
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
-Optimization.nlopt.global.lowerBound: 0.00001
-Optimization.nlopt.global.upperBound: 100000
-Optimization.nlopt.arap.lowerBound: 0.000001
-Optimization.nlopt.arap.upperBound: 150000000
+Optimization.nlopt.global.lowerBound: 50
+Optimization.nlopt.global.upperBound: 50
+Optimization.nlopt.arap.lowerBound: 0.00001
+Optimization.nlopt.arap.upperBound: 10000000
 
 #Method selection
 Triangulation.seed.method: "NRSLAM" # Classic NRSLAM ORBSLAM
-Triangulation.seed.location: "TwoPoints" # InRays TwoPoints
+Triangulation.seed.location: TwoPoints
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # NRSLAM: use NRSLAM weighted midpoint method
@@ -94,3 +99,4 @@ Triangulation.seed.location: "TwoPoints" # InRays TwoPoints
 # Visualization
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
+Execution.stop: "false"

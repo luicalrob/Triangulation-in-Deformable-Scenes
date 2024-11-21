@@ -35,8 +35,9 @@
 #include "Map/Map.h"
 
 #include "sophus/se3.hpp"
-
 #include <opencv2/opencv.hpp>
+
+#include <fstream>
 
 class SLAM {
 public:
@@ -75,7 +76,7 @@ public:
     /*
      * Measure the pos & or errors of the poses and the 3D error of the mapPoints
      */
-    void measureAbsoluteErrors();
+    void measureAbsoluteErrors(bool stop = true);
 
     /*
      * Measure the relative distances errors of the mapPoints
@@ -172,6 +173,10 @@ private:
 
     bool drawRaysSelection_;
     bool showSolution_;
+    bool stop_;
+
+    std::ofstream outFile_;
+    std::string filePath_;
 };
 
 
