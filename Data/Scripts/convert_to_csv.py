@@ -53,7 +53,7 @@ def setExperiment(experiment_type):
 
 
 parser = argparse.ArgumentParser(description="Set parameters for the experiment")
-parser.add_argument('--Model', type=str, choices=["ARAP_NoGlobal", "ARAP", "Elastic", "HyperElastic"] ,required=False, help="Model name (ARAP_NoGlobal, ARAP, Elastic or HyperElastic)")
+parser.add_argument('--Model', type=str, choices=["ARAP_NoGlobal", "ARAP_Modified", "ARAP", "Elastic", "HyperElasticOdgen", "ARAP_OneSet"] ,required=False, help="Model name (ARAP_NoGlobal, ARAP, ARAP_OneSet, Elastic or HyperElastic)")
 parser.add_argument('--Triangulation', type=str, choices=["InRays", "TwoPoints"], required=False, help="Triangulation type (InRays or TwoPoints)")
 parser.add_argument('--Depth', type=int, choices=[20, 80, 150], required=False, help="Depth value (20, 80, 150)")
 parser.add_argument('--Shape', type=str, choices=["Planar", "Gradual"], required=False, help="Shape type (Planar or Gradual)")
@@ -63,7 +63,7 @@ args = parser.parse_args()
 
 #######  Inputs  ########
 
-# "ARAP_NoGlobal" "ARAP", "Elastic, HyperElastic"
+# "ARAP_NoGlobal", "ARAP_OneSet", "ARAP", "Elastic, HyperElasticOdgen"
 if (args.Model):
     Model = args.Model
 else:
@@ -262,7 +262,7 @@ if measurements:
 
 # Step 4: Define Headers
 ZeroRow = [
-    "InRays","","","","","","","","",
+    {Triangulation},"","","","","","","","",
     "","","",
     "","","",
     "","","",""
