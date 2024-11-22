@@ -170,7 +170,8 @@ private:
     double NloptGlobalUpperBound_;
     double NloptArapLowerBound_;
     double NloptArapUpperBound_;
-
+    
+    bool showScene_;
     bool drawRaysSelection_;
     bool showSolution_;
     bool stop_;

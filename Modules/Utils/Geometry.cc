@@ -143,34 +143,14 @@ void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
     if(location == "TwoPoints"){
         p3D1 = x1;
         p3D2 = x1;
+    } else if(location == "FarPoints") {
+        point0 = (t + point0);
+
+        p3D1 = point0 + (point0 - x1);
+        p3D2 = point1 + (point1 - x1);
     } else {
         p3D1 = (t + point0);
         p3D2 = point1;
-        // point0 = (t + point0);
-
-        // // Compute the midpoint of point0 and point1 along the line connecting them
-        // // between the triangulated point x1 and the line segment of point0 and point1.
-        
-        // // Direction of the perpendicular line
-        // Eigen::Vector3f perpendicular_dir = (point1 - point0).normalized();
-        
-        // // Calculate the vector from x1 to point0 and from x1 to point1
-        // Eigen::Vector3f x1_to_point0 = point0 - x1;
-        // Eigen::Vector3f x1_to_point1 = point1 - x1;
-        
-        // // Find the distances between x1, point0, and point1
-        // float dist_x1_point0 = x1_to_point0.norm();
-        // float dist_x1_point1 = x1_to_point1.norm();
-        
-        // // To select points between x1, point0, and point1:
-        // // We want points that lie on the perpendicular vector but have equal distance to x1, point0, and point1.
-        
-        // // Interpolation factor `alpha` to find the final points
-        // float alpha = dist_x1_point0 / (dist_x1_point0 + dist_x1_point1);
-        
-        // // Final points on the line connecting the two rays.
-        // p3D1 = x1 + alpha * (point0 - x1);
-        // p3D2 = x1 + alpha * (point1 - x1);
     }
     
     x3D_1 = T2w.inverse() * p3D1;

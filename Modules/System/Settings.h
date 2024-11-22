@@ -100,6 +100,7 @@ public:
     double getNloptArapLowerBound();
     double getNloptArapUpperBound();
 
+    bool getShowScene();
     bool getDrawRaysSelection();
     bool getShowSolution();
     bool getStopExecutionOption();
@@ -160,6 +161,7 @@ private:
     int nOptimizations_;
     int nOptIterations_;
 
+    bool showScene_;
     bool drawRaysSelection_;
     bool showSolution_;
     bool stop_;
