@@ -121,6 +121,16 @@ Settings::Settings(const std::string& configFile) {
     NloptArapLowerBound_ = fSettings["Optimization.nlopt.arap.lowerBound"];
     NloptArapUpperBound_ = fSettings["Optimization.nlopt.arap.upperBound"];
 
+    
+    std::string showSceneString;
+    fSettings["MapVisualizer.showScene"] >> showSceneString;
+
+    if (showSceneString == "true") {
+        showScene_ = true;
+    } else {
+        showScene_ = false;
+    }
+    
     std::string drawRaysString;
     fSettings["MapVisualizer.drawRays"] >> drawRaysString;
 
@@ -351,6 +361,10 @@ bool Settings::getDrawRaysSelection(){
 
 bool Settings::getShowSolution(){
     return showSolution_;
+}
+
+bool Settings::getShowScene(){
+    return showScene_;
 }
 
 bool Settings::getStopExecutionOption(){

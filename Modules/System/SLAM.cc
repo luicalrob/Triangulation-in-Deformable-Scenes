@@ -44,7 +44,10 @@ SLAM::SLAM(const std::string &settingsFile) {
     pMap_ = shared_ptr<Map>(new Map(settings_.getMinCommonObs()));
 
     //Create visualizers
-    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
+    showScene_ = settings_.getShowScene();
+    if(showScene_) {
+        mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
+    }
 
     prevFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
@@ -159,7 +162,9 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     currFrame_.setPose(T2w);
     Tcw_ = T2w;
 
-    mapVisualizer_->updateCurrentPose(T2w);
+    if(showScene_) {
+        mapVisualizer_->updateCurrentPose(T2w);
+    }
 }
 
 void SLAM::viusualizeSolution() {
@@ -202,8 +207,10 @@ void SLAM::viusualizeSolution() {
     }
 
     // visualize
-    mapVisualizer_->update(drawRaysSelection_);
-    mapVisualizer_->updateCurrentPose(Tcw_);
+    if(showScene_) {
+        mapVisualizer_->update(drawRaysSelection_);
+        mapVisualizer_->updateCurrentPose(Tcw_);
+    }
 }
 
 void SLAM::createKeyPoints() {
@@ -242,9 +249,10 @@ void SLAM::createKeyPoints() {
     pMap_->insertKeyFrame(prevKeyFrame_);
     pMap_->insertKeyFrame(currKeyFrame_);
 
-    visualizer_->drawFeatures(prevFrame_.getKeyPoints(), currIm_, "Previous Frame KeyPoints");
-    visualizer_->drawFeatures(currFrame_.getKeyPoints(), currIm_, "Current Frame KeyPoints");
-
+    if(showScene_) {
+        visualizer_->drawFeatures(prevFrame_.getKeyPoints(), currIm_, "Previous Frame KeyPoints");
+        visualizer_->drawFeatures(currFrame_.getKeyPoints(), currIm_, "Current Frame KeyPoints");
+    }
 }
 
 void SLAM::mapping() {
@@ -285,7 +293,7 @@ void SLAM::mapping() {
             triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         }
         
-        //x3D_1 = x3D_prev; 
+        x3D_1 = x3D_prev; 
 
         //Check positive depth
         auto x_1 = T1w * x3D_1;
@@ -345,7 +353,9 @@ void SLAM::mapping() {
             mapVisualizer_->update(drawRaysSelection_);
         }
     } else {
-        mapVisualizer_->update(drawRaysSelection_);
+        if(showScene_) {
+            mapVisualizer_->update(drawRaysSelection_);
+        }
     }
 
     std::cout << "\nINITIAL MEASUREMENTS: \n";
@@ -443,8 +453,10 @@ void SLAM::mapping() {
 
         std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;
 
-        mapVisualizer_->update(drawRaysSelection_);
-        mapVisualizer_->updateCurrentPose(Tcw_);
+        if(showScene_) {
+            mapVisualizer_->update(drawRaysSelection_);
+            mapVisualizer_->updateCurrentPose(Tcw_);
+        }
 
         if (i != nOptimizations_) {
             std::cout << i << " / " << nOptimizations_ << " MEASUREMENTS: \n";
@@ -473,8 +485,10 @@ void SLAM::mapping() {
     }
 
     // visualize
-    mapVisualizer_->update(drawRaysSelection_);
-    mapVisualizer_->updateCurrentPose(Tcw_);
+    if(showScene_) {
+        mapVisualizer_->update(drawRaysSelection_);
+        mapVisualizer_->updateCurrentPose(Tcw_);
+    }
 }
 
 void SLAM::measureAbsoluteErrors(bool stop) {
@@ -598,7 +612,9 @@ void SLAM::measureAbsoluteErrors(bool stop) {
             }
         }
     } else {
-        mapVisualizer_->update(drawRaysSelection_);
+        if(showScene_) {
+            mapVisualizer_->update(drawRaysSelection_);
+        }
     }
     
 }
