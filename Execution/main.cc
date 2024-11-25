@@ -39,6 +39,8 @@ int main(){
 
     SLAM.createKeyPoints();
 
+    SLAM.getDepthMeasurements();
+
     bool showSolution = SLAM.getShowSolution();
 
     // To visualize solution

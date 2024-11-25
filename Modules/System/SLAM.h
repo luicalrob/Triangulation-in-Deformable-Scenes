@@ -69,6 +69,11 @@ public:
     void createKeyPoints();
 
     /*
+     * Get real depth measurements and create depth measurements with gaussian error
+     */
+    void getDepthMeasurements();
+
+    /*
      * Mapping of the simulation matches
      */
     void mapping();
@@ -143,8 +148,14 @@ private:
     Eigen::Vector3f C1Pose_;
     Eigen::Vector3f C2Pose_;
 
+    std::vector<float> C1PointsDepth;
+    std::vector<float> C2PointsDepth;
+    std::vector<float> C1DepthMeasurements;
+    std::vector<float> C2DepthMeasurements;
+
     float simulatedRepErrorStanDesv_;
     int decimalsRepError_;
+    float SimulatedDepthErrorStanDesv_;
 
     double repBalanceWeight_;
     double arapBalanceWeight_;

@@ -68,6 +68,7 @@ SLAM::SLAM(const std::string &settingsFile) {
 
     simulatedRepErrorStanDesv_ = settings_.getSimulatedRepError();
     decimalsRepError_ = settings_.getDecimalsRepError();
+    SimulatedDepthErrorStanDesv_ = settings_.getSimulatedDepthError();
 
     repBalanceWeight_ = settings_.getOptRepWeight();
     arapBalanceWeight_ = settings_.getOptArapWeight();
@@ -255,6 +256,30 @@ void SLAM::createKeyPoints() {
     }
 }
 
+void SLAM::getDepthMeasurements() {
+    C1PointsDepth.clear();
+    C2PointsDepth.clear();
+    C1DepthMeasurements.clear();
+    C2DepthMeasurements.clear();
+
+    std::default_random_engine generator;
+    std::normal_distribution<float> distribution(0.0f, SimulatedDepthErrorStanDesv_/1000);
+
+    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T2w = currFrame_.getPose();
+
+    for(size_t i = 0; i < movedPoints_.size(); ++i) {
+
+        Eigen::Vector3f p3Dcam1 = T1w * originalPoints_[i];
+        Eigen::Vector3f p3Dcam2 = T2w * movedPoints_[i];
+
+        C1PointsDepth.push_back(p3Dcam1[2]);
+        C2PointsDepth.push_back(p3Dcam2[2]);
+        C1DepthMeasurements.push_back(p3Dcam1[2] + distribution(generator));
+        C2DepthMeasurements.push_back(p3Dcam2[2] + distribution(generator));
+    }
+}
+
 void SLAM::mapping() {
     int nTriangulated = 0;
 
@@ -371,7 +396,8 @@ void SLAM::mapping() {
     measureRelativeErrors();
     measureAbsoluteErrors();
 
-    for(int i = 1; i <= nOptimizations_; i++){ 
+    double optimizationChange = 100;
+    for(int i = 1; i <= nOptimizations_ && optimizationChange >= (0.00001*movedPoints_.size()); i++){ 
         // correct error
         if (OptSelection_ == "open3DArap") {
             arapOpen3DOptimization(pMap_.get());
@@ -410,7 +436,7 @@ void SLAM::mapping() {
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
 
                 repBalanceWeight_ = x[0];
                 globalBalanceWeight_ = x[1];
@@ -445,13 +471,14 @@ void SLAM::mapping() {
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
             }
         } else {
-            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_, nOptIterations_);
+            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
         }
 
         std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;
+        std::cout << "\nOptimization change: " << optimizationChange << std::endl;
 
         if(showScene_) {
             mapVisualizer_->update(drawRaysSelection_);

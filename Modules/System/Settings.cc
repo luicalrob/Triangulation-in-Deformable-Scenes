@@ -96,6 +96,7 @@ Settings::Settings(const std::string& configFile) {
 
     SimulatedRepError_ = fSettings["Keypoints.RepError"];
     DecimalsRepError_ = fSettings["Keypoints.decimalsApproximation"];
+    SimulatedDepthError_ = fSettings["Measurements.DepthError"];
 
     OptRepWeight_ = fSettings["Optimization.rep"];
     OptArapWeight_ = fSettings["Optimization.arap"];
@@ -273,6 +274,10 @@ float Settings::getSimulatedRepError(){
 
 int Settings::getDecimalsRepError(){
     return DecimalsRepError_;
+}
+
+float Settings::getSimulatedDepthError(){
+    return SimulatedDepthError_;
 }
 
 double Settings::getOptRepWeight(){

@@ -439,7 +439,8 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     }
 }
 
-void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWeight, double arapBalanceWeight, double alphaWeight, double betaWeight, int nOptIterations){
+void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWeight, double arapBalanceWeight, double alphaWeight, 
+                        double betaWeight, int nOptIterations, double* optimizationChange){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
     unordered_map<RotationMatrix_,size_t> mRotId;
@@ -741,10 +742,21 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
         pKF->setPose(sophusPose);
     }
 
+    if (optimizationChange) {
+        *optimizationChange = 0;
+    }
+
     for(pair<MapPoint_,ID> pairMapPointId : mMapPointId){
         MapPoint_ pMP = pairMapPointId.first;
         VertexSBAPointXYZ* vPoint = static_cast<VertexSBAPointXYZ*>(optimizer.vertex(pairMapPointId.second));
         Eigen::Vector3f p3D = vPoint->estimate().cast<float>();
+
+        if (optimizationChange) {
+            Eigen::Vector3f originalPosition = pMP->getWorldPosition();
+            double changeMagnitude = (originalPosition - p3D).norm();
+            *optimizationChange += changeMagnitude;
+        }
+
         pMP->setWorldPosition(p3D);
     }
 
