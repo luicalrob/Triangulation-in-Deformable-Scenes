@@ -371,7 +371,8 @@ void SLAM::mapping() {
     measureRelativeErrors();
     measureAbsoluteErrors();
 
-    for(int i = 1; i <= nOptimizations_; i++){ 
+    double optimizationChange = 100;
+    for(int i = 1; i <= nOptimizations_ && optimizationChange >= (0.00001*movedPoints_.size()); i++){ 
         // correct error
         if (OptSelection_ == "open3DArap") {
             arapOpen3DOptimization(pMap_.get());
@@ -410,7 +411,7 @@ void SLAM::mapping() {
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
 
                 repBalanceWeight_ = x[0];
                 globalBalanceWeight_ = x[1];
@@ -445,13 +446,14 @@ void SLAM::mapping() {
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
             }
         } else {
-            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_, nOptIterations_);
+            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
         }
 
         std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;
+        std::cout << "\nOptimization change: " << optimizationChange << std::endl;
 
         if(showScene_) {
             mapVisualizer_->update(drawRaysSelection_);

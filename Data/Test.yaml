@@ -50,8 +50,8 @@ Triangulation.minCos: 0.9998
 Camera.FirstPose.x: 0.0
 Camera.FirstPose.y: 0.0
 Camera.FirstPose.z: 0.0
-Camera.SecondPose.x: 0.34
-Camera.SecondPose.y: 0.08
+Camera.SecondPose.x: 0.14
+Camera.SecondPose.y: 0.01
 Camera.SecondPose.z: 0.06
 
 #Simulated typical desviation reprojection error for keypoints
@@ -71,7 +71,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 5
+Optimization.numberOfOptimizations: 20
 Optimization.numberOfIterations: 25
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
@@ -89,15 +89,17 @@ Optimization.nlopt.arap.upperBound: 10000000
 
 #Method selection
 Triangulation.seed.method: "NRSLAM" # Classic NRSLAM ORBSLAM
-Triangulation.seed.location: "InRays"
-# inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
-# TwoPoints: SVD triangulation method, choosing both points as the solution
+# Classic: Use standard triangulation calculation
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
+Triangulation.seed.location: "FarPoints"
+# inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
+# TwoPoints: SVD triangulation method, choosing both points as the solution
+# FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction
 
 
 # Visualization
-MapVisualizer.showScene: "false"
+MapVisualizer.showScene: "true"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
 Execution.stop: "false"
