@@ -59,7 +59,7 @@ Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 0.0
+Measurements.DepthError: 1.0
 
 # 100000000: 3 stand
 # 90000: 6.38
@@ -96,7 +96,7 @@ Triangulation.seed.method: "DepthMeasurement" # Classic NRSLAM ORBSLAM
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
 # DepthMeasurement: use depth measurements 
-Triangulation.seed.location: "FarPoints"
+Triangulation.seed.location: "TwoPoints"
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction

@@ -315,7 +315,9 @@ void SLAM::mapping() {
         } else if (TrianMethod_ == "ORBSLAM") {
             triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         } else if (TrianMethod_ == "DepthMeasurement") {
-            triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_, C1DepthMeasurements, C2DepthMeasurements);
+            xn1 = prevCalibration_->unproject(x1, C1DepthMeasurements[i]);
+            xn2 = currCalibration_->unproject(x2, C2DepthMeasurements[i]);
+            triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_, C1DepthMeasurements[i], C2DepthMeasurements[i]);
         } else {
             triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         }
@@ -604,10 +606,10 @@ void SLAM::measureAbsoluteErrors(bool stop) {
         std::cout << "Average movement: " << average_movement * 1000 << std::endl;
         float average_error_original = total_error_original / insertedIndexes_.size();
         //std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
-        //std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
+        //std::cout << "Average error in ORIGINAL 3D: " << average_error_original * 1000 << std::endl;
         float average_error_moved = total_error_moved / insertedIndexes_.size();
         //std::cout << "\nTotal error in MOVED 3D: " << total_error_moved << std::endl;
-        //std::cout << "Average error in MOVED 3D: " << average_error_moved << std::endl;
+        //std::cout << "Average error in MOVED 3D: " << average_error_moved * 1000 << std::endl;
         float average_error = total_error / point_count;
         //std::cout << "\nTotal error in 3D: " << total_error << std::endl;
         float rmse = std::sqrt(total_squared_error / point_count);

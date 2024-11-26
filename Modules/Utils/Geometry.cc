@@ -191,32 +191,13 @@ void triangulateORBSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
 
 void triangulateDepth(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
                  const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, 
-                 std::string location, std::vector<float> C1DepthMeasurements, std::vector<float> C2DepthMeasurements) {
-    Eigen::Vector3f f0_hat = xn1.normalized();
-    Eigen::Vector3f f1_hat = xn2.normalized();
-
+                 std::string location, float C1DepthMeasurements, float C2DepthMeasurements) {
     Sophus::SE3f T21 = T2w * T1w.inverse();
     Eigen::Vector3f t = T21.translation();
     Eigen::Matrix3f R = T21.rotationMatrix();
 
-    Eigen::Vector3f p = (R * f0_hat).cross(f1_hat);
-    Eigen::Vector3f q = (R * f0_hat).cross(t);
-    Eigen::Vector3f r = f1_hat.cross(t);
-
-    float lambda0 = r.norm() / p.norm();
-    float lambda1 = q.norm() / p.norm();
-
-    Eigen::Vector3f point0 = C1DepthMeasurements[0] * R * f0_hat;
-    Eigen::Vector3f point1 = C2DepthMeasurements[0] * f1_hat;
-
-    float v1 = (t + point0 + point1).squaredNorm();
-    float v2 = (t - point0 - point1).squaredNorm();
-    float v3 = (t - point0 + point1).squaredNorm();
-
-    float minv = fmin(v1,fmin(v2,v3));
-
-    // Inverse Depth Weighted MidPoint.
-    //Eigen::Vector3f x1 = q.norm() / (q.norm() + r.norm()) * (t + r.norm() / p.norm() * (R * f0_hat + f1_hat));
+    Eigen::Vector3f point0 = T21 * xn1; 
+    Eigen::Vector3f point1 = xn2;
     Eigen::Vector3f x1 = (point0 + point1) / 2.0f;
 
     Eigen::Vector3f p3D1, p3D2;
@@ -225,15 +206,13 @@ void triangulateDepth(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
         p3D1 = x1;
         p3D2 = x1;
     } else if(location == "FarPoints") {
-        point0 = (t + point0);
-
         p3D1 = point0 + (point0 - x1);
         p3D2 = point1 + (point1 - x1);
     } else {
-        p3D1 = (t + point0);
+        p3D1 = point0;
         p3D2 = point1;
     }
-    
+
     x3D_1 = T2w.inverse() * p3D1;
     x3D_2 = T2w.inverse() * p3D2;
 }
