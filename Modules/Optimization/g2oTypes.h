@@ -363,4 +363,30 @@ public:
 };
 
 
+class EdgeDepthCorrection: public  g2o::BaseUnaryEdge<1, float, VertexSBAPointXYZ>{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    EdgeDepthCorrection();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError()  {
+        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        float obs(_measurement);      //Observed depth of the point
+        Eigen::Vector3d p3Dw = v1->estimate();  //Predicted 3D world position of the point
+
+        // Compute the depth error
+        _error = obs - p3Dw[2];
+    }
+
+    //virtual void linearizeOplus();
+
+    std::shared_ptr<CameraModel> pCamera;
+};
+
+
+
 #endif //SLAM_G2OTYPES_H
