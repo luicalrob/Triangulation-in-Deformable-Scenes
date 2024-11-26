@@ -25,6 +25,7 @@ KeyFrame::KeyFrame(Frame &f) {
     vKeys_ = f.getKeyPoints();
     descriptors_ = f.getDescriptors().clone();
     vMapPoints_ = f.getMapPoints();
+    vDepthMeasurements_ = f.getDepthMeasurements();
 
     Tcw_ = f.getPose();
 
@@ -58,6 +59,7 @@ KeyFrame::KeyFrame(Frame &f) {
 
 KeyFrame::KeyFrame(const KeyFrame& other)
     : vKeys_(other.vKeys_),
+      vDepthMeasurements_(other.vDepthMeasurements_),
       descriptors_(other.descriptors_.clone()),
       Tcw_(other.Tcw_),
       calibration_(other.calibration_),
@@ -100,6 +102,14 @@ cv::KeyPoint KeyFrame::getKeyPoint(size_t idx) {
 
 std::vector<cv::KeyPoint>& KeyFrame::getKeyPoints() {
     return vKeys_;
+}
+
+float KeyFrame::getDepthMeasure(size_t idx) {
+    return vDepthMeasurements_[idx];
+}
+
+std::vector<float>& KeyFrame::getDepthMeasurements() {
+    return vDepthMeasurements_;
 }
 
 std::vector<std::shared_ptr<MapPoint> > & KeyFrame::getMapPoints() {

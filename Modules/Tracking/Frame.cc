@@ -28,6 +28,7 @@ Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
              const vector<float>& vDistortion){
     vKeys_ = vector<cv::KeyPoint>(nFeatures);
     vKeysDis_ = vector<cv::KeyPoint>(nFeatures);
+    vDepthMeasurements_ = vector<float>(nFeatures);
     descriptors_ = cv::Mat(nFeatures,32,CV_8U);
     vMapPoints_ = vector<shared_ptr<MapPoint>>(nFeatures,nullptr);
 
@@ -74,6 +75,10 @@ std::vector<cv::KeyPoint>& Frame::getKeyPoints() {
     return vKeys_;
 }
 
+std::vector<float>& Frame::getDepthMeasurements() {
+    return vDepthMeasurements_;
+}
+
 std::vector<cv::KeyPoint>& Frame::getKeyPointsDistorted() {
     return vKeysDis_;
 }
@@ -82,12 +87,20 @@ cv::KeyPoint Frame::getKeyPoint(const size_t idx) {
     return vKeys_[idx];
 }
 
+float Frame::getDepthMeasure(const size_t idx) {
+    return vDepthMeasurements_[idx];
+}
+
 Grid Frame::getGrid() {
     return grid_;
 }
 
 void Frame::setKeyPoint(cv::KeyPoint pKP, const size_t idx) {
     vKeys_[idx] = pKP;
+}
+
+void Frame::setDepthMeasure(float depth, const size_t idx) {
+    vDepthMeasurements_[idx] = depth;
 }
 
 void Frame::setMapPoint(size_t idx, std::shared_ptr<MapPoint> pMP) {
@@ -122,6 +135,7 @@ void Frame::assign(Frame &F) {
     //No memory reallocation is performed, faster!!
     vKeys_.swap(F.vKeys_);
     vKeysDis_.swap(F.vKeysDis_);
+    vDepthMeasurements_.swap(F.vDepthMeasurements_);
     vMapPoints_.swap(F.vMapPoints_);
     fill(F.vMapPoints_.begin(),F.vMapPoints_.end(), nullptr);
     cv::swap(descriptors_, F.descriptors_);

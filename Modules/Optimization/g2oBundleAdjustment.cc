@@ -575,6 +575,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                     currId++;
                 }
 
+                // REPROJECTION ERROR //
                 //Set fisrt projection edge
                 cv::Point2f uv = pKF1->getKeyPoint(mpIndex).pt;
                 int octave = pKF1->getKeyPoint(mpIndex).octave;
@@ -617,6 +618,30 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 eKF2->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
 
                 optimizer.addEdge(eKF2);
+
+                // DEPTH ERROR //
+                //Set fisrt depth edge
+                float d = pKF1->getDepthMeasure(mpIndex);
+
+                EdgeDepthCorrection* eD1 = new EdgeDepthCorrection();
+
+                eD1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                eD1->setMeasurement(d);
+                Eigen::Matrix<double, 1, 1> informationMatrixDepth;
+                informationMatrixDepth(0, 0) = 1;
+                eD1->setInformation(informationMatrixDepth);
+                optimizer.addEdge(eD1);
+
+                //Set second depth edge
+                d = pKF2->getDepthMeasure(mpIndex);
+
+                EdgeDepthCorrection* eD2 = new EdgeDepthCorrection();
+
+                eD2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                eD2->setMeasurement(d);
+                eD2->setInformation(informationMatrixDepth);
+                optimizer.addEdge(eD2);
+
 
                 auto it = invertedPosIndexes.find(mpIndex);
                 size_t i = 0;

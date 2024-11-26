@@ -275,8 +275,13 @@ void SLAM::getDepthMeasurements() {
 
         C1PointsDepth.push_back(p3Dcam1[2]);
         C2PointsDepth.push_back(p3Dcam2[2]);
-        C1DepthMeasurements.push_back(p3Dcam1[2] + distribution(generator));
-        C2DepthMeasurements.push_back(p3Dcam2[2] + distribution(generator));
+        float d1 = p3Dcam1[2] + distribution(generator);
+        float d2 = p3Dcam2[2] + distribution(generator);
+        C1DepthMeasurements.push_back(d1);
+        C2DepthMeasurements.push_back(d2);
+
+        prevFrame_.setDepthMeasure(d1, i);
+        currFrame_.setDepthMeasure(d2, i);
     }
 }
 
@@ -315,9 +320,12 @@ void SLAM::mapping() {
         } else if (TrianMethod_ == "ORBSLAM") {
             triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         } else if (TrianMethod_ == "DepthMeasurement") {
-            xn1 = prevCalibration_->unproject(x1, C1DepthMeasurements[i]);
-            xn2 = currCalibration_->unproject(x2, C2DepthMeasurements[i]);
-            triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_, C1DepthMeasurements[i], C2DepthMeasurements[i]);
+            float d1 = prevKeyFrame_->getDepthMeasure(i); // vMatches[i] si las parejas no fuesen ordenadas
+            float d2 = currKeyFrame_->getDepthMeasure(i);
+
+            xn1 = prevCalibration_->unproject(x1, d1);
+            xn2 = currCalibration_->unproject(x2, d2);
+            triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_, d1, d2);
         } else {
             triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         }

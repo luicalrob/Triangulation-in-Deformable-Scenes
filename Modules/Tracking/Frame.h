@@ -72,6 +72,22 @@ public:
      * Sets a new KeyPoint in the Frame at index idx
      */
     void setKeyPoint(cv::KeyPoint pKP, const size_t idx);
+
+    /*
+     * Gets the depth measure at index idx in the KeyFrame
+     */
+    float getDepthMeasure(const size_t idx);
+
+    /*
+     * Gets all the depth measurements of the Frame
+     */
+    std::vector<float>& getDepthMeasurements();
+
+    /*
+     * Sets a new depth measure in the Frame at index idx
+     */
+    void setDepthMeasure(float depth, const size_t idx);
+
     /*
      * Gets all the MapPoints matched in the Frame
      */
@@ -210,6 +226,7 @@ private:
 
     //Undistorted and distorted KeyPoints, its decsriptor and matched MapPoints, related by the same index
     std::vector<cv::KeyPoint> vKeys_, vKeysDis_;
+    std::vector<float> vDepthMeasurements_;
     cv::Mat descriptors_;
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
 

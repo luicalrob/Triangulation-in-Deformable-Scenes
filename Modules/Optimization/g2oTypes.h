@@ -379,12 +379,10 @@ public:
         Eigen::Vector3d p3Dw = v1->estimate();  //Predicted 3D world position of the point
 
         // Compute the depth error
-        _error = obs - p3Dw[2];
+        _error[0] = obs - p3Dw[2];
     }
 
     //virtual void linearizeOplus();
-
-    std::shared_ptr<CameraModel> pCamera;
 };
 
 

@@ -64,6 +64,16 @@ public:
     std::vector<cv::KeyPoint>& getKeyPoints();
 
     /*
+     * Gets the depth measure at index idx in the KeyFrame
+     */
+    float getDepthMeasure(size_t idx);
+
+    /*
+     * Gets all the depth measurements of the Frame
+     */
+    std::vector<float>& getDepthMeasurements();
+
+    /*
      * Gets all the MapPoint matches of the KeyFrame. They are associated with the KeyPoint at the same index
      */
     std::vector<std::shared_ptr<MapPoint>>& getMapPoints();
@@ -151,6 +161,7 @@ private:
     std::vector<cv::KeyPoint> vKeys_;
     cv::Mat descriptors_;
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
+    std::vector<float> vDepthMeasurements_;
 
     Sophus::SE3f Tcw_;
 

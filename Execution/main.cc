@@ -37,9 +37,9 @@ int main(){
 
     SLAM.setCameraPoses(firstCamera, secondCamera);
 
-    SLAM.createKeyPoints();
-
     SLAM.getDepthMeasurements();
+
+    SLAM.createKeyPoints();
 
     bool showSolution = SLAM.getShowSolution();
 
