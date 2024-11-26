@@ -494,16 +494,6 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                         double,
                         open3d::utility::hash_eigen<Eigen::Vector2i>> edge_weights = ComputeEdgeWeightsCot(mesh, 0);
 
-            //std::shared_ptr<open3d::geometry::PointCloud> cloud = convertToOpen3DPointCloud(v1Positions);
-            // std::shared_ptr<open3d::geometry::TetraMesh> tetra_mesh;
-            // std::vector<size_t> pt_map;
-
-            // std::tie(tetra_mesh, pt_map) = open3d::geometry::Qhull::ComputeDelaunayTetrahedralization(v1Positions);
-            // std::cout << "mesh size: (" << mesh->vertices_.size() << ")\n";
-
-            //std::vector<Sophus::SO3d> Rs(tetra_mesh->tetras_.size(), Sophus::SO3d::exp(Eigen::Vector3d::Zero())); //no rotation
-            //std::vector<RotationMatrix_> Rs(mesh->triangles_.size(), std::make_shared<Sophus::SO3d>(Sophus::SO3d::exp(Eigen::Vector3d::Zero())));
-
             T_global = pMap->getGlobalKeyFramesTransformation(k2->first, k1->first);
 
             Eigen::Matrix3d rotation;
@@ -555,7 +545,6 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 if (!pMPi2) continue;
 
                 MapPoint_ firstPointToOptimize = pMPi1;
-                //RotationMatrix_ Rot = std::make_shared<Sophus::SO3d>(Rs[mpIndex]);
                 MapPoint_ secondPointToOptimize = pMPi2;
 
                 //Check if this MapPoint has been already added to the optimization
@@ -644,22 +633,6 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 std::unordered_set<int> jIndexes = mesh->adjacency_list_[i];
 
                 if (jIndexes.empty()) continue;
-
-                // EdgeTransformation* eTi = new EdgeTransformation();
-
-                // eTi->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                // eTi->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                // eTi->setVertex(2, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mTGlobalId[T])));
-                // //eTi->Xi1world =  mesh->vertices_[i];
-                // // eTi->T = T_global;
-                
-                // Eigen::Matrix<double, 1, 1> informationMatrixTi;
-                // informationMatrixTi(0, 0) = globalBalanceWeight / mesh->vertices_.size();
-                // eTi->setInformation(informationMatrixTi);
-                
-                // double measurementTi = 0.0;
-                // eTi->setMeasurement(measurementTi);
-                // optimizer.addEdge(eTi);
 
                 double distancesInvTipDesv = getInvUncertainty(mesh, v1Positions, v2Positions, i);
 

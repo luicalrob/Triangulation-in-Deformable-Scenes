@@ -314,10 +314,12 @@ void SLAM::mapping() {
             triangulateClassic(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         } else if (TrianMethod_ == "ORBSLAM") {
             triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
+        } else if (TrianMethod_ == "DepthMeasurement") {
+            triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_, C1DepthMeasurements, C2DepthMeasurements);
         } else {
             triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
         }
-        
+
         //x3D_1 = x3D_prev; 
 
         //Check positive depth

@@ -351,3 +351,23 @@ bool EdgeTransformation::write(std::ostream& os) const {
 //     _jacobianOplusXi = 2.0 * Rg * diffGlobalT; //1x3
 //     _jacobianOplusXj = -2.0 * diffGlobalT; //1x3
 // }
+
+// EdgeDepthCorrection::EdgeDepthCorrection(){
+// }
+
+// bool EdgeDepthCorrection::read(std::istream& is) {
+//     is >> _measurement;
+
+//     double info;
+//     is >> info;
+//     information()(0, 0) = info;
+
+//     return true;
+// }
+
+// bool EdgeDepthCorrection::write(std::ostream& os) const {
+//     os << _measurement << " ";
+
+//     os << information()(0, 0);
+//     return os.good();
+// }
