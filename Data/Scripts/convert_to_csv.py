@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import argparse
 
+from config import default_values
+
 def process_value(value, key, precision=2, scientific=False):
     """
     Processes a value extracted from a line and formats it according to the parameters.
@@ -53,12 +55,12 @@ def setExperiment(experiment_type):
 
 
 parser = argparse.ArgumentParser(description="Set parameters for the experiment")
-parser.add_argument('--Model', type=str, choices=["ARAP_depth", "ARAP_NoGlobal", "ARAP", "Elastic", "HyperElasticOdgen", "ARAP_OneSet"] ,required=False, help="Model name (ARAP_NoGlobal, ARAP, ARAP_OneSet, Elastic or HyperElastic)")
-parser.add_argument('--Triangulation', type=str, choices=["InRays", "TwoPoints", "FarPoints"], required=False, help="Triangulation type (InRays or TwoPoints)")
-parser.add_argument('--Depth', type=int, choices=[20, 80, 150], required=False, help="Depth value (20, 80, 150)")
-parser.add_argument('--Shape', type=str, choices=["Planar", "Gradual"], required=False, help="Shape type (Planar or Gradual)")
-parser.add_argument('--ExperimentType', type=int, choices=range(1, 7), help="Type of experiment (1 to 6)", required=False)
-parser.add_argument('--Experiment', type=int, choices=range(1, 6), required=False, help="Experiment number (1 to 5)")
+parser.add_argument('--Model', type=str, choices=default_values["Model"] ,required=False, help="Model name (ARAP_NoGlobal, ARAP_OneSet, ARAP, Elastic or HyperElastic)")
+parser.add_argument('--Triangulation', type=str, choices=default_values["Triangulation"], required=False, help="Triangulation type (InRays, FarPoints or TwoPoints)")
+parser.add_argument('--Depth', type=int, choices=default_values["Depth"], required=False, help="Depth value (20, 80, 150)")
+parser.add_argument('--Shape', type=str, choices=default_values["Shape"], required=False, help="Shape type (Planar or Gradual)")
+parser.add_argument('--ExperimentType', type=int, choices=default_values["ExperimentType"], help="Type of experiment (1 to 6)", required=False)
+parser.add_argument('--Experiment', type=int, choices=default_values["Experiment"], required=False, help="Experiment number (1 to 5)")
 args = parser.parse_args()
 
 #######  Inputs  ########

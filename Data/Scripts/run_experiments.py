@@ -4,6 +4,8 @@ import shutil
 import argparse
 from itertools import product
 
+from config import default_values, shape_experiment_types
+
 def setExperiment(experiment_type):
     """
     Args:
@@ -28,21 +30,8 @@ def setExperiment(experiment_type):
         raise ValueError("The type of experiment must be between 1 and 6.")
 
 
-default_values = {
-    "Triangulation": ["InRays", "TwoPoints", "FarPoints"],
-    "Depth": [20, 80, 150],
-    "Shape": ["Planar", "Gradual"],
-    "ExperimentType": range(1, 7),
-    "Experiment": range(1, 6),
-}
-
-shape_experiment_types = {
-    "Planar": [1, 2, 3, 4, 5, 6],
-    "Gradual": [2, 3, 5, 6],
-}
-
 parser = argparse.ArgumentParser(description="Run experiments automatically.")
-parser.add_argument('--Model', type=str, choices=["ARAP_depth", "ARAP_NoGlobal", "ARAP", "Elastic", "HyperElasticOdgen", "ARAP_OneSet"] ,required=True, help="Model name (ARAP_NoGlobal, ARAP_OneSet, ARAP, Elastic or HyperElastic)")
+parser.add_argument('--Model', type=str, choices=default_values["Model"] ,required=True, help="Model name (ARAP_NoGlobal, ARAP_OneSet, ARAP, Elastic or HyperElastic)")
 parser.add_argument('--Triangulation', type=str, choices=default_values["Triangulation"], required=False, help="Triangulation type (InRays or TwoPoints)")
 parser.add_argument('--Depth', type=int, choices=default_values["Depth"], required=False, help="Depth value (20, 80, 150)")
 parser.add_argument('--Shape', type=str, choices=default_values["Shape"], required=False, help="Shape type (Planar or Gradual)")
