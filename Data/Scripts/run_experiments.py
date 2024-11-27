@@ -1,34 +1,33 @@
 #!/usr/bin/env python3
+
+"""
+Script to run the experiments that we have selected.
+
+This script create optimization data from a specific Model, using
+data selected from the sintetic data base previously prepared.
+
+Steps:
+1. Create data if it doesn't exist using "create_data.py" script.
+2. Select the Model. 
+3. Select extra choices if needed (not mandatory).
+4. Run the script.
+Example:
+./Data/Scripts/run_experiments.py --Model ARAP
+
+
+Output:
+- Experiments.txt files saved in each folder inside "./Data/Experiments"
+
+Author: Luis Calderón Robustillo
+Date: 19/11/24
+"""
+
 import os
 import shutil
 import argparse
 from itertools import product
 
-from config import default_values, shape_experiment_types
-
-def setExperiment(experiment_type):
-    """
-    Args:
-        experiment_type (int): The experiment type (1 a 6).
-    
-    Returns:
-        dict: gaussianMov and rigidMov values
-    """
-    # Diccionario de configuración
-    experiment_config = {
-        1: {"gaussian": 2.5, "rigid": 0},
-        2: {"gaussian": 0, "rigid": 2.5},
-        3: {"gaussian": 2.5, "rigid": 2.5},
-        4: {"gaussian": 10, "rigid": 0},
-        5: {"gaussian": 0, "rigid": 10},
-        6: {"gaussian": 10, "rigid": 10},
-    }
-    
-    try:
-        return experiment_config[experiment_type]
-    except KeyError:
-        raise ValueError("The type of experiment must be between 1 and 6.")
-
+from config import default_values, shape_experiment_types, setExperiment
 
 parser = argparse.ArgumentParser(description="Run experiments automatically.")
 parser.add_argument('--Model', type=str, choices=default_values["Model"] ,required=True, help="Model name (ARAP_NoGlobal, ARAP_OneSet, ARAP, Elastic or HyperElastic)")

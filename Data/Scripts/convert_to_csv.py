@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import argparse
 
-from config import default_values
+from config import default_values, setExperiment
 
 def process_value(value, key, precision=2, scientific=False):
     """
@@ -29,30 +29,6 @@ def process_value(value, key, precision=2, scientific=False):
         formatted_value = f"{round(value_float, precision):.{precision}f}"
     formatted_value = formatted_value.replace('.', ',')
     return key, formatted_value
-
-def setExperiment(experiment_type):
-    """
-    Args:
-        experiment_type (int): The experiment type (1 a 6).
-    
-    Returns:
-        dict: gaussianMov and rigidMov values
-    """
-    # Diccionario de configuración
-    experiment_config = {
-        1: {"gaussian": 2.5, "rigid": 0},
-        2: {"gaussian": 0, "rigid": 2.5},
-        3: {"gaussian": 2.5, "rigid": 2.5},
-        4: {"gaussian": 10, "rigid": 0},
-        5: {"gaussian": 0, "rigid": 10},
-        6: {"gaussian": 10, "rigid": 10},
-    }
-    
-    try:
-        return experiment_config[experiment_type]
-    except KeyError:
-        raise ValueError("The type of experiment must be between 1 and 6.")
-
 
 parser = argparse.ArgumentParser(description="Set parameters for the experiment")
 parser.add_argument('--Model', type=str, choices=default_values["Model"] ,required=False, help="Model name (ARAP_NoGlobal, ARAP_OneSet, ARAP, Elastic or HyperElastic)")

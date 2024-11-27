@@ -1,47 +1,35 @@
 #!/usr/bin/env python3
+
+"""
+Script to aggregate experiments data into a single CSV file.
+
+This script processes data from a specific Model, using a chosen 
+Triangulation method and Experiment. It compiles the data 
+into a consolidated CSV file for easier analysis.
+
+Steps:
+1. Run the experiments that you want to study using "run_experiments.py" script.
+2. Select the Model, Triangulation method and the Experiment in the command line. 
+3. Select extra choices if needed (not mandatory).
+4. Run the script.
+Example:
+./Data/Scripts/automated_loop_to_csv.py --Model ARAP --Triangulation InRays --Experiment 1
+
+
+Output:
+- A single CSV & Excel file containing all the experiments for the specified 
+  Model and Triangulation method.
+
+Author: Luis Calderón Robustillo
+Date: 19/11/24
+"""
+
 import argparse
 import subprocess
 from itertools import product
 
-from config import default_values, shape_experiment_types
+from config import default_values, shape_experiment_types, setExperiment
 
-def setExperiment(experiment_type):
-    """
-    Args:
-        experiment_type (int): The experiment type (1 a 6).
-    
-    Returns:
-        dict: gaussianMov and rigidMov values
-    """
-    # Diccionario de configuración
-    experiment_config = {
-        1: {"gaussian": 2.5, "rigid": 0},
-        2: {"gaussian": 0, "rigid": 2.5},
-        3: {"gaussian": 2.5, "rigid": 2.5},
-        4: {"gaussian": 10, "rigid": 0},
-        5: {"gaussian": 0, "rigid": 10},
-        6: {"gaussian": 10, "rigid": 10},
-    }
-    
-    try:
-        return experiment_config[experiment_type]
-    except KeyError:
-        raise ValueError("The type of experiment must be between 1 and 6.")
-
-
-default_values = {
-    "Model": ["ARAP_depth_onlyTriang", "ARAP_depth", "ARAP_NoGlobal", "ARAP", "Elastic", "HyperElasticOdgen", "ARAP_OneSet"],
-    "Triangulation": ["InRays", "TwoPoints", "FarPoints"],
-    "Depth": [20, 80, 150],
-    "Shape": ["Planar", "Gradual"],
-    "ExperimentType": range(1, 7),
-    "Experiment": range(1, 6),
-}
-
-shape_experiment_types = {
-    "Planar": [1, 2, 3, 4, 5, 6],
-    "Gradual": [2, 3, 5, 6],
-}
 
 parser = argparse.ArgumentParser(description="Run experiments automatically.")
 parser.add_argument('--Model', type=str, choices=default_values["Model"] ,required=True, help="Model name (ARAP_NoGlobal, ARAP_OneSet, ARAP, Elastic or HyperElastic)")

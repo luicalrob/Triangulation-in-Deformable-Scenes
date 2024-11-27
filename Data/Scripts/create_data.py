@@ -1,6 +1,29 @@
 #!/usr/bin/env python3
 import numpy as np
 
+"""
+Script to create data for the sintetic data base.
+
+This script creates two sets of 3D points: the first with a specific 
+shape and a second with a specified movement relative to the first.
+
+Steps:
+1. Select the Original points position. 
+1. Select the Gaussian/Rigid movement. 
+3. Choose between Planar, Gradual or Curvature movement.
+4. Select a intensity of the Gradual or Curvature movement, if they have been choosen.
+3. Run the script.
+Example:
+./Data/Scripts/create_data.py
+
+
+Output:
+- original_points.csv and moved_points.csv files are created
+
+Author: Luis Calderón Robustillo
+Date: 19/11/24
+"""
+
 def generate_points(num_points, rigid_movement, gaussian_movement, x_mean, x_std, y_mean, y_std, z_mean, z_std, 
                     angle_x=0, angle_y=0, angle_z=0, grad_direction='y', grad_intensity=1.0, gradual=False, curvature=False):
     original_points = np.zeros((num_points, 3))
@@ -84,10 +107,20 @@ angle_x, angle_y, angle_z = -45, -0, 45  # in degrees
 # Movement
 rigid_movement = 0.01  # Scale of movement for the moved points
 gaussian_movement = 0.01  # Scale of movement for the moved points
+movement_type = "Planar" # "Planar" "Gradual or "Curvature"
+gradual_and_curv_intensity = 25.0 # A significant value returns pronunciated gradual/curvature movements
+
+Gradual = False
+Curvature = False
+
+if (movement_type = "Gradual"):
+    Gradual = True
+elif (movement_type = "Curvature"):
+    Curvature = True
 
 original_points, moved_points = generate_points(num_points, rigid_movement, gaussian_movement, x_mean, 
                                                 x_std, y_mean, y_std, z_mean, z_std, angle_x, angle_y, angle_z,
-                                                'y', 25.0, False, False)
+                                                'y', gradual_and_curv_intensity, Gradual, Curvature)
 
 save_points('./Data/original_points.csv', original_points)
 save_points('./Data/moved_points.csv', moved_points)
