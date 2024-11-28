@@ -19,29 +19,6 @@ def validate_options(option, available_values, option_name):
 def get_csv_filename(model, triangulation, experiment):
     return f"{model}_{triangulation}_{experiment}.csv"
 
-def extract_final_percentages(file_path):
-    """
-    Extract the percentages from the FINAL row of a CSV file.
-
-    Args:
-        file_path (str): Path to the input CSV file.
-
-    Returns:
-        tuple: (Improvement Percentage, Final Vs Mov Percentage) or None if not found.
-    """
-    try:
-        df = pd.read_csv(file_path, skiprows=1)  # Skip metadata rows
-        final_row = df[df["Section"] == "FINAL"]
-        if not final_row.empty:
-            improvement = final_row["Improv. (%)"].iloc[0]
-            final_vs_mov = final_row["Final Vs Mov (%)"].iloc[0]
-            return improvement, final_vs_mov
-        else:
-            return None
-    except Exception as e:
-        print(f"Error processing {file_path}: {e}")
-        return None
-
 def process_files(models, triangulations, experiment):
     """
     Process the CSV files for the specified models, triangulations, and experiment.
@@ -70,6 +47,7 @@ def process_files(models, triangulations, experiment):
             col_prefix = f"{model}-{triangulation}"
             model_columns[f"{col_prefix} Improvement (%)"] = []
             model_columns[f"{col_prefix} Final Vs Mov (%)"] = []
+            model_columns[f"{col_prefix} Initial VS Mov (%)"] = []
 
     # Now process each model and triangulation combination
     firstIteration = True
@@ -79,38 +57,49 @@ def process_files(models, triangulations, experiment):
             file_path = os.path.join(DATA_DIR, file_name)
 
             if os.path.exists(file_path):
-                percentages = extract_final_percentages(file_path)
-                if percentages:
-                    improvement, final_vs_mov = percentages
+                df = pd.read_csv(file_path, skiprows=1)
+                initial_rows = df[df["Section"] == "INITIAL"]
+                final_rows = df[df["Section"] == "FINAL"]
 
-                    # Read the CSV and capture the key experiment data
-                    df = pd.read_csv(file_path, skiprows=1)
-                    final_rows = df[df["Section"] == "FINAL"]
+                # Ensure we process the correct rows
+                if not final_rows.empty:
+                    for _, final_row in final_rows.iterrows():  # Loop through all "FINAL" rows
+                        if (firstIteration):
+                            # Extract values for each "FINAL" row
+                            avg_movement = final_row["Av. movement"]
+                            shape = final_row["Shape"]
+                            gaussian_mov = final_row["Gaussian"]
+                            rigid_mov = final_row["Rigid"]
 
-                    # Ensure we process the correct rows
-                    if not final_rows.empty:
-                        for _, final_row in final_rows.iterrows():  # Loop through all "FINAL" rows
-                            if (firstIteration):
-                                # Extract values for each "FINAL" row
-                                avg_movement = final_row["Av. movement"]
-                                shape = final_row["Shape"]
-                                gaussian_mov = final_row["Gaussian"]
-                                rigid_mov = final_row["Rigid"]
+                            # Populate the metadata dictionary
+                            metadata["Avg Movement"].append(avg_movement)
+                            metadata["Shape"].append(shape)
+                            metadata["Gaussian Mov"].append(gaussian_mov)
+                            metadata["Rigid Mov"].append(rigid_mov)
 
-                                # Populate the metadata dictionary
-                                metadata["Avg Movement"].append(avg_movement)
-                                metadata["Shape"].append(shape)
-                                metadata["Gaussian Mov"].append(gaussian_mov)
-                                metadata["Rigid Mov"].append(rigid_mov)
+                        improvement = final_row["Improv. (%)"]
+                        final_vs_mov = final_row["Final Vs Mov (%)"]
 
-                            # Add Improvement (%) and Final Vs Mov (%) for the specific model & triangulation
-                            model_columns[f"{model}-{triangulation} Improvement (%)"].append(improvement)
-                            model_columns[f"{model}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
-                        firstIteration = False
-                    else:
-                        print(f"No FINAL row found in {file_name}.")
+                        # Add Improvement (%) and Final Vs Mov (%) for the specific model & triangulation
+                        model_columns[f"{model}-{triangulation} Improvement (%)"].append(improvement)
+                        model_columns[f"{model}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
+                    firstIteration = False
+
+                    for _, initial_row in initial_rows.iterrows():  # Loop through all "INITIAL" rows
+                        initial_error = initial_row["Av. error"]
+                        mov = initial_row["Av. movement"]
+
+                        initial_e_value = float(initial_error.replace(',', '.'))
+                        mov_value = float(mov.replace(',', '.'))
+
+                        initial_vs_mov_percentage = (initial_e_value / mov_value) * 100
+                        initial_vs_mov = "{:.2f}".format(initial_vs_mov_percentage).replace('.', ',')
+
+                        model_columns[f"{model}-{triangulation} Initial VS Mov (%)"].append(initial_vs_mov)  
+
+                    mov
                 else:
-                    print(f"Error extracting percentages from {file_name}.")
+                    print(f"No FINAL row found in {file_name}.")
             else:
                 print(f"File not found: {file_name}")
             
