@@ -3,7 +3,9 @@
 default_values = {
     "Model": [
         "ARAP", 
-        "ARAP_depth", 
+        "ARAP_depth",
+        "ARAP_depth_3mm",
+        "ARAP_depth_8mm",
         "ARAP_depth_onlyTriang", 
         "Elastic", 
         "HyperElasticOdgen", 

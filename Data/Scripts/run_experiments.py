@@ -34,7 +34,7 @@ parser.add_argument('--Model', type=str, choices=default_values["Model"] ,requir
 parser.add_argument('--Triangulation', type=str, choices=default_values["Triangulation"], required=False, help="Triangulation type (InRays or TwoPoints)")
 parser.add_argument('--Depth', type=int, choices=default_values["Depth"], required=False, help="Depth value (20, 80, 150)")
 parser.add_argument('--Shape', type=str, choices=default_values["Shape"], required=False, help="Shape type (Planar or Gradual)")
-parser.add_argument('--ExperimentType', type=int, choices=default_values["ExperimentType"], help="Type of experiment (1 to 6)", required=False)
+parser.add_argument('--ExperimentType',nargs='+', type=int, choices=default_values["ExperimentType"], help="Type of experiment (1 to 6)", required=False)
 parser.add_argument('--Experiment', type=int, choices=default_values["Experiment"], required=False, help="Experiment number (1 to 5)")
 args = parser.parse_args()
         
@@ -50,6 +50,7 @@ for triangulation, depth, shape, experiment in product(triangulations, depths, s
         experiment_types = [args.ExperimentType] if args.ExperimentType else shape_experiment_types[shape]
     else:
         experiment_types = default_values["ExperimentType"]
+
 
     for experiment_type in experiment_types:
         parameters = setExperiment(experiment_type)

@@ -59,7 +59,7 @@ Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 1.0
+Measurements.DepthError: 8.0
 
 # 100000000: 3 stand
 # 90000: 6.38
@@ -81,8 +81,8 @@ Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimiz
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
 Optimization.nlopt.numberOfIterations: 35
-Optimization.nlopt.relTolerance: 1.5e-2
-Optimization.nlopt.absTolerance: 1.5e-2
+Optimization.nlopt.relTolerance: 1.5e-1
+Optimization.nlopt.absTolerance: 1.5e-1
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
 Optimization.nlopt.global.lowerBound: 50
@@ -91,7 +91,7 @@ Optimization.nlopt.arap.lowerBound: 0.00001
 Optimization.nlopt.arap.upperBound: 10000000
 
 #Method selection
-Triangulation.seed.method: "DepthMeasurement" # Classic NRSLAM ORBSLAM
+Triangulation.method: "DepthMeasurement" # Classic NRSLAM ORBSLAM
 # Classic: Use standard triangulation calculation
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
@@ -103,7 +103,7 @@ Triangulation.seed.location: "FarPoints"
 
 
 # Visualization
-MapVisualizer.showScene: "true"
+MapVisualizer.showScene: "false"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
 Execution.stop: "false"

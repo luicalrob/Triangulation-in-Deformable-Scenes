@@ -628,7 +628,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 eD1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                 eD1->setMeasurement(d);
                 Eigen::Matrix<double, 1, 1> informationMatrixDepth;
-                informationMatrixDepth(0, 0) = 1;
+                informationMatrixDepth(0, 0) = 1/(10*10);
                 eD1->setInformation(informationMatrixDepth);
                 optimizer.addEdge(eD1);
 

@@ -106,7 +106,7 @@ Settings::Settings(const std::string& configFile) {
 
     fSettings["Optimization.selection"] >> OptSelection_;
     fSettings["Optimization.weightsSelection"] >> OptWeightsSelection_;
-    fSettings["Triangulation.seed.method"] >> TrianMethod_;
+    fSettings["Triangulation.method"] >> TrianMethod_;
     fSettings["Triangulation.seed.location"] >> TrianLocation_;
 
     nOptimizations_ = fSettings["Optimization.numberOfOptimizations"];
