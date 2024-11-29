@@ -28,20 +28,21 @@ struct Functor {
 };
 
 struct EigenOptimizationFunctor : Functor<double> {
-    EigenOptimizationFunctor(std::shared_ptr<Map> map, int iterations, double error, double alpha, double beta): Functor<double>(2,2), pMap(map), nIterations(iterations), repErrorStanDesv(error), alphaWeight(alpha), betaWeight(beta) {}
+    EigenOptimizationFunctor(std::shared_ptr<Map> map, int iterations, double error, double alpha, double beta, float depthError): Functor<double>(2,2), pMap(map), nIterations(iterations), repErrorStanDesv(error), alphaWeight(alpha), betaWeight(beta), depthUncertainty(depthError) {}
 
     std::shared_ptr<Map> pMap;           // Pointer to a Map object
     int nIterations;     // Number of iterations
     double repErrorStanDesv; // Standard deviation of error
     double alphaWeight; 
-    double betaWeight; 
+    double betaWeight;
+    float depthUncertainty; 
 
     int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const {   
         std::shared_ptr<Map> pMapCopy = pMap->clone();
 
         std::cout << "Current x values: " << x[0] << ", " << x[1] << ", " << x[2] << std::endl;
         
-        arapOptimization(pMapCopy.get(), x(0), x(1), x(2), alphaWeight, betaWeight, nIterations);
+        arapOptimization(pMapCopy.get(), x(0), x(1), x(2), alphaWeight, betaWeight, depthUncertainty, nIterations);
         
         PixelsError pixelsErrors;
         calculatePixelsStandDev(pMapCopy, pixelsErrors);

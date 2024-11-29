@@ -408,8 +408,8 @@ void SLAM::mapping() {
     measureRelativeErrors();
     measureAbsoluteErrors();
 
-    double optimizationChange = 100;
-    for(int i = 1; i <= nOptimizations_ && optimizationChange >= (0.00001*movedPoints_.size()); i++){ 
+    double optimizationUpdate = 100;
+    for(int i = 1; i <= nOptimizations_ && optimizationUpdate >= (0.00001*movedPoints_.size()); i++){ 
         // correct error
         if (OptSelection_ == "open3DArap") {
             arapOpen3DOptimization(pMap_.get());
@@ -428,6 +428,7 @@ void SLAM::mapping() {
                 optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
                 optData.alpha = alphaWeight_;
                 optData.beta = betaWeight_;
+                optData.depthUncertainty = SimulatedDepthErrorStanDesv_;
 
                 opt.set_min_objective(outerObjective, &optData);
 
@@ -448,7 +449,8 @@ void SLAM::mapping() {
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, SimulatedDepthErrorStanDesv_, 
+                                    nOptIterations_, &optimizationUpdate);
 
                 repBalanceWeight_ = x[0];
                 globalBalanceWeight_ = x[1];
@@ -460,7 +462,8 @@ void SLAM::mapping() {
                 x[1] = globalBalanceWeight_;
                 x[2] = arapBalanceWeight_;
 
-                EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_, alphaWeight_, betaWeight_); 
+                EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_, alphaWeight_, betaWeight_, 
+                                                    SimulatedDepthErrorStanDesv_); 
                 
                 Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
                 Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
@@ -483,14 +486,16 @@ void SLAM::mapping() {
 
                 std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
 
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
+                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, SimulatedDepthErrorStanDesv_, 
+                                    nOptIterations_, &optimizationUpdate);
             }
         } else {
-            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_, nOptIterations_, &optimizationChange);
+            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_,
+                            SimulatedDepthErrorStanDesv_, nOptIterations_, &optimizationUpdate);
         }
 
         std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;
-        std::cout << "\nOptimization change: " << optimizationChange << std::endl;
+        std::cout << "\nOptimization change: " << optimizationUpdate << std::endl;
 
         if(showScene_) {
             mapVisualizer_->update(drawRaysSelection_);
