@@ -10,6 +10,7 @@ struct OptimizationData {
     float repErrorStanDesv;
     double alpha;
     double beta;
+    float depthUncertainty;
 };
 
 //double outerObjective(const std::vector<double>& x, std::vector<double>& grad, void* data);

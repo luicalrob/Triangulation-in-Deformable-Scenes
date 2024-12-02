@@ -15,8 +15,9 @@ double outerObjective(unsigned int n, const double* x, double* grad, void* data)
     float repErrorStanDesv = pData->repErrorStanDesv;
     double alpha = pData->alpha;
     double beta = pData->beta;
+    float depthUncertainty = pData->depthUncertainty;
 
-    arapOptimization(pMapCopy.get(), repBalanceWeight, globalBalanceWeight, arapBalanceWeight, alpha, beta, nOptIterations);
+    arapOptimization(pMapCopy.get(), repBalanceWeight, globalBalanceWeight, arapBalanceWeight, alpha, beta, depthUncertainty, nOptIterations);
 
     PixelsError pixelsErrors;
     calculatePixelsStandDev(pMapCopy, pixelsErrors);

@@ -440,7 +440,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
 }
 
 void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWeight, double arapBalanceWeight, double alphaWeight, 
-                        double betaWeight, int nOptIterations, double* optimizationChange){
+                        double betaWeight, float DepthError, int nOptIterations, double* optimizationUpdate){
     unordered_map<KeyFrame_,size_t> mKeyFrameId;
     unordered_map<MapPoint_,size_t> mMapPointId;
     unordered_map<RotationMatrix_,size_t> mRotId;
@@ -452,7 +452,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
     // Create optimizer
     g2o::SparseOptimizer optimizer;
 
-    std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>();
+    std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverEigen<g2o::BlockSolverX::PoseMatrixType>>();
 
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
             g2o::make_unique<g2o::BlockSolverX>(std::move(linearSolver))
@@ -628,7 +628,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 eD1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
                 eD1->setMeasurement(d);
                 Eigen::Matrix<double, 1, 1> informationMatrixDepth;
-                informationMatrixDepth(0, 0) = 1/(10*10);
+                double depthUncertainty = static_cast<double>(DepthError);
+                informationMatrixDepth(0, 0) = 1/(depthUncertainty * depthUncertainty);
                 eD1->setInformation(informationMatrixDepth);
                 optimizer.addEdge(eD1);
 
@@ -740,8 +741,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
         pKF->setPose(sophusPose);
     }
 
-    if (optimizationChange) {
-        *optimizationChange = 0;
+    if (optimizationUpdate) {
+        *optimizationUpdate = 0;
     }
 
     for(pair<MapPoint_,ID> pairMapPointId : mMapPointId){
@@ -749,10 +750,10 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
         VertexSBAPointXYZ* vPoint = static_cast<VertexSBAPointXYZ*>(optimizer.vertex(pairMapPointId.second));
         Eigen::Vector3f p3D = vPoint->estimate().cast<float>();
 
-        if (optimizationChange) {
+        if (optimizationUpdate) {
             Eigen::Vector3f originalPosition = pMP->getWorldPosition();
             double changeMagnitude = (originalPosition - p3D).norm();
-            *optimizationChange += changeMagnitude;
+            *optimizationUpdate += changeMagnitude;
         }
 
         pMP->setWorldPosition(p3D);
