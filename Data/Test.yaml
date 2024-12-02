@@ -69,7 +69,7 @@ Measurements.DepthError: 4.0
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 50
-Optimization.arap: 1000
+Optimization.arap: 200000
 Optimization.alpha:  1
 Optimization.beta: 1
 
@@ -103,7 +103,7 @@ Triangulation.seed.location: "TwoPoints"
 
 
 # Visualization
-MapVisualizer.showScene: "false"
+MapVisualizer.showScene: "true"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "false"
+Execution.stop: "true"
