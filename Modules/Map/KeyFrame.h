@@ -74,6 +74,16 @@ public:
     std::vector<float>& getDepthMeasurements();
 
     /*
+     * Set depth scale comparing measurements and mappoints depth if the scale is not previously set
+     */
+    void setInitialDepthScale();
+
+    /*
+     * Gets KF depth scale
+     */
+    float getDepthScale();
+
+    /*
      * Gets all the MapPoint matches of the KeyFrame. They are associated with the KeyPoint at the same index
      */
     std::vector<std::shared_ptr<MapPoint>>& getMapPoints();
@@ -162,6 +172,7 @@ private:
     cv::Mat descriptors_;
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
     std::vector<float> vDepthMeasurements_;
+    float depthScale_ = 0.0f;
 
     Sophus::SE3f Tcw_;
 

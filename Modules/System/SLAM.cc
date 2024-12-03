@@ -69,6 +69,8 @@ SLAM::SLAM(const std::string &settingsFile) {
     simulatedRepErrorStanDesv_ = settings_.getSimulatedRepError();
     decimalsRepError_ = settings_.getDecimalsRepError();
     SimulatedDepthErrorStanDesv_ = settings_.getSimulatedDepthError();
+    SimulatedDepthScaleC1_ = settings_.getSimulatedDepthScaleC1();
+    SimulatedDepthScaleC2_ = settings_.getSimulatedDepthScaleC2();
 
     repBalanceWeight_ = settings_.getOptRepWeight();
     arapBalanceWeight_ = settings_.getOptArapWeight();
@@ -269,14 +271,14 @@ void SLAM::getDepthMeasurements() {
     Sophus::SE3f T2w = currFrame_.getPose();
 
     for(size_t i = 0; i < movedPoints_.size(); ++i) {
-
         Eigen::Vector3f p3Dcam1 = T1w * originalPoints_[i];
         Eigen::Vector3f p3Dcam2 = T2w * movedPoints_[i];
 
         C1PointsDepth.push_back(p3Dcam1[2]);
         C2PointsDepth.push_back(p3Dcam2[2]);
-        float d1 = p3Dcam1[2] + distribution(generator);
-        float d2 = p3Dcam2[2] + distribution(generator);
+        float d1 = p3Dcam1[2] * SimulatedDepthScaleC1_ + distribution(generator);
+        float d2 = p3Dcam2[2] * SimulatedDepthScaleC2_ + distribution(generator);
+
         C1DepthMeasurements.push_back(d1);
         C2DepthMeasurements.push_back(d2);
 
@@ -325,6 +327,7 @@ void SLAM::mapping() {
 
             xn1 = prevCalibration_->unproject(x1, d1);
             xn2 = currCalibration_->unproject(x2, d2);
+
             triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_, d1, d2);
         } else {
             triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
@@ -381,6 +384,9 @@ void SLAM::mapping() {
 
     std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
 
+    prevKeyFrame_->setInitialDepthScale();
+    currKeyFrame_->setInitialDepthScale();
+
     // stop
     //Uncomment for step by step execution (pressing esc key)
     if (stop_) {
@@ -404,7 +410,7 @@ void SLAM::mapping() {
     } else {
         std::cerr << "Unable to open file for writing" << std::endl;
     }
-
+    
     measureRelativeErrors();
     measureAbsoluteErrors();
 
@@ -690,6 +696,12 @@ void SLAM::measureRelativeErrors(){
 
             std::cout << "Global rotation: " << Rs_global<< "\n";
             std::cout << "Global translation: " << Ts<< "\n";
+
+            float s1 = pKF1->getDepthScale();
+            float s2 = pKF2->getDepthScale();
+
+            std::cout << "C1 depth scale: " << s1 << std::endl;
+            std::cout << "C2 depth scale: " << s2 << std::endl;
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints();

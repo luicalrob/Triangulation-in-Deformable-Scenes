@@ -156,6 +156,8 @@ private:
     float simulatedRepErrorStanDesv_;
     int decimalsRepError_;
     float SimulatedDepthErrorStanDesv_;
+    float SimulatedDepthScaleC1_;
+    float SimulatedDepthScaleC2_;
 
     double repBalanceWeight_;
     double arapBalanceWeight_;

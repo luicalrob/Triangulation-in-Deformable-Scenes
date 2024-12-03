@@ -56,6 +56,20 @@ bool VertexRotationMatrix::write(std::ostream& os) const {
     return true;
 }
 
+VertexDepthScale::VertexDepthScale() : BaseVertex<1, double>() {
+    _estimate = 0.0;
+}
+
+bool VertexDepthScale::read(std::istream& is) {
+    is >> _estimate;
+    return true;
+}
+
+bool VertexDepthScale::write(std::ostream& os) const {
+    os << _estimate;
+    return os.good();
+}
+
 
 VertexTranslationVector::VertexTranslationVector() : BaseVertex<3, Eigen::Vector3d>() {
     _estimate.setZero();

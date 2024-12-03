@@ -76,6 +76,8 @@ public:
     float getSimulatedRepError();
     int getDecimalsRepError();
     float getSimulatedDepthError();
+    float getSimulatedDepthScaleC1();
+    float getSimulatedDepthScaleC2();
 
     double getOptRepWeight();
     double getOptArapWeight();
@@ -138,6 +140,8 @@ private:
     float SimulatedRepError_;
     int DecimalsRepError_;
     float SimulatedDepthError_;
+    float SimulatedDepthScaleC1_;
+    float SimulatedDepthScaleC2_;
 
     double OptRepWeight_;
     double OptArapWeight_;

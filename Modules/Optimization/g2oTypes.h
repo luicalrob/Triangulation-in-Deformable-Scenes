@@ -75,6 +75,24 @@ public:
     }
 };
 
+class VertexDepthScale : public g2o::BaseVertex<1, double> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+    VertexDepthScale();
+
+    virtual bool read(std::istream& is);
+    virtual bool write(std::ostream& os) const;
+
+    virtual void setToOriginImpl() {
+        _estimate = 0.0f;
+    }
+
+    virtual void oplusImpl(const double* update) {
+        _estimate += static_cast<double>(update[0]);
+    }
+};
+
 class VertexSO3 : public g2o::BaseVertex<3, Sophus::SO3d> {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -363,7 +381,7 @@ public:
 };
 
 
-class EdgeDepthCorrection: public  g2o::BaseUnaryEdge<1, float, VertexSBAPointXYZ>{
+class EdgeDepthCorrection: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexDepthScale>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -375,11 +393,13 @@ public:
 
     void computeError()  {
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        float obs(_measurement);      //Observed depth of the point
-        Eigen::Vector3d p3Dw = v1->estimate();  //Predicted 3D world position of the point
+        const VertexDepthScale* vDepthScale = static_cast<const VertexDepthScale*>(_vertices[1]);
+        double obs(_measurement);      //Observed depth of the point
+        Eigen::Vector3d p3Dw = v1->estimate();
+        double scale = vDepthScale->estimate();
 
         // Compute the depth error
-        _error[0] = obs - p3Dw[2];
+        _error[0] = obs - p3Dw[2] * scale;
     }
 
     //virtual void linearizeOplus();

@@ -112,6 +112,34 @@ std::vector<float>& KeyFrame::getDepthMeasurements() {
     return vDepthMeasurements_;
 }
 
+void KeyFrame::setInitialDepthScale(){
+    if (vDepthMeasurements_.empty()) std::cout << "Not possible to set KF depth scale, no depth measurements.\n" << std::endl;
+    if (vMapPoints_.empty()) std::cout << "Not possible to set KF depth scale, no map points.\n" << std::endl;
+    if (!depthScale_) {
+        float scale = 0;
+        float n_points = 0;
+        for(size_t i = 0; i < vDepthMeasurements_.size(); ++i) {
+            float d = vDepthMeasurements_[i];
+            shared_ptr<MapPoint> mp = vMapPoints_[i];
+            if (!d) continue;
+            if (!mp) continue;
+
+            Eigen::Vector3f mp_pos = mp->getWorldPosition();
+            Eigen::Vector3f mp_pos_c = Tcw_ * mp_pos;
+            float mp_z = mp_pos_c[2];
+
+            scale += d / mp_z;
+
+            n_points++;
+        }
+        depthScale_ = scale / n_points;
+    }
+}
+
+float KeyFrame::getDepthScale(){
+    return depthScale_;
+}
+
 std::vector<std::shared_ptr<MapPoint> > & KeyFrame::getMapPoints() {
     return vMapPoints_;
 }
