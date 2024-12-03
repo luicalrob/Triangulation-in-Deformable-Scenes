@@ -37,7 +37,7 @@ parser.add_argument('--Shape', type=str, choices=default_values["Shape"], requir
 parser.add_argument('--ExperimentType',nargs='+', type=int, choices=default_values["ExperimentType"], help="Type of experiment (1 to 6)", required=False)
 parser.add_argument('--Experiment', type=int, choices=default_values["Experiment"], required=False, help="Experiment number (1 to 5)")
 args = parser.parse_args()
-        
+
 triangulations = [args.Triangulation] if args.Triangulation else default_values["Triangulation"]
 depths = [args.Depth] if args.Depth else default_values["Depth"]
 shapes = [args.Shape] if args.Shape else default_values["Shape"]
@@ -47,10 +47,12 @@ experiments = [args.Experiment] if args.Experiment else default_values["Experime
 for triangulation, depth, shape, experiment in product(triangulations, depths, shapes, experiments):
     # Determine experiment types based on shape
     if shape in shape_experiment_types:
-        experiment_types = [args.ExperimentType] if args.ExperimentType else shape_experiment_types[shape]
+        if args.ExperimentType:
+            experiment_types = args.ExperimentType if isinstance(args.ExperimentType, list) else [args.ExperimentType]
+        else:
+            experiment_types = shape_experiment_types[shape]
     else:
         experiment_types = default_values["ExperimentType"]
-
 
     for experiment_type in experiment_types:
         parameters = setExperiment(experiment_type)

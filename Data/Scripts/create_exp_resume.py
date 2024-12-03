@@ -7,7 +7,7 @@ import pandas as pd
 from config import default_values
 
 DATA_DIR = "./Data/Excels"
-output_file = "./Data/Excels/Resumes/Depth uncertainty - Experiment 1"
+output_file = "./Data/Excels/Resumes/Depth not scaled - Experiment 1"
 
 def validate_options(option, available_values, option_name):
     if option not in available_values:
