@@ -217,50 +217,6 @@ void triangulateDepth(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
     x3D_2 = T2w.inverse() * p3D2;
 }
 
-void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2, Eigen::Matrix3f& K1, Eigen::Matrix3f& K2,
-                        Eigen::Vector3f& point1, Eigen::Vector3f& point2) {
-    Eigen::Matrix<float, 3, 4> P1 = computeProjection(Tcw1, K1);
-    Eigen::Matrix<float, 3, 4> P2 = computeProjection(Tcw2, K2);    
-
-    Eigen::MatrixXf A(4, 4);
-    A.row(0) = xn1(0) * P1.row(2) - P1.row(0);
-    A.row(1) = xn1(1) * P1.row(2) - P1.row(1);
-    A.row(2) = xn2(0) * P2.row(2) - P2.row(0);
-    A.row(3) = xn2(1) * P2.row(2) - P2.row(1);
-
-    Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeFullV);
-    Eigen::Vector4f x3D = svd.matrixV().col(3);
-
-    if (x3D(3) != 0) {
-        point1 = x3D.head<3>() / x3D(3);
-        point2 = x3D.head<3>() / x3D(3);
-
-        // point1 = Tcw1.inverse() * point1;
-        // point2 = Tcw2.inverse() * point2;
-    } else {
-        point1.setZero();
-        point2.setZero();
-    }
-}
-
-void triangulateInRaysNearPrevSolution(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2, const Sophus::SE3f &T1w, 
-                        const Sophus::SE3f &T2w, Eigen::Vector3f &x3D_1, Eigen::Vector3f &x3D_2, Eigen::Vector3f &x3D_prev){
-    Sophus::SE3f T21 = T2w * T1w.inverse();
-    // Step 1: Transform previous 3D point into the local frames of the two cameras.
-    Eigen::Vector3f x3D_prev_cam1 = T1w * x3D_prev; // Previous solution in camera 1 frame
-    Eigen::Vector3f x3D_prev_cam2 = T2w * x3D_prev; // Previous solution in camera 2 frame
-
-    // Step 2: Find the closest point on the first ray to the previous solution in camera 1 frame.
-    float lambda1 = xn1.dot(x3D_prev_cam1); // Projection of x3D_prev_cam1 onto the direction of xn1
-    x3D_1 = T1w.inverse() * (lambda1 * xn1);          // Closest point on ray 1 in world frame
-
-    // Step 3: Find the closest point on the second ray to x3D_1.
-    Eigen::Vector3f x3D_1_cam2 = T2w * x3D_1;  // Transform x3D_1 to camera 2 frame
-    float lambda2 = xn2.dot(x3D_prev_cam2);                 // Projection of x3D_1_cam2 onto the direction of xn2
-    x3D_2 = T2w.inverse() * (lambda2 * xn2);                       // Closest point on ray 2 in world frame
-}
-
 float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2){
     float errx = p1.x - p2.x;
     float erry = p1.y - p2.y;
@@ -299,26 +255,6 @@ std::vector<Eigen::Vector3d> extractPositions(const std::vector<std::shared_ptr<
 
     positions.shrink_to_fit();
     return positions;
-}
-
-std::shared_ptr<open3d::geometry::PointCloud> convertToOpen3DPointCloud(const std::vector<Eigen::Vector3d>& positions) {
-    auto pointCloud = std::make_shared<open3d::geometry::PointCloud>();
-    
-    for (const Eigen::Vector3d& pos : positions) {
-        if (pos.isZero()) continue;
-        pointCloud->points_.push_back(pos);
-    }
-
-    return pointCloud;
-}
-
-double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eigen::Vector3d &v2) {
-    Eigen::Vector3d e0 = v1 - v0;
-    Eigen::Vector3d e1 = v2 - v1;
-    Eigen::Vector3d e2 = v0 - v2;
-
-    double cosTheta = -e2.dot(e0) / (e2.norm() * e0.norm());
-    return cosTheta / sqrt(1.0 - cosTheta * cosTheta);
 }
 
 std::unordered_map<Eigen::Vector2i, double, open3d::utility::hash_eigen<Eigen::Vector2i>> 
@@ -418,23 +354,6 @@ std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
 
     return triangle_mesh;
 }
-
-Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &point, const Eigen::Vector3f &rayOrigin, const Eigen::Vector3f &rayDir) {
-    Eigen::Vector3f originToPoint = point - rayOrigin;
-    
-    // Calculate the projection of the originToPoint vector onto the ray direction vector
-    float t = rayDir.dot(originToPoint) / rayDir.dot(rayDir);
-    
-    // Ensure that t >= 0, since we're only interested in points on the ray (not behind the origin)
-    if (t < 0.0f) {
-        return rayOrigin;
-    }
-    
-    Eigen::Vector3f closestPoint = rayOrigin + t * rayDir;
-    
-    return closestPoint;
-}
-
 
 void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors){
     Eigen::Vector2d meanRepErrorUVC1 = Eigen::Vector2d::Zero();

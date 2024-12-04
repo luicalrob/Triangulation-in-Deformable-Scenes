@@ -26,6 +26,8 @@
 #define SLAM_SLAM_H
 
 #include "System/Settings.h"
+#include "Mapping/LocalMapping.h"
+#include "Tracking/Tracking.h"
 
 #include "Visualization/FrameVisualizer.h"
 #include "Visualization/MapVisualizer.h"
@@ -47,6 +49,11 @@ public:
      * Constructor with the path to the settings file
      */
     SLAM(const std::string& settingsFile);
+
+    /*
+     * Process an image. Computes in Tcw the camera pose of the image
+     */
+    bool processImage(const cv::Mat& im, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer);
 
     /*
      * Load simulation 3D points
@@ -76,7 +83,7 @@ public:
     /*
      * Mapping of the simulation matches
      */
-    void mapping();
+    void simulatedMapping();
 
     /*
      * Measure the pos & or errors of the poses and the 3D error of the mapPoints
@@ -112,6 +119,17 @@ public:
 
 
 private:
+
+    /*
+     * Converts if needed the image to grayscale
+     */
+    cv::Mat convertImageToGrayScale(const cv::Mat& im);
+
+    /*
+     * Tracker and mapper
+     */
+    Tracking tracker_;
+    LocalMapping mapper_;
 
     /*
      * Settings of the system. Loaded from a file

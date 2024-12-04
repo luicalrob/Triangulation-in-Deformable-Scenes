@@ -45,9 +45,14 @@ SLAM::SLAM(const std::string &settingsFile) {
 
     //Create visualizers
     showScene_ = settings_.getShowScene();
-    if(showScene_) {
-        mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
-    }
+    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
+    visualizer_ = shared_ptr<FrameVisualizer>(new FrameVisualizer);
+
+    //Initialize tracker
+    tracker_ = Tracking(settings_, visualizer_, mapVisualizer_, pMap_);
+
+    //Initialize mapper
+    mapper_ = LocalMapping(settings_,pMap_);
 
     prevFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
@@ -104,6 +109,46 @@ SLAM::SLAM(const std::string &settingsFile) {
     outFile_.imbue(std::locale("es_ES.UTF-8"));
 }
 
+bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer) {
+    //Convert image to grayscale if needed
+    // cv::Mat grayIm = convertImageToGrayScale(im);
+
+    // //Predic camera pose
+    // bool goodTracked = tracker_.doTracking(grayIm, Tcw, nKF, nMPs, timer);
+
+    // //Do mapping
+    // shared_ptr<KeyFrame> lastKeyFrame = tracker_.getLastKeyFrame();
+    // mapper_.doMapping(lastKeyFrame, nMPs);
+
+    // //Update viewer windows
+    // // visualizer_->updateWindows();
+
+    // //Uncomment for step by step execution (pressing esc key)
+    // // while((cv::waitKey(10) & 0xEFFFFF) != 27){
+    // //     mapVisualizer_->update();
+    // // }
+
+    // // mapVisualizer_->update();
+    // // cv::waitKey(1);
+
+    // return goodTracked;
+    return true;
+}
+
+cv::Mat SLAM::convertImageToGrayScale(const cv::Mat &im) {
+    cv::Mat grayScaled;
+
+    if(im.type() == CV_8U)
+        grayScaled = im;
+    else if(im.channels()==3){
+        cvtColor(im,grayScaled,cv::COLOR_RGB2GRAY);
+    }
+    else if(im.channels()==4){
+        cvtColor(im,grayScaled,cv::COLOR_BGRA2GRAY);
+    }
+
+    return grayScaled;
+}
 
 void SLAM::loadPoints(const std::string &originalFile, const std::string &movedFile) {
     std::ifstream originalFileStream(originalFile);
@@ -287,7 +332,7 @@ void SLAM::getDepthMeasurements() {
     }
 }
 
-void SLAM::mapping() {
+void SLAM::simulatedMapping() {
     int nTriangulated = 0;
 
     // Each moved point correspond with the point in the same index in the original vector

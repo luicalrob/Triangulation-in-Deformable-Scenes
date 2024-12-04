@@ -57,16 +57,10 @@ void triangulateORBSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
                         Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2,
                         Eigen::Vector3f& point1, Eigen::Vector3f& point2, std::string location);
 
-void triangulateInRaysNearPrevSolution(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
-                        const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, Eigen::Vector3f& x3D_prev);
-
 void triangulateDepth(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
                  const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, 
                  std::string location, float C1DepthMeasurements, float C2DepthMeasurements);
 
-void triangulateProjection(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2, Eigen::Matrix3f& K1, Eigen::Matrix3f& K2,
-                        Eigen::Vector3f& point1, Eigen::Vector3f& point2);
 /*
  * Squared reprojection error
  */
@@ -81,16 +75,6 @@ Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12);
  * Extract the 3D positions as a vector of the entire set of mapPoints
  */
 std::vector<Eigen::Vector3d> extractPositions(const std::vector<std::shared_ptr<MapPoint>>& mapPoints);
-
-/*
- * Function to convert std::vector<Eigen::Vector3d> to open3d::geometry::PointCloud
- */
-std::shared_ptr<open3d::geometry::PointCloud> convertToOpen3DPointCloud(const std::vector<Eigen::Vector3d>& positions);
-
-/*
- * Computes cotangent value givem 3 vertex 
- */
-double cotangent(const Eigen::Vector3d &v0, const Eigen::Vector3d &v1, const Eigen::Vector3d &v2);
 
 /*
  * Computes edge weights cotangent values as an unordered map
@@ -116,8 +100,6 @@ std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
 static inline Eigen::Vector2i GetOrderedEdge(int vidx0, int vidx1) {
         return Eigen::Vector2i(std::min(vidx0, vidx1), std::max(vidx0, vidx1));
 }
-
-Eigen::Vector3f findClosestPointOnRay(const Eigen::Vector3f &p3D1, const Eigen::Vector3f &rayOrigin, const Eigen::Vector3f &rayDir);
 
 /*
  * Given a map with map points, it return the standard desviation of the reprojection error in pixels

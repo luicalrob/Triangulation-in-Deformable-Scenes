@@ -18,40 +18,27 @@
 /*
  * Author: Juan J. Gómez Rodríguez (jjgomez@unizar.es)
  *
- * A demo showing the Mini-SLAM library processing a sequence of the EuRoC dataset
+ * This class represents an interface for Feature extractors. Derived classes must provide a method to compute
+ * image features from a given image
  */
 
-#include "System/SLAM.h"
+#ifndef JJSLAM_FEATURE_H
+#define JJSLAM_FEATURE_H
+
+#include <vector>
 
 #include <opencv2/opencv.hpp>
 
-using namespace std;
+class Feature{
+public:
+    Feature(){};
 
-int main(){
-    SLAM SLAM("Data/Test.yaml");
+    /*
+     * Computes KeyPoints in the given image. To be implemented by the children classes
+     */
+    virtual void extract(const cv::Mat& im, std::vector<cv::KeyPoint>& vKeys) = 0;
+private:
+};
 
-    Eigen::Vector3f firstCamera = SLAM.getFirstCameraPos();
-    Eigen::Vector3f secondCamera = SLAM.getSecondCameraPos();
 
-    SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
-
-    SLAM.setCameraPoses(firstCamera, secondCamera);
-
-    SLAM.getDepthMeasurements();
-
-    SLAM.createKeyPoints();
-
-    bool showSolution = SLAM.getShowSolution();
-
-    // To visualize solution
-    if(showSolution) {
-        SLAM.viusualizeSolution();
-    } else {
-        SLAM.simulatedMapping();
-    }
-
-    SLAM.measureRelativeErrors();
-    SLAM.measureAbsoluteErrors();
-
-    return 0;
-}
+#endif //JJSLAM_FEATURE_H

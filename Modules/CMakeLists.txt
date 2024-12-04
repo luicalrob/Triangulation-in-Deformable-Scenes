@@ -25,9 +25,14 @@ set(root ${CMAKE_CURRENT_SOURCE_DIR})
 set(HEADER_FILES
         ${root}/Calibration/CameraModel.h
         ${root}/Calibration/PinHole.h
+        ${root}/Features/Descriptor.h
+        ${root}/Features/Feature.h
+        ${root}/Features/FAST.h
+        ${root}/Features/ORB.h
         ${root}/Map/KeyFrame.h
         ${root}/Map/Map.h
         ${root}/Map/MapPoint.h
+        ${root}/Mapping/LocalMapping.h
         ${root}/Matching/DescriptorMatching.h
         ${root}/Optimization/nloptOptimization.h
         ${root}/Optimization/EigenOptimization.h
@@ -36,6 +41,8 @@ set(HEADER_FILES
         ${root}/System/Settings.h
         ${root}/System/SLAM.h
         ${root}/Tracking/Frame.h
+        ${root}/Tracking/MonocularMapInitializer.h
+        ${root}/Tracking/Tracking.h
         ${root}/Visualization/FrameVisualizer.h
         ${root}/Visualization/MapVisualizer.h
         ${root}/Utils/Geometry.h
@@ -44,9 +51,12 @@ set(HEADER_FILES
 
 set(SOURCE_FILES
         ${root}/Calibration/PinHole.cc
+        ${root}/Features/FAST.cc
+        ${root}/Features/ORB.cc
         ${root}/Map/KeyFrame.cc
         ${root}/Map/Map.cc
         ${root}/Map/MapPoint.cc
+        ${root}/Mapping/LocalMapping.cc
         ${root}/Matching/DescriptorMatching.cc
         ${root}/Optimization/nloptOptimization.cc
         ${root}/Optimization/g2oBundleAdjustment.cc
@@ -54,6 +64,8 @@ set(SOURCE_FILES
         ${root}/System/Settings.cc
         ${root}/System/SLAM.cc
         ${root}/Tracking/Frame.cc
+        ${root}/Tracking/MonocularMapInitializer.cc
+        ${root}/Tracking/Tracking.cc
         ${root}/Visualization/FrameVisualizer.cc
         ${root}/Visualization/MapVisualizer.cc
         ${root}/Utils/Geometry.cc

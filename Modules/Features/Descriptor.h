@@ -18,40 +18,26 @@
 /*
  * Author: Juan J. Gómez Rodríguez (jjgomez@unizar.es)
  *
- * A demo showing the Mini-SLAM library processing a sequence of the EuRoC dataset
+ * This class represents an interface for Feature descriptors. Derived classes must provide a method to compute
+ * descriptors from image features in a given image
  */
 
-#include "System/SLAM.h"
+#ifndef JJSLAM_DESCRIPTOR_H
+#define JJSLAM_DESCRIPTOR_H
+
+#include <vector>
 
 #include <opencv2/opencv.hpp>
 
-using namespace std;
+class Descriptor {
+public:
+    Descriptor(){};
 
-int main(){
-    SLAM SLAM("Data/Test.yaml");
+    /*
+     * Comutes the descriptor of the given KeyPoints in the given image. To be implemented by the children classes
+     */
+    virtual void describe(const cv::Mat& im, std::vector<cv::KeyPoint>& vKeys, cv::Mat& desc) = 0;
+};
 
-    Eigen::Vector3f firstCamera = SLAM.getFirstCameraPos();
-    Eigen::Vector3f secondCamera = SLAM.getSecondCameraPos();
 
-    SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
-
-    SLAM.setCameraPoses(firstCamera, secondCamera);
-
-    SLAM.getDepthMeasurements();
-
-    SLAM.createKeyPoints();
-
-    bool showSolution = SLAM.getShowSolution();
-
-    // To visualize solution
-    if(showSolution) {
-        SLAM.viusualizeSolution();
-    } else {
-        SLAM.simulatedMapping();
-    }
-
-    SLAM.measureRelativeErrors();
-    SLAM.measureAbsoluteErrors();
-
-    return 0;
-}
+#endif //JJSLAM_DESCRIPTOR_H
