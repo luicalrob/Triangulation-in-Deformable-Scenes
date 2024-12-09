@@ -23,6 +23,7 @@
 #include "Utils/Geometry.h"
 #include "Utils/Conversions.h"
 #include "Utils/CommonTypes.h"
+#include "Utils/Measurements.h"
 #include "Optimization/nloptOptimization.h"
 #include "Optimization/EigenOptimization.h"
 
@@ -52,7 +53,7 @@ SLAM::SLAM(const std::string &settingsFile) {
     tracker_ = Tracking(settings_, visualizer_, mapVisualizer_, pMap_);
 
     //Initialize mapper
-    mapper_ = LocalMapping(settings_,pMap_);
+    mapper_ = LocalMapping(settings_, visualizer_, mapVisualizer_,pMap_);
 
     prevFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
@@ -344,8 +345,6 @@ void SLAM::simulatedMapping() {
 
     Sophus::SE3f T1w = prevFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
-    Eigen::Matrix3f K1 = prevCalibration_->getCalibrationMatrix();
-    Eigen::Matrix3f K2 = currCalibration_->getCalibrationMatrix();
 
     //Try to triangulate a new MapPoint with each match
     for(size_t i = 0; i < nMatches; i++){ //vMatches.size()
@@ -456,8 +455,21 @@ void SLAM::simulatedMapping() {
         std::cerr << "Unable to open file for writing" << std::endl;
     }
     
-    measureRelativeErrors();
-    measureAbsoluteErrors();
+    measureRelativeMapErrors(pMap_, filePath_);
+    measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
+
+    // stop
+    // Uncomment for step by step execution (pressing esc key)
+    if (stop_) {
+        std::cout << "Press esc to continue... " << std::endl;
+        while((cv::waitKey(10) & 0xEFFFFF) != 27){
+            mapVisualizer_->update(drawRaysSelection_);
+        }
+    } else {
+        if(showScene_) {
+            mapVisualizer_->update(drawRaysSelection_);
+        }
+    }
 
     double optimizationUpdate = 100;
     for(int i = 1; i <= nOptimizations_ && optimizationUpdate >= (0.00001*movedPoints_.size()); i++){ 
@@ -564,8 +576,8 @@ void SLAM::simulatedMapping() {
                 std::cerr << "Unable to open file for writing" << std::endl;
             }
 
-            measureRelativeErrors();
-            measureAbsoluteErrors(false);
+            measureRelativeMapErrors(pMap_, filePath_);
+            measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
         }
     }
 
@@ -623,6 +635,7 @@ void SLAM::measureAbsoluteErrors(bool stop) {
     float total_squared_error_moved = 0.0f;
     float total_squared_error = 0.0f;
     int point_count = insertedIndexes_.size()*2;
+
 
     for(size_t i = 0, j = 0; j < insertedIndexes_.size(); i += 2, j++) {
         std::shared_ptr<MapPoint> mapPoint1 = pMap_->getMapPoint(i);

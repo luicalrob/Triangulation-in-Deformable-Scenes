@@ -33,9 +33,15 @@ using namespace std;
 LocalMapping::LocalMapping() {
 }
 
-LocalMapping::LocalMapping(Settings& settings, std::shared_ptr<Map> pMap) {
+LocalMapping::LocalMapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualizer,
+                    std::shared_ptr<MapVisualizer>& mapVisualizer, std::shared_ptr<Map> pMap) {
     settings_ = settings;
     pMap_ = pMap;
+
+    visualizer_ = visualizer;
+    mapVisualizer_ = mapVisualizer;
+
+    showScene_ = settings_.getShowScene();
 
     repBalanceWeight_ = settings_.getOptRepWeight();
     arapBalanceWeight_ = settings_.getOptArapWeight();
@@ -313,8 +319,21 @@ void LocalMapping::optimization() {
         std::cerr << "Unable to open file for writing" << std::endl;
     }
     
-    // measureRelativeMapErrors(pMap_);
-    // measureAbsoluteMapErrors(pMap_);
+    measureRelativeMapErrors(pMap_, filePath_);
+    measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
+
+    // stop
+    // Uncomment for step by step execution (pressing esc key)
+    // if (stop_) {
+    //     std::cout << "Press esc to continue... " << std::endl;
+    //     while((cv::waitKey(10) & 0xEFFFFF) != 27){
+    //         mapVisualizer_->update(drawRaysSelection_);
+    //     }
+    // } else {
+    //     if(showScene_) {
+    //         mapVisualizer_->update(drawRaysSelection_);
+    //     }
+    // }
 
     double optimizationUpdate = 100;
     for(int i = 1; i <= nOptimizations_ && optimizationUpdate >= (0.00001*movedPoints_.size()); i++){ 
@@ -405,10 +424,9 @@ void LocalMapping::optimization() {
         std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;
         std::cout << "\nOptimization change: " << optimizationUpdate << std::endl;
         
-        // if(showScene_) {
-        //     mapVisualizer_->update(drawRaysSelection_);
-        //     mapVisualizer_->updateCurrentPose(Tcw_);
-        // }
+        if(showScene_) {
+            mapVisualizer_->update(drawRaysSelection_);
+        }
 
         if (i != nOptimizations_) {
             std::cout << i << " / " << nOptimizations_ << " MEASUREMENTS: \n";
@@ -421,8 +439,8 @@ void LocalMapping::optimization() {
                 std::cerr << "Unable to open file for writing" << std::endl;
             }
 
-            // measureRelativeErrors(pMap_);
-            // measureAbsoluteErrors(pMap_, false);
+            measureRelativeMapErrors(pMap_, filePath_);
+            measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
         }
     }
 

@@ -1,11 +1,14 @@
 #include "Utils/Geometry.h"
-#include "Utils/Conversions.h"
+#include "Utils/Measurements.h"
 
 #include <random> 
 
 using namespace std;
 
-void measureAbsoluteMapErrors(Map* pMap, bool stop) {
+void measureAbsoluteMapErrors(std::shared_ptr<Map> pMap, std::vector<Eigen::Vector3f> originalPoints, std::vector<Eigen::Vector3f> movedPoints, std::string filePath) {
+    std::ofstream outFile;
+    outFile.imbue(std::locale("es_ES.UTF-8"));
+
     // 3D Error measurement in map points
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
 
@@ -16,16 +19,17 @@ void measureAbsoluteMapErrors(Map* pMap, bool stop) {
     float total_squared_error_original = 0.0f;
     float total_squared_error_moved = 0.0f;
     float total_squared_error = 0.0f;
-    int point_count = 0;
+    int point_count = mapPoints_corrected.size();
+    int point_count_in_kf = mapPoints_corrected.size() / 2.0;
     
-    for(size_t i = 0, j = 0; j < insertedIndexes_.size(); i += 2, j++) {
+    for(size_t i = 0, j = 0; j < mapPoints_corrected.size()/2; i += 2, j++) {
         std::shared_ptr<MapPoint> mapPoint1 = pMap->getMapPoint(i);
         std::shared_ptr<MapPoint> mapPoint2 = pMap->getMapPoint(i+1);
         Eigen::Vector3f opt_original_position = mapPoint1->getWorldPosition();
         Eigen::Vector3f opt_moved_position = mapPoint2->getWorldPosition();
 
-        Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[j]];
-        Eigen::Vector3f moved_position = movedPoints_[insertedIndexes_[j]];
+        Eigen::Vector3f original_position = originalPoints[j];
+        Eigen::Vector3f moved_position = movedPoints[j];
 
         Eigen::Vector3f movement = original_position - moved_position;
         Eigen::Vector3f original_error = opt_original_position - original_position;
@@ -47,26 +51,26 @@ void measureAbsoluteMapErrors(Map* pMap, bool stop) {
         total_squared_error += squared_error_magnitude_original + squared_error_magnitude_moved;
 
         // std::cout << "\nError for point: " << mapPoint1->getId() << " and " << mapPoint2->getId() << "\n";
-        // std::cout << "Position " << insertedIndexes_[j] << "\n";
+        // std::cout << "Position " << mapPoints_corrected[j] << "\n";
         // std::cout << "Mappoint x: " << opt_original_position.x() << " y: " << opt_original_position.y() << " z: " << opt_original_position.z() << std::endl;
         // std::cout << "point x: " << original_position.x() << " y: " << original_position.y() << " z: " << original_position.z() << std::endl;
         // std::cout << "moved Mappoint x: " << opt_moved_position.x() << " y: " << opt_moved_position.y() << " z: " << opt_moved_position.z() << std::endl;
         // std::cout << "moved point x: " << moved_position.x() << " y: " << moved_position.y() << " z: " << moved_position.z() << std::endl;
         // std::cout << "x: " << total_error << std::endl;
-        point_count++;
+        //point_count++;
     }
 
     // std::cout << "point_count: " << point_count << std::endl;
     if (point_count > 0) {
         std::cout << "\nABSOLUTE MEASUREMENTS: \n";
 
-        float average_movement = total_movement / insertedIndexes_.size();
+        float average_movement = total_movement / point_count_in_kf;
         //std::cout << "\nTotal movement: " << total_movement << std::endl;
         std::cout << "Average movement: " << average_movement * 1000 << std::endl;
-        float average_error_original = total_error_original / insertedIndexes_.size();
+        float average_error_original = total_error_original / point_count_in_kf;
         //std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
         //std::cout << "Average error in ORIGINAL 3D: " << average_error_original * 1000 << std::endl;
-        float average_error_moved = total_error_moved / insertedIndexes_.size();
+        float average_error_moved = total_error_moved / point_count_in_kf;
         //std::cout << "\nTotal error in MOVED 3D: " << total_error_moved << std::endl;
         //std::cout << "Average error in MOVED 3D: " << average_error_moved * 1000 << std::endl;
         float average_error = total_error / point_count;
@@ -75,41 +79,26 @@ void measureAbsoluteMapErrors(Map* pMap, bool stop) {
         std::cout << "Average error in 3D: " << average_error * 1000 << std::endl;
         std::cout << "RMSE in 3D: " << rmse * 1000 << "\n" << std::endl;
         
-        outFile_.open(filePath_, std::ios::app);
-        if (outFile_.is_open()) {
-            if (stop) {
-                outFile_ << "Av. movement: " << average_movement * 1000 << '\n';
-            }
-            outFile_ << "Av. error: " << average_error * 1000 << '\n';
-            outFile_ << "RMSE: " << rmse * 1000 << "\n\n";
+        outFile.open(filePath, std::ios::app);
+        if (outFile.is_open()) {
+            outFile << "Av. movement: " << average_movement * 1000 << '\n';
+            outFile << "Av. error: " << average_error * 1000 << '\n';
+            outFile << "RMSE: " << rmse * 1000 << "\n\n";
 
-            outFile_.close();
+            outFile.close();
             std::cout << "Data has been written to Experiment.txt" << std::endl;
         } else {
             std::cerr << "Unable to open file for writing" << std::endl;
         }
     } else {
         std::cout << "No points to compare." << std::endl;
-    }
-
-    // stop
-    // Uncomment for step by step execution (pressing esc key)
-    if (stop_) {
-        if (stop) {
-            std::cout << "Press esc to continue... " << std::endl;
-            while((cv::waitKey(10) & 0xEFFFFF) != 27){
-                mapVisualizer_->update(drawRaysSelection_);
-            }
-        }
-    } else {
-        if(showScene_) {
-            mapVisualizer_->update(drawRaysSelection_);
-        }
-    }
-    
+    } 
 }
 
-void SLAM::measureRelativeMapErrors(Map* pMap){
+void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
+    std::ofstream outFile;
+    outFile.imbue(std::locale("es_ES.UTF-8"));
+    
     std::vector<Eigen::Vector3d> relativeErrors;
     std::vector<double> squaredNormRelativeErrors;
     Eigen::Vector3d meanRelativeError = Eigen::Vector3d::Zero();
@@ -222,15 +211,15 @@ void SLAM::measureRelativeMapErrors(Map* pMap){
                 
                 std::cout << "Average squared norm relative error: " << meanSquaredNormRelativeError << std::endl;
 
-                outFile_.open(filePath_, std::ios::app);
-                if (outFile_.is_open()) {
-                    outFile_ << "C1 standard desv: " << pixelsErrors.desvc1 << '\n';
-                    outFile_ << "C2 standard desv: " << pixelsErrors.desvc2 << '\n';
-                    outFile_ << "Rel. error: " << meanSquaredNormRelativeError << '\n';
-                    outFile_ << "Global rotation: " << Rs_global << '\n';
-                    outFile_ << "Global translation: " << Ts << '\n';
+                outFile.open(filePath, std::ios::app);
+                if (outFile.is_open()) {
+                    outFile << "C1 standard desv: " << pixelsErrors.desvc1 << '\n';
+                    outFile << "C2 standard desv: " << pixelsErrors.desvc2 << '\n';
+                    outFile << "Rel. error: " << meanSquaredNormRelativeError << '\n';
+                    outFile << "Global rotation: " << Rs_global << '\n';
+                    outFile << "Global translation: " << Ts << '\n';
 
-                    outFile_.close();
+                    outFile.close();
                     std::cout << "Data has been written to Experiment.txt" << std::endl;
                 } else {
                     std::cerr << "Unable to open file for writing" << std::endl;

@@ -30,6 +30,7 @@
 #include "System/Settings.h"
 
 #include "Visualization/FrameVisualizer.h"
+#include <Visualization/MapVisualizer.h>
 
 #include <memory>
 #include <fstream>
@@ -41,7 +42,8 @@ public:
     /*
      * Constructor with the SLAM map and settings
      */
-    LocalMapping(Settings& settings, std::shared_ptr<Map> pMap);
+    LocalMapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualizer,
+             std::shared_ptr<MapVisualizer>& mapVisualizer, std::shared_ptr<Map> pMap);
 
     /*
      * Does the mapping operative: triangulation, duplication remove and Local Bundle Adjustment
@@ -76,6 +78,10 @@ private:
     std::list<std::shared_ptr<MapPoint>> mlpRecentAddedMapPoints;
 
     Settings settings_;
+
+    //Visualizers
+    std::shared_ptr<FrameVisualizer> visualizer_;
+    std::shared_ptr<MapVisualizer> mapVisualizer_;
 
     /*
      * Simulation Points
