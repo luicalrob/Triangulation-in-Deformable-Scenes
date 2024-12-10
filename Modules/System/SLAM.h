@@ -96,11 +96,6 @@ public:
     Eigen::Matrix3f lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY());
 
     /*
-     * Get "show solution" setting parameter
-     */
-    bool getShowSolution();
-
-    /*
      * Get camera positions
      */
     Eigen::Vector3f getFirstCameraPos();
@@ -111,6 +106,8 @@ public:
     std::vector<Eigen::Vector3f> getMovedPoints();
 
     std::vector<int> getInsertedIndexes();
+
+    void stop();
 
 
     /*
@@ -125,6 +122,10 @@ public:
     std::vector<Eigen::Vector3f> movedPoints_;
     
     std::string filePath_;
+
+    bool drawRaysSelection_;
+    bool showSolution_;
+    bool stop_;
 
 private:
 
@@ -201,9 +202,6 @@ private:
     double NloptArapUpperBound_;
     
     bool showScene_;
-    bool drawRaysSelection_;
-    bool showSolution_;
-    bool stop_;
 
     std::ofstream outFile_;
 };

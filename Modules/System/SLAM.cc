@@ -128,14 +128,6 @@ bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMP
     deformationOptimization();
 
     visualizer_->updateWindows();
-    if (stop_) {
-        stopExecution(mapVisualizer_, drawRaysSelection_);
-    } else {
-        if(showScene_) {
-            mapVisualizer_->update(drawRaysSelection_);
-            mapVisualizer_->updateCurrentPose(Tcw_);
-        }
-    }
 
     // return goodTracked;
     return true;
@@ -153,14 +145,6 @@ bool SLAM::processSimulatedImage( int &nMPs, clock_t &timer) {
     deformationOptimization();
 
     visualizer_->updateWindows();
-    if (stop_) {
-        stopExecution(mapVisualizer_, drawRaysSelection_);
-    } else {
-        if(showScene_) {
-            mapVisualizer_->update(drawRaysSelection_);
-            mapVisualizer_->updateCurrentPose(Tcw_);
-        }
-    }
 
     return true;
 }
@@ -376,18 +360,7 @@ void SLAM::deformationOptimization() {
         std::cerr << "Unable to open file for writing" << std::endl;
     }
     
-    measureRelativeMapErrors(pMap_, filePath_);
-    measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
-
-    // stop
-    // Uncomment for step by step execution (pressing esc key)
-    if (stop_) {
-        stopExecution(mapVisualizer_, drawRaysSelection_);
-    } else {
-        if(showScene_) {
-            mapVisualizer_->update(drawRaysSelection_);
-        }
-    }
+    stop();
 
     double optimizationUpdate = 100;
     for(int i = 1; i <= nOptimizations_ && optimizationUpdate >= (0.00001*movedPoints_.size()); i++){ 
@@ -533,6 +506,16 @@ Eigen::Vector3f SLAM::getSecondCameraPos(){
     return C2Pose_;
 }
 
-bool SLAM::getShowSolution(){
-    return showSolution_;
+void SLAM::stop(){
+    measureRelativeMapErrors(pMap_, filePath_);
+    measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
+
+    if (stop_) {
+        stopExecution(mapVisualizer_, drawRaysSelection_);
+    } else {
+        if(showScene_) {
+            mapVisualizer_->update(drawRaysSelection_);
+            mapVisualizer_->updateCurrentPose(Tcw_);
+        }
+    }
 }

@@ -42,14 +42,11 @@ int main(){
 
     SLAM.createKeyPoints();
 
-    bool showSolution = SLAM.getShowSolution();
-
-
     clock_t timer;
     int nMPs = 0;
 
     // To visualize solution
-    if(showSolution) {
+    if(SLAM.showSolution_) {
         SLAM.viusualizeSolution();
     } else {
         timer = clock();
@@ -59,8 +56,7 @@ int main(){
         timer = clock() - timer;
     }
 
-    measureRelativeMapErrors(SLAM.pMap_, SLAM.filePath_);
-    measureAbsoluteMapErrors(SLAM.pMap_, SLAM.originalPoints_, SLAM.movedPoints_, SLAM.filePath_);
+    SLAM.stop();
 
     cout << "[END] Seconds: " << fixed << setprecision(4) << ((float)timer)/CLOCKS_PER_SEC << endl;
     cout << "[END] Number of MapPoints: " << nMPs << endl;
