@@ -86,19 +86,9 @@ public:
     void getSimulatedDepthMeasurements();
 
     /*
-     * Mapping of the simulation matches
+     * Deformation optimization of triangulated points
      */
-    void simulatedMapping();
-
-    /*
-     * Measure the pos & or errors of the poses and the 3D error of the mapPoints
-     */
-    void measureAbsoluteErrors(bool stop = true);
-
-    /*
-     * Measure the relative distances errors of the mapPoints
-     */
-    void measureRelativeErrors();
+    void deformationOptimization();
 
     /*
      * Create camera orientation matrix from two points
@@ -109,18 +99,6 @@ public:
      * Get "show solution" setting parameter
      */
     bool getShowSolution();
-
-    void triangulateSimulatedMapPoints();
-
-    void optimization();
-
-    bool isValidTriangulation(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
-                                        const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
-                                        const Eigen::Vector3f& x3D_1, const Eigen::Vector3f& x3D_2);
-
-    bool triangulate(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
-                               const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
-                               Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
 
     /*
      * Get camera positions

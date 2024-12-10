@@ -29,9 +29,6 @@
 #include "Map/Map.h"
 #include "System/Settings.h"
 
-#include "Visualization/FrameVisualizer.h"
-#include <Visualization/MapVisualizer.h>
-
 #include <memory>
 #include <fstream>
 
@@ -42,8 +39,7 @@ public:
     /*
      * Constructor with the SLAM map and settings
      */
-    LocalMapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualizer,
-             std::shared_ptr<MapVisualizer>& mapVisualizer, std::shared_ptr<Map> pMap);
+    LocalMapping(Settings& settings, std::shared_ptr<Map> pMap);
 
     /*
      * Does the mapping operative: triangulation, duplication remove and Local Bundle Adjustment
@@ -84,11 +80,6 @@ private:
     void checkDuplicatedMapPoints();
 
     /*
-     * Deformation optimization of triangulated points
-     */
-    void optimization();
-
-    /*
      * Check positive z and minimum parallax of triangulated points
      */
     bool isValidTriangulation(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
@@ -111,56 +102,9 @@ private:
 
     Settings settings_;
 
-    //Visualizers
-    std::shared_ptr<FrameVisualizer> visualizer_;
-    std::shared_ptr<MapVisualizer> mapVisualizer_;
-
-    Eigen::Vector3f C1Pose_;
-    Eigen::Vector3f C2Pose_;
-
-    std::vector<float> C1PointsDepth;
-    std::vector<float> C2PointsDepth;
-    std::vector<float> C1DepthMeasurements;
-    std::vector<float> C2DepthMeasurements;
-
-    float simulatedRepErrorStanDesv_;
-    int decimalsRepError_;
-    float SimulatedDepthErrorStanDesv_;
-    float SimulatedDepthScaleC1_;
-    float SimulatedDepthScaleC2_;
-
-    double repBalanceWeight_;
-    double arapBalanceWeight_;
-    double globalBalanceWeight_;
-    double alphaWeight_;
-    double betaWeight_;
-
-    std::string OptSelection_;
-    std::string OptWeightsSelection_;
     std::string TrianSelection_;
     std::string TrianMethod_;
     std::string TrianLocation_;
-
-    int nOptimizations_;
-    int nOptIterations_;
-
-    int NloptnOptimizations_;
-    double NloptRelTolerance_;
-    double NloptAbsTolerance_;
-    double NloptRepLowerBound_;
-    double NloptRepUpperBound_;
-    double NloptGlobalLowerBound_;
-    double NloptGlobalUpperBound_;
-    double NloptArapLowerBound_;
-    double NloptArapUpperBound_;
-    
-    bool showScene_;
-    bool drawRaysSelection_;
-    bool showSolution_;
-    bool stop_;
-
-    std::ofstream outFile_;
-    std::string filePath_;
 };
 
 

@@ -16,61 +16,22 @@
 */
 
 #include "Mapping/LocalMapping.h"
-#include "Optimization/g2oBundleAdjustment.h"
 #include "Matching/DescriptorMatching.h"
 #include "Utils/Geometry.h"
 #include "Utils/CommonTypes.h"
-#include "Utils/Measurements.h"
-#include "Utils/Utils.h"
 #include <iterator>
-#include <nlopt.hpp>
-#include "Optimization/nloptOptimization.h"
-#include "Optimization/EigenOptimization.h"
-
-#include <unsupported/Eigen/NonLinearOptimization>
-#include <unsupported/Eigen/NumericalDiff>
 
 using namespace std;
 
 LocalMapping::LocalMapping() {
 }
 
-LocalMapping::LocalMapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualizer,
-                    std::shared_ptr<MapVisualizer>& mapVisualizer, std::shared_ptr<Map> pMap) {
+LocalMapping::LocalMapping(Settings& settings, std::shared_ptr<Map> pMap) {
     settings_ = settings;
     pMap_ = pMap;
 
-    visualizer_ = visualizer;
-    mapVisualizer_ = mapVisualizer;
-
-    showScene_ = settings_.getShowScene();
-
-    repBalanceWeight_ = settings_.getOptRepWeight();
-    arapBalanceWeight_ = settings_.getOptArapWeight();
-    globalBalanceWeight_ = settings_.getOptGlobalWeight();
-    alphaWeight_ = settings_.getOptAlphaWeight();
-    betaWeight_ = settings_.getOptBetaWeight();
-
-    OptSelection_ = settings_.getOptSelection();
-    OptWeightsSelection_ = settings_.getOptWeightsSelection();
     TrianMethod_ = settings_.getTrianMethod();
     TrianLocation_ = settings_.getTrianLocation();
-
-    nOptimizations_ = settings_.getnOptimizations();
-    nOptIterations_ = settings_.getnOptIterations();
-
-    NloptnOptimizations_ = settings_.getNloptnOptimizations();
-    NloptRelTolerance_ = settings_.getNloptRelTolerance();
-    NloptAbsTolerance_ = settings_.getNloptAbsTolerance();
-    NloptRepLowerBound_ = settings_.getNloptRepLowerBound();
-    NloptRepUpperBound_ = settings_.getNloptRepUpperBound();
-    NloptGlobalLowerBound_ = settings_.getNloptGlobalLowerBound();
-    NloptGlobalUpperBound_ = settings_.getNloptGlobalUpperBound();
-    NloptArapLowerBound_ = settings_.getNloptArapLowerBound();
-    NloptArapUpperBound_ = settings_.getNloptArapUpperBound();
-
-    filePath_ = "./Data/Experiment.txt";
-    outFile_.imbue(std::locale("es_ES.UTF-8"));
 }
 
 void LocalMapping::doMapping(std::shared_ptr<KeyFrame> &pCurrKeyFrame, int &nMPs) {
@@ -88,9 +49,6 @@ void LocalMapping::doMapping(std::shared_ptr<KeyFrame> &pCurrKeyFrame, int &nMPs
 
     //checkDuplicatedMapPoints();
 
-    //Run deformation optimization
-    //optimization();
-
     nMPs = pMap_->getMapPoints().size();
 }
 
@@ -104,9 +62,6 @@ void LocalMapping::doSimulatedMapping(std::shared_ptr<KeyFrame> &pCurrKeyFrame, 
 
     //Triangulate new MapPoints
     triangulateSimulatedMapPoints();
-
-    //Run deformation optimization
-    //optimization();
 
     nMPs = pMap_->getMapPoints().size();
 }
@@ -378,154 +333,6 @@ void LocalMapping::checkDuplicatedMapPoints() {
         int nFused = fuse(pMap_->getKeyFrame(vKFcovisible[i].first),settings_.getMatchingFuseTh(),vCurrMapPoints,pMap_.get());
         pMap_->checkKeyFrame(vKFcovisible[i].first);
         pMap_->checkKeyFrame(currKeyFrame_->getId());
-    }
-}
-
-void LocalMapping::optimization() {
-    std::cout << "\nINITIAL MEASUREMENTS: \n";
-    outFile_.open(filePath_);
-    if (outFile_.is_open()) {
-        outFile_ << "INITIAL MEASUREMENTS: \n";
-
-        outFile_.close();
-    } else {
-        std::cerr << "Unable to open file for writing" << std::endl;
-    }
-    
-    measureRelativeMapErrors(pMap_, filePath_);
-    measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
-
-    // stop
-    // Uncomment for step by step execution (pressing esc key)
-    if (stop_) {
-        stopExecution(mapVisualizer_, drawRaysSelection_);
-    } else {
-        if(showScene_) {
-            mapVisualizer_->update(drawRaysSelection_);
-        }
-    }
-
-    double optimizationUpdate = 100;
-    for(int i = 1; i <= nOptimizations_ && optimizationUpdate >= (0.00001*movedPoints_.size()); i++){ 
-        // correct error
-        if (OptSelection_ == "open3DArap") {
-            arapOpen3DOptimization(pMap_.get());
-        } else if(OptSelection_ == "twoOptimizations") {
-            if (OptWeightsSelection_ == "nlopt") {
-                nlopt::opt opt(nlopt::LN_NELDERMEAD, 3);
-                
-                std::vector<double> lb = {NloptRepLowerBound_, NloptGlobalLowerBound_, NloptArapLowerBound_};
-                std::vector<double> ub = {NloptRepUpperBound_, NloptGlobalUpperBound_, NloptArapUpperBound_};
-                opt.set_lower_bounds(lb);
-                opt.set_upper_bounds(ub);
-
-                OptimizationData optData;
-                optData.pMap = pMap_->clone();
-                optData.nOptIterations = nOptIterations_;
-                optData.repErrorStanDesv = simulatedRepErrorStanDesv_;
-                optData.alpha = alphaWeight_;
-                optData.beta = betaWeight_;
-                optData.depthUncertainty = SimulatedDepthErrorStanDesv_;
-
-                opt.set_min_objective(outerObjective, &optData);
-
-                std::vector<double> x = {repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_};
-
-                opt.set_xtol_rel(NloptRelTolerance_);
-                opt.set_xtol_abs(NloptAbsTolerance_);
-                opt.set_maxeval(NloptnOptimizations_);
-
-                double minf;
-                nlopt::result result = opt.optimize(x, minf);
-
-                std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
-                std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
-                std::cout << "Optimized globalBalanceWeight: " << x[1] << std::endl;
-                std::cout << "Optimized arapBalanceWeight: " << x[2] << std::endl;
-                std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
-
-                std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
-
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, SimulatedDepthErrorStanDesv_, 
-                                    nOptIterations_, &optimizationUpdate);
-
-                repBalanceWeight_ = x[0];
-                globalBalanceWeight_ = x[1];
-                arapBalanceWeight_ = x[2];
-            } else {
-                Eigen::VectorXd x(3);
-                // Initial values
-                x[0] = repBalanceWeight_;
-                x[1] = globalBalanceWeight_;
-                x[2] = arapBalanceWeight_;
-
-                EigenOptimizationFunctor functor(pMap_->clone(), nOptIterations_, simulatedRepErrorStanDesv_, alphaWeight_, betaWeight_, 
-                                                    SimulatedDepthErrorStanDesv_); 
-                
-                Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
-                Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
-                levenbergMarquardt.parameters.ftol = 1e-3;   // Loosen tolerance for function value change
-                levenbergMarquardt.parameters.xtol = 1e-3;   // Loosen tolerance for parameter change
-                levenbergMarquardt.parameters.gtol = 1e-3;   // Loosen tolerance for gradient
-                levenbergMarquardt.parameters.maxfev = 10;  // Maintain maximum number of function evaluations
-                //levenbergMarquardt.parameters.epsilon = 1e-5;
-
-
-                int ret = levenbergMarquardt.minimize(x);
-                std::cout << "Return code: " << ret << std::endl;
-
-                std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
-
-                std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
-                std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
-                std::cout << "Optimized globalBalanceWeight: " << x[1] << std::endl;
-                std::cout << "Optimized arapBalanceWeight: " << x[2] << std::endl;
-
-                std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
-
-                arapOptimization(pMap_.get(), x[0], x[1], x[2], alphaWeight_, betaWeight_, SimulatedDepthErrorStanDesv_, 
-                                    nOptIterations_, &optimizationUpdate);
-            }
-        } else {
-            arapOptimization(pMap_.get(), repBalanceWeight_, globalBalanceWeight_, arapBalanceWeight_, alphaWeight_, betaWeight_,
-                            SimulatedDepthErrorStanDesv_, nOptIterations_, &optimizationUpdate);
-        }
-
-        std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations_ << " iterations." << std::endl;
-        std::cout << "\nOptimization change: " << optimizationUpdate << std::endl;
-        
-        if(showScene_) {
-            mapVisualizer_->update(drawRaysSelection_);
-        }
-
-        if (i != nOptimizations_) {
-            std::cout << i << " / " << nOptimizations_ << " MEASUREMENTS: \n";
-            outFile_.open(filePath_, std::ios::app);
-            if (outFile_.is_open()) {
-                outFile_ << i << " / " << nOptimizations_ << " MEASUREMENTS: \n";
-
-                outFile_.close();
-            } else {
-                std::cerr << "Unable to open file for writing" << std::endl;
-            }
-
-            measureRelativeMapErrors(pMap_, filePath_);
-            measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
-        }
-    }
-
-    //arapBundleAdjustment(pMap_.get());
-    outFile_.open(filePath_, std::ios::app);
-    if (outFile_.is_open()) {
-        outFile_ << "FINAL MEASUREMENTS: \n";
-
-        outFile_.close();
-    } else {
-        std::cerr << "Unable to open file for writing" << std::endl;
-    }
-
-    if(showScene_) {
-        mapVisualizer_->update(drawRaysSelection_);
     }
 }
 

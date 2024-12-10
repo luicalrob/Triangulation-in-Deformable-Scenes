@@ -55,7 +55,6 @@ int main(){
         timer = clock();
 
         SLAM.processSimulatedImage(nMPs, timer);
-        //SLAM.simulatedMapping();
 
         timer = clock() - timer;
     }
