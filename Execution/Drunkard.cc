@@ -29,12 +29,12 @@
 using namespace std;
 
 int main(){
-    SLAM SLAM("Data/Test.yaml");
+    SLAM SLAM("Data/Drunkard.yaml");
 
     Eigen::Vector3f firstCamera = SLAM.getFirstCameraPos();
     Eigen::Vector3f secondCamera = SLAM.getSecondCameraPos();
 
-    SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
+    //SLAM.loadPoints("Data/original_points.csv", "Data/moved_points.csv");
 
     SLAM.setCameraPoses(firstCamera, secondCamera);
 
@@ -44,6 +44,9 @@ int main(){
 
     clock_t timer;
     int nMPs = 0;
+    int nKF = 0;
+    cv::Mat currIm;
+    Sophus::SE3f Tcw;
 
     // To visualize solution
     if(SLAM.showSolution_) {
@@ -51,7 +54,7 @@ int main(){
     } else {
         timer = clock();
 
-        SLAM.processSimulatedImage(nMPs, timer);
+        SLAM.processImage(currIm, Tcw, nKF, nMPs, timer);
 
         timer = clock() - timer;
     }

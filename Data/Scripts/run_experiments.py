@@ -73,7 +73,7 @@ for triangulation, depth, shape, experiment in product(triangulations, depths, s
 
         source_folder = f'./Data/SinteticDataBase/{depth}cm Depth/{shape}/{totalMov} mm {typeMov}/{experiment}'
         destination_folder = './Data'
-        test_yaml_path = './Data/Test.yaml'
+        test_yaml_path = './Data/Simulation.yaml'
         result_folder = f'./Data/Experiments/{args.Model}/{triangulation}/{depth}cm Depth/{shape}/{totalMov} mm {typeMov}/{experiment}'
 
         os.makedirs(destination_folder, exist_ok=True)

@@ -13,6 +13,10 @@ include_directories(
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Execution)
 
 # Set the name of the main program and add its source file
-set(MAIN_PROGRAM_NAME main)
-add_executable(${MAIN_PROGRAM_NAME} main.cc)
-target_link_libraries(${MAIN_PROGRAM_NAME} ${OpenCV_LIBS} slam)
+set(PROGRAM_NAME simulation)
+add_executable(${PROGRAM_NAME} simulation.cc)
+target_link_libraries(${PROGRAM_NAME} ${OpenCV_LIBS} slam)
+
+set(PROGRAM_NAME Drunkard)
+add_executable(${PROGRAM_NAME} Drunkard.cc)
+target_link_libraries(${PROGRAM_NAME} ${OpenCV_LIBS} slam)
