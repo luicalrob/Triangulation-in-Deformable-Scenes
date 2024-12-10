@@ -48,7 +48,8 @@ set(HEADER_FILES
         ${root}/Utils/Geometry.h
         ${root}/Utils/CommonTypes.h
         ${root}/Utils/Conversions.h
-        ${root}/Utils/Measurements.h)
+        ${root}/Utils/Measurements.h
+        ${root}/Utils/Utils.h)
 
 set(SOURCE_FILES
         ${root}/Calibration/PinHole.cc
@@ -71,7 +72,8 @@ set(SOURCE_FILES
         ${root}/Visualization/MapVisualizer.cc
         ${root}/Utils/Geometry.cc
         ${root}/Utils/Conversions.cc
-        ${root}/Utils/Measurements.cc)
+        ${root}/Utils/Measurements.cc
+        ${root}/Utils/Utils.cc)
 
 set(SLAM_LIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
 

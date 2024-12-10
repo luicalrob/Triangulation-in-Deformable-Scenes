@@ -105,7 +105,7 @@ Triangulation.seed.location: "FarPoints"
 
 
 # Visualization
-MapVisualizer.showScene: "false"
+MapVisualizer.showScene: "true"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "false"
+Execution.stop: "true"

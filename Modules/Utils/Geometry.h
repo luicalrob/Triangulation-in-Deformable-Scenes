@@ -54,12 +54,11 @@ void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
                  Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, std::string location);
 
 void triangulateORBSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                        Sophus::SE3f& Tcw1, Sophus::SE3f& Tcw2,
+                        const Sophus::SE3f& Tcw1, const Sophus::SE3f& Tcw2,
                         Eigen::Vector3f& point1, Eigen::Vector3f& point2, std::string location);
 
-void triangulateDepth(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
-                 const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, 
-                 std::string location, float C1DepthMeasurements, float C2DepthMeasurements);
+void triangulateDepth(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, const Sophus::SE3f& T1w, 
+                        const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, std::string location);
 
 /*
  * Squared reprojection error

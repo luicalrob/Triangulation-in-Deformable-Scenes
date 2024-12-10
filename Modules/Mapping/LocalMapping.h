@@ -50,6 +50,18 @@ public:
      */
     void doMapping(std::shared_ptr<KeyFrame>& pCurrKeyFrame, int &nMPs);
 
+    /*
+     * Does the simulated mapping operation: triangulation and optimization
+     */
+    void doSimulatedMapping(std::shared_ptr<KeyFrame> &pCurrKeyFrame, std::shared_ptr<KeyFrame> &pPrevKeyFrame, int &nMPs);
+
+
+    /*
+     * Simulation Points
+     */
+    std::vector<Eigen::Vector3f> originalPoints_;
+    std::vector<Eigen::Vector3f> movedPoints_;
+
 private:
     /*
      * Removes from the map redundant or wrongly triangulated points
@@ -62,6 +74,11 @@ private:
     void triangulateNewMapPoints();
 
     /*
+     * Triangulates new MapPoints in a simulation
+     */
+    void triangulateSimulatedMapPoints();
+
+    /*
      * Matches MapPoints from the current KeyFrame with the previous ones and checks for duplicates
      */
     void checkDuplicatedMapPoints();
@@ -71,9 +88,24 @@ private:
      */
     void optimization();
 
+    /*
+     * Check positive z and minimum parallax of triangulated points
+     */
+    bool isValidTriangulation(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                                        const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                                        const Eigen::Vector3f& x3D_1, const Eigen::Vector3f& x3D_2);
+
+    /*
+     * Triangulate points using the triangulation method selected
+     */
+    bool triangulate(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                               const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                               Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
+
     std::shared_ptr<Map> pMap_;
 
     std::shared_ptr<KeyFrame> currKeyFrame_;
+    std::shared_ptr<KeyFrame> prevKeyFrame_;
 
     std::list<std::shared_ptr<MapPoint>> mlpRecentAddedMapPoints;
 
@@ -82,12 +114,6 @@ private:
     //Visualizers
     std::shared_ptr<FrameVisualizer> visualizer_;
     std::shared_ptr<MapVisualizer> mapVisualizer_;
-
-    /*
-     * Simulation Points
-     */
-    std::vector<Eigen::Vector3f> originalPoints_;
-    std::vector<Eigen::Vector3f> movedPoints_;
 
     Eigen::Vector3f C1Pose_;
     Eigen::Vector3f C2Pose_;

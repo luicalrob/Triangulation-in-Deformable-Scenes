@@ -22,6 +22,7 @@
  */
 
 #include "System/SLAM.h"
+#include "Utils/Measurements.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -37,21 +38,33 @@ int main(){
 
     SLAM.setCameraPoses(firstCamera, secondCamera);
 
-    SLAM.getDepthMeasurements();
+    SLAM.getSimulatedDepthMeasurements();
 
     SLAM.createKeyPoints();
 
     bool showSolution = SLAM.getShowSolution();
 
+
+    clock_t timer;
+    int nMPs = 0;
+
     // To visualize solution
     if(showSolution) {
         SLAM.viusualizeSolution();
     } else {
-        SLAM.simulatedMapping();
+        timer = clock();
+
+        SLAM.processSimulatedImage(nMPs, timer);
+        //SLAM.simulatedMapping();
+
+        timer = clock() - timer;
     }
 
-    SLAM.measureRelativeErrors();
-    SLAM.measureAbsoluteErrors();
+    measureRelativeMapErrors(SLAM.pMap_, SLAM.filePath_);
+    measureAbsoluteMapErrors(SLAM.pMap_, SLAM.originalPoints_, SLAM.movedPoints_, SLAM.filePath_);
+
+    cout << "[END] Seconds: " << fixed << setprecision(4) << ((float)timer)/CLOCKS_PER_SEC << endl;
+    cout << "[END] Number of MapPoints: " << nMPs << endl;
 
     return 0;
 }

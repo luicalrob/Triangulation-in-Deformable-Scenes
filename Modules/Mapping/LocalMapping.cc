@@ -20,6 +20,8 @@
 #include "Matching/DescriptorMatching.h"
 #include "Utils/Geometry.h"
 #include "Utils/CommonTypes.h"
+#include "Utils/Measurements.h"
+#include "Utils/Utils.h"
 #include <iterator>
 #include <nlopt.hpp>
 #include "Optimization/nloptOptimization.h"
@@ -79,15 +81,32 @@ void LocalMapping::doMapping(std::shared_ptr<KeyFrame> &pCurrKeyFrame, int &nMPs
         return;
 
     //Remove redundant MapPoints
-    mapPointCulling();
+    //mapPointCulling();
 
     //Triangulate new MapPoints
     triangulateNewMapPoints();
 
-    checkDuplicatedMapPoints();
+    //checkDuplicatedMapPoints();
 
     //Run deformation optimization
-    optimization();
+    //optimization();
+
+    nMPs = pMap_->getMapPoints().size();
+}
+
+void LocalMapping::doSimulatedMapping(std::shared_ptr<KeyFrame> &pCurrKeyFrame, std::shared_ptr<KeyFrame> &pPrevKeyFrame, int &nMPs) {
+    //Keep input keyframe
+    currKeyFrame_ = pCurrKeyFrame;
+    prevKeyFrame_ = pPrevKeyFrame;
+
+    if(!currKeyFrame_ || !prevKeyFrame_)
+        return;
+
+    //Triangulate new MapPoints
+    triangulateSimulatedMapPoints();
+
+    //Run deformation optimization
+    //optimization();
 
     nMPs = pMap_->getMapPoints().size();
 }
@@ -225,36 +244,19 @@ void LocalMapping::triangulateNewMapPoints() {
 
                 Eigen::Vector3f xn1 = calibration1->unproject(x1).normalized();
                 Eigen::Vector3f xn2 = calibration2->unproject(x2).normalized();
-                Eigen::Vector3f x3D_1;
-                Eigen::Vector3f x3D_2;
+                Eigen::Vector3f x3D_1, x3D_2;
 
-                if (TrianMethod_ == "Classic") {
-                    triangulateClassic(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
-                } else if (TrianMethod_ == "ORBSLAM") {
-                    triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
-                } else if (TrianMethod_ == "DepthMeasurement") {
+                if(TrianMethod_ == "DepthMeasurement") {
                     float d1 = currKeyFrame_->getDepthMeasure(i);
-                    float d2 = pKF->getDepthMeasure(i); // vMatches[i] si las parejas no fuesen ordenadas
+                    float d2 = pKF->getDepthMeasure(i);
 
                     xn1 = calibration1->unproject(x1, d1);
                     xn2 = calibration2->unproject(x2, d2);
-
-                    triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_, d1, d2);
-                } else {
-                    triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
                 }
 
-                //Check positive depth
-                auto x_1 = T1w * x3D_1;
-                auto x_2 = T2w * x3D_2;
-                if(x_1[2] < 0.0 || x_2[2] < 0.0) continue;
+                if (!triangulate(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
 
-                //Check parallax
-                auto ray1 = (T1w.inverse().rotationMatrix() * xn1).normalized();
-                auto ray2 = (T2w.inverse().rotationMatrix() * xn2).normalized();
-                auto parallax = cosRayParallax(ray1, ray2);
-
-                if(parallax > settings_.getMinCos()) continue;
+                if (!isValidTriangulation(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
 
                 //Check reprojection error
 
@@ -295,6 +297,77 @@ void LocalMapping::triangulateNewMapPoints() {
     }
 }
 
+void LocalMapping::triangulateSimulatedMapPoints() {
+    int nTriangulated = 0;
+
+    int nMatches = movedPoints_.size();
+
+    std::cout << "Number of matches: " << nMatches << std::endl;
+
+    Sophus::SE3f T1w = prevKeyFrame_->getPose();
+    Sophus::SE3f T2w = currKeyFrame_->getPose();
+
+    std::shared_ptr<CameraModel> prevCalibration = prevKeyFrame_->getCalibration();
+    std::shared_ptr<CameraModel> currCalibration = currKeyFrame_->getCalibration();
+
+    //Try to triangulate a new MapPoint with each match
+    for(size_t i = 0; i < nMatches; i++){
+        cv::Point2f x1 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
+        cv::Point2f x2 = currKeyFrame_->getKeyPoint(i).pt;
+
+        Eigen::Vector3f xn1 = prevCalibration->unproject(x1).normalized();
+        Eigen::Vector3f xn2 = currCalibration->unproject(x2).normalized();
+
+        if(TrianMethod_ == "DepthMeasurement") {
+            float d1 = prevKeyFrame_->getDepthMeasure(i);
+            float d2 = currKeyFrame_->getDepthMeasure(i);
+
+            xn1 = prevCalibration->unproject(x1, d1);
+            xn2 = currCalibration->unproject(x2, d2);
+        }
+
+        Eigen::Vector3f x3D_1, x3D_2;
+
+        if (!triangulate(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
+
+        if (!isValidTriangulation(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
+
+        //Check reprojection error
+        Eigen::Vector2f p_p1;
+        Eigen::Vector2f p_p2;
+        prevCalibration->project(T1w*x3D_1, p_p1);
+        currCalibration->project(T2w*x3D_2, p_p2);
+
+        cv::Point2f cv_p1(p_p1[0], p_p1[1]);
+        cv::Point2f cv_p2(p_p2[0], p_p2[1]);
+
+        float e1 = squaredReprojectionError(x1, cv_p1);
+        float e2 = squaredReprojectionError(x2, cv_p2);
+
+        //if(e1 > 5.991 || e2 > 5.991) continue;
+
+        std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
+        std::shared_ptr<MapPoint> map_point_2(new MapPoint(x3D_2));
+
+        pMap_->insertMapPoint(map_point_1);
+        pMap_->insertMapPoint(map_point_2);
+
+        pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
+        pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
+
+        prevKeyFrame_->setMapPoint(i, map_point_1);
+        currKeyFrame_->setMapPoint(i, map_point_2);
+
+        nTriangulated++;
+        nTriangulated++;
+    }
+
+    std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
+
+    prevKeyFrame_->setInitialDepthScale();
+    currKeyFrame_->setInitialDepthScale();
+}
+
 void LocalMapping::checkDuplicatedMapPoints() {
     vector<pair<ID,int>> vKFcovisible = pMap_->getCovisibleKeyFrames(currKeyFrame_->getId());
     vector<shared_ptr<MapPoint>> vCurrMapPoints = currKeyFrame_->getMapPoints();
@@ -324,16 +397,13 @@ void LocalMapping::optimization() {
 
     // stop
     // Uncomment for step by step execution (pressing esc key)
-    // if (stop_) {
-    //     std::cout << "Press esc to continue... " << std::endl;
-    //     while((cv::waitKey(10) & 0xEFFFFF) != 27){
-    //         mapVisualizer_->update(drawRaysSelection_);
-    //     }
-    // } else {
-    //     if(showScene_) {
-    //         mapVisualizer_->update(drawRaysSelection_);
-    //     }
-    // }
+    if (stop_) {
+        stopExecution(mapVisualizer_, drawRaysSelection_);
+    } else {
+        if(showScene_) {
+            mapVisualizer_->update(drawRaysSelection_);
+        }
+    }
 
     double optimizationUpdate = 100;
     for(int i = 1; i <= nOptimizations_ && optimizationUpdate >= (0.00001*movedPoints_.size()); i++){ 
@@ -453,4 +523,38 @@ void LocalMapping::optimization() {
     } else {
         std::cerr << "Unable to open file for writing" << std::endl;
     }
+
+    if(showScene_) {
+        mapVisualizer_->update(drawRaysSelection_);
+    }
+}
+
+bool LocalMapping::isValidTriangulation(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                                        const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                                        const Eigen::Vector3f& x3D_1, const Eigen::Vector3f& x3D_2) {
+    auto x_1 = T1w * x3D_1;
+    auto x_2 = T2w * x3D_2;
+
+    if (x_1[2] < 0.0 || x_2[2] < 0.0) return false;
+
+    auto ray1 = (T1w.inverse().rotationMatrix() * xn1).normalized();
+    auto ray2 = (T2w.inverse().rotationMatrix() * xn2).normalized();
+    auto parallax = cosRayParallax(ray1, ray2);
+
+    return parallax <= settings_.getMinCos();
+}
+
+bool LocalMapping::triangulate(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                               const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                               Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2) {
+    if (TrianMethod_ == "Classic") {
+        triangulateClassic(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
+    } else if (TrianMethod_ == "ORBSLAM") {
+        triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
+    } else if (TrianMethod_ == "DepthMeasurement") {
+        triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
+    } else {
+        triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
+    }
+    return true;
 }

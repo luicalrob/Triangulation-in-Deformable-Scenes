@@ -56,6 +56,11 @@ public:
     bool processImage(const cv::Mat& im, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer);
 
     /*
+     * Process simulated images.
+     */
+    bool processSimulatedImage( int &nMPs, clock_t &timer);
+
+    /*
      * Load simulation 3D points
      */
     void loadPoints(const std::string &originalFile, const std::string &movedFile);
@@ -78,7 +83,7 @@ public:
     /*
      * Get real depth measurements and create depth measurements with gaussian error
      */
-    void getDepthMeasurements();
+    void getSimulatedDepthMeasurements();
 
     /*
      * Mapping of the simulation matches
@@ -105,6 +110,18 @@ public:
      */
     bool getShowSolution();
 
+    void triangulateSimulatedMapPoints();
+
+    void optimization();
+
+    bool isValidTriangulation(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                                        const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                                        const Eigen::Vector3f& x3D_1, const Eigen::Vector3f& x3D_2);
+
+    bool triangulate(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                               const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                               Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
+
     /*
      * Get camera positions
      */
@@ -117,6 +134,19 @@ public:
 
     std::vector<int> getInsertedIndexes();
 
+
+    /*
+     * Map of the SLAM system
+     */
+    std::shared_ptr<Map> pMap_;    
+    
+    /*
+     * Simulation Points
+     */
+    std::vector<Eigen::Vector3f> originalPoints_;
+    std::vector<Eigen::Vector3f> movedPoints_;
+    
+    std::string filePath_;
 
 private:
 
@@ -136,10 +166,6 @@ private:
      */
     Settings settings_;
 
-    /*
-     * Map of the SLAM system
-     */
-    std::shared_ptr<Map> pMap_;
     cv::Mat currIm_;
 
     Frame prevFrame_, currFrame_;
@@ -156,12 +182,6 @@ private:
      */
     std::shared_ptr<FrameVisualizer> visualizer_;
     std::shared_ptr<MapVisualizer> mapVisualizer_;
-
-    /*
-     * Simulation Points
-     */
-    std::vector<Eigen::Vector3f> originalPoints_;
-    std::vector<Eigen::Vector3f> movedPoints_;
 
     Eigen::Vector3f C1Pose_;
     Eigen::Vector3f C2Pose_;
@@ -208,7 +228,6 @@ private:
     bool stop_;
 
     std::ofstream outFile_;
-    std::string filePath_;
 };
 
 
