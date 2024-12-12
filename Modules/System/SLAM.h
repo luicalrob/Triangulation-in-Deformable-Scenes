@@ -88,7 +88,7 @@ public:
     /*
      * Deformation optimization of triangulated points
      */
-    void deformationOptimization();
+    void deformationOptimization1();
 
     /*
      * Create camera orientation matrix from two points

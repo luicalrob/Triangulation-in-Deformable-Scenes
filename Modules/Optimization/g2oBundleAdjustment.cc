@@ -19,6 +19,9 @@
 #include "Optimization/g2oTypes.h"
 #include "Utils/Geometry.h"
 #include "Utils/CommonTypes.h"
+#include "Optimization/nloptOptimization.h"
+#include "Optimization/EigenOptimization.h"
+#include "Utils/Measurements.h"
 
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
@@ -436,6 +439,175 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
         VertexSBAPointXYZ* vPoint = static_cast<VertexSBAPointXYZ*>(optimizer.vertex(pairMapPointId.second));
         Eigen::Vector3f p3D = vPoint->estimate().cast<float>();
         pMP->setWorldPosition(p3D);
+    }
+}
+
+void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer) {
+    float simulatedRepErrorStanDesv = settings.getSimulatedRepError();
+    float SimulatedDepthErrorStanDesv = settings.getSimulatedDepthError();
+
+    double repBalanceWeight = settings.getOptRepWeight();
+    double arapBalanceWeight = settings.getOptArapWeight();
+    double globalBalanceWeight = settings.getOptGlobalWeight();
+    double alphaWeight = settings.getOptAlphaWeight();
+    double betaWeight = settings.getOptBetaWeight();
+
+    std::string OptSelection = settings.getOptSelection();
+    std::string OptWeightsSelection = settings.getOptWeightsSelection();
+
+    int nOptimizations = settings.getnOptimizations();
+    int nOptIterations = settings.getnOptIterations();
+
+    int NloptnOptimizations = settings.getNloptnOptimizations();
+    double NloptRelTolerance = settings.getNloptRelTolerance();
+    double NloptAbsTolerance = settings.getNloptAbsTolerance();
+    double NloptRepLowerBound = settings.getNloptRepLowerBound();
+    double NloptRepUpperBound = settings.getNloptRepUpperBound();
+    double NloptGlobalLowerBound = settings.getNloptGlobalLowerBound();
+    double NloptGlobalUpperBound = settings.getNloptGlobalUpperBound();
+    double NloptArapLowerBound = settings.getNloptArapLowerBound();
+    double NloptArapUpperBound = settings.getNloptArapUpperBound();
+
+    bool drawRaysSelection = settings.getDrawRaysSelection();
+    bool showScene = settings.getShowScene();;
+
+    std::ofstream outFile_;
+    std::string filePath_ = settings.getExpFilePath();
+    outFile_.imbue(std::locale("es_ES.UTF-8"));
+
+    std::cout << "\nINITIAL MEASUREMENTS: \n";
+    outFile_.open(filePath_);
+    if (outFile_.is_open()) {
+        outFile_ << "INITIAL MEASUREMENTS: \n";
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
+
+    std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
+
+    double optimizationUpdate = 100;
+    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.00001*mapPoints_corrected.size()); i++){ 
+        // correct error
+        if (OptSelection == "open3DArap") {
+            arapOpen3DOptimization(pMap.get());
+        } else if(OptSelection == "twoOptimizations") {
+            if (OptWeightsSelection == "nlopt") {
+                std::cout << "START new optimization. "  << std::endl;
+                nlopt::opt opt(nlopt::LN_NELDERMEAD, 3);
+                
+                std::vector<double> lb = {NloptRepLowerBound, NloptGlobalLowerBound, NloptArapLowerBound};
+                std::vector<double> ub = {NloptRepUpperBound, NloptGlobalUpperBound, NloptArapUpperBound};
+                opt.set_lower_bounds(lb);
+                opt.set_upper_bounds(ub);
+
+                OptimizationData optData;
+                optData.pMap = pMap->clone();
+                optData.nOptIterations = nOptIterations;
+                optData.repErrorStanDesv = simulatedRepErrorStanDesv;
+                optData.alpha = alphaWeight;
+                optData.beta = betaWeight;
+                optData.depthUncertainty = SimulatedDepthErrorStanDesv;
+
+                opt.set_min_objective(outerObjective, &optData);
+
+                std::vector<double> x = {repBalanceWeight, globalBalanceWeight, arapBalanceWeight};
+
+                opt.set_xtol_rel(NloptRelTolerance);
+                opt.set_xtol_abs(NloptAbsTolerance);
+                opt.set_maxeval(NloptnOptimizations);
+
+                double minf;
+                nlopt::result result = opt.optimize(x, minf);
+
+                std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
+                std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
+                std::cout << "Optimized globalBalanceWeight: " << x[1] << std::endl;
+                std::cout << "Optimized arapBalanceWeight: " << x[2] << std::endl;
+                std::cout << "Final minimized ABSOLUTE error: " << minf << std::endl;
+
+                std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+
+                arapOptimization(pMap.get(), x[0], x[1], x[2], alphaWeight, betaWeight, SimulatedDepthErrorStanDesv, 
+                                    nOptIterations, &optimizationUpdate);
+
+                repBalanceWeight = x[0];
+                globalBalanceWeight = x[1];
+                arapBalanceWeight = x[2];
+            } else {
+                Eigen::VectorXd x(3);
+                // Initial values
+                x[0] = repBalanceWeight;
+                x[1] = globalBalanceWeight;
+                x[2] = arapBalanceWeight;
+
+                EigenOptimizationFunctor functor(pMap->clone(), nOptIterations, simulatedRepErrorStanDesv, alphaWeight, betaWeight, 
+                                                    SimulatedDepthErrorStanDesv); 
+                
+                Eigen::NumericalDiff<EigenOptimizationFunctor> numDiff(functor);
+                Eigen::LevenbergMarquardt<Eigen::NumericalDiff<EigenOptimizationFunctor>, double> levenbergMarquardt(numDiff);
+                levenbergMarquardt.parameters.ftol = 1e-3;   // Loosen tolerance for function value change
+                levenbergMarquardt.parameters.xtol = 1e-3;   // Loosen tolerance for parameter change
+                levenbergMarquardt.parameters.gtol = 1e-3;   // Loosen tolerance for gradient
+                levenbergMarquardt.parameters.maxfev = 10;  // Maintain maximum number of function evaluations
+                //levenbergMarquardt.parameters.epsilon = 1e-5;
+
+
+                int ret = levenbergMarquardt.minimize(x);
+                std::cout << "Return code: " << ret << std::endl;
+
+                std::cout << "Number of iterations: " << levenbergMarquardt.iter << std::endl;
+
+                std::cout << "\nWEIGHTS OPTIMIZED" << std::endl;
+                std::cout << "Optimized repBalanceWeight: " << x[0] << std::endl;
+                std::cout << "Optimized globalBalanceWeight: " << x[1] << std::endl;
+                std::cout << "Optimized arapBalanceWeight: " << x[2] << std::endl;
+
+                std::cout << "\nFinal optimization with optimized weights:\n" << std::endl;
+
+                arapOptimization(pMap.get(), x[0], x[1], x[2], alphaWeight, betaWeight, SimulatedDepthErrorStanDesv, 
+                                    nOptIterations, &optimizationUpdate);
+            }
+        } else {
+            arapOptimization(pMap.get(), repBalanceWeight, globalBalanceWeight, arapBalanceWeight, alphaWeight, betaWeight,
+                            SimulatedDepthErrorStanDesv, nOptIterations, &optimizationUpdate);
+        }
+
+        std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations << " iterations." << std::endl;
+        std::cout << "\nOptimization change: " << optimizationUpdate << std::endl;
+        
+        if(showScene) {
+            mapVisualizer->update(drawRaysSelection);
+        }
+
+        if (i != nOptimizations) {
+            std::cout << i << " / " << nOptimizations << " MEASUREMENTS: \n";
+            outFile_.open(filePath_, std::ios::app);
+            if (outFile_.is_open()) {
+                outFile_ << i << " / " << nOptimizations << " MEASUREMENTS: \n";
+
+                outFile_.close();
+            } else {
+                std::cerr << "Unable to open file for writing" << std::endl;
+            }
+
+            measureRelativeMapErrors(pMap, filePath_);
+            //measureAbsoluteMapErrors(pMap, originalPoints_, movedPoints_, filePath_);
+        }
+    }
+
+    outFile_.open(filePath_, std::ios::app);
+    if (outFile_.is_open()) {
+        outFile_ << "FINAL MEASUREMENTS: \n";
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
+
+    if(showScene) {
+        mapVisualizer->update(drawRaysSelection);
     }
 }
 

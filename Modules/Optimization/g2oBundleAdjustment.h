@@ -26,6 +26,9 @@
 
 #include "Map/Map.h"
 #include "open3d/Open3D.h"
+#include "System/Settings.h"
+#include "Visualization/FrameVisualizer.h"
+#include "Visualization/MapVisualizer.h"
 
 /*
  * Performs a full Bundle Adjustment (optimizes both camera poses and 3D points)
@@ -42,6 +45,11 @@ int poseOnlyOptimization(Frame& currFrame);
  * Performs a Bundle Adjustmen using the local map around the given KeyFrame
  */
 void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
+
+/*
+ * Performs a As-Rigid-As-Possible optimization using arapOptimization function inside a external loop to optimize the weights
+ */
+void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer);
 
 /*
  * Performs a As-Rigid-As-Possible optimization joined with a reprojection error minimization (optimizes 3D points positions in the space)

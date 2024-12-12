@@ -124,6 +124,7 @@ Settings::Settings(const std::string& configFile) {
     NloptArapLowerBound_ = fSettings["Optimization.nlopt.arap.lowerBound"];
     NloptArapUpperBound_ = fSettings["Optimization.nlopt.arap.upperBound"];
 
+    fSettings["Experiment.Filepath"] >> ExpFilePath_;
     
     std::string showSceneString;
     fSettings["MapVisualizer.showScene"] >> showSceneString;
@@ -368,6 +369,10 @@ double Settings::getNloptArapLowerBound(){
 
 double Settings::getNloptArapUpperBound(){
     return NloptArapUpperBound_;
+}
+
+std::string Settings::getExpFilePath() {
+    return ExpFilePath_;
 }
 
 bool Settings::getDrawRaysSelection(){

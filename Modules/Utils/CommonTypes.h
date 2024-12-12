@@ -28,3 +28,8 @@ struct PixelsError {
     double desvc2;   // Standard deviation camera 2
     double desv;     // Standard deviation across both camera
 };
+
+struct PoseData {
+    double tx, ty, tz;
+    double qx, qy, qz, qw;
+};

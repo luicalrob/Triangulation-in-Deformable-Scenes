@@ -103,6 +103,8 @@ public:
     double getNloptArapLowerBound();
     double getNloptArapUpperBound();
 
+    std::string getExpFilePath();
+
     bool getShowScene();
     bool getDrawRaysSelection();
     bool getShowSolution();
@@ -163,6 +165,8 @@ private:
     double NloptGlobalUpperBound_;
     double NloptArapLowerBound_;
     double NloptArapUpperBound_;
+
+    std::string ExpFilePath_;
 
     int nOptimizations_;
     int nOptIterations_;

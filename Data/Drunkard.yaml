@@ -12,8 +12,8 @@ Camera.p1: 0.00019359
 Camera.p2: 1.76187114e-05
 
 # Camera resolution
-Camera.cols: 752
-Camera.rows: 480
+Camera.cols: 320
+Camera.rows: 320
 
 # Number of features per image
 FeatureExtractor.nFeatures: 1000
@@ -91,6 +91,8 @@ Optimization.nlopt.global.lowerBound: 50
 Optimization.nlopt.global.upperBound: 50
 Optimization.nlopt.arap.lowerBound: 0.00001
 Optimization.nlopt.arap.upperBound: 10000000
+
+Experiment.Filepath: "./Data/Experiment.txt"
 
 #Method selection
 Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM

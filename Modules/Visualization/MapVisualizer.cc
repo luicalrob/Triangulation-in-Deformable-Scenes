@@ -24,7 +24,7 @@
 using namespace std;
 
 MapVisualizer::MapVisualizer(shared_ptr<Map> pMap) : pMap_(pMap){
-    pangolin::CreateWindowAndBind("Mini-SLAM",1024,768);
+    pangolin::CreateWindowAndBind("SLAM",1024,768);
 
     // 3D Mouse handler requires depth testing to be enabled
     glEnable(GL_DEPTH_TEST);

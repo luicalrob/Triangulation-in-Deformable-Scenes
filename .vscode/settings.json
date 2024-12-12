@@ -81,6 +81,23 @@
         "hash_map": "cpp",
         "hash_set": "cpp",
         "slist": "cpp",
-        "nonlinearoptimization": "cpp"
+        "nonlinearoptimization": "cpp",
+        "superlusupport": "cpp",
+        "*.evaluator": "cpp",
+        "*.traits": "cpp",
+        "adolcforward": "cpp",
+        "alignedvector3": "cpp",
+        "autodiff": "cpp",
+        "bvh": "cpp",
+        "eulerangles": "cpp",
+        "fft": "cpp",
+        "kroneckerproduct": "cpp",
+        "mprealsupport": "cpp",
+        "openglsupport": "cpp",
+        "splines": "cpp",
+        "csetjmp": "cpp",
+        "cuchar": "cpp",
+        "charconv": "cpp",
+        "netfwd": "cpp"
     }
 }

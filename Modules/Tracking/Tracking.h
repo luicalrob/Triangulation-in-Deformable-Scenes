@@ -118,6 +118,8 @@ private:
     //SLAM map
     std::shared_ptr<Map> pMap_;
 
+    Sophus::SE3f Tcw_;
+
     //Visualizers
     std::shared_ptr<FrameVisualizer> visualizer_;
     std::shared_ptr<MapVisualizer> mapVisualizer_;

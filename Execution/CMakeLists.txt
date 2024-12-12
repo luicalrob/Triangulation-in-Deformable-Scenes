@@ -17,6 +17,6 @@ set(PROGRAM_NAME simulation)
 add_executable(${PROGRAM_NAME} simulation.cc)
 target_link_libraries(${PROGRAM_NAME} ${OpenCV_LIBS} slam)
 
-set(PROGRAM_NAME Drunkard)
-add_executable(${PROGRAM_NAME} Drunkard.cc)
+set(PROGRAM_NAME drunkard)
+add_executable(${PROGRAM_NAME} drunkard.cc)
 target_link_libraries(${PROGRAM_NAME} ${OpenCV_LIBS} slam)

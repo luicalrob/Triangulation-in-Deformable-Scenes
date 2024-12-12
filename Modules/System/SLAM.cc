@@ -105,7 +105,7 @@ SLAM::SLAM(const std::string &settingsFile) {
     showSolution_ = settings_.getShowSolution();
     stop_ = settings_.getStopExecutionOption();
 
-    filePath_ = "./Data/Experiment.txt";
+    filePath_ = settings_.getExpFilePath();
     outFile_.imbue(std::locale("es_ES.UTF-8"));
 }
 
@@ -113,6 +113,8 @@ bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMP
     if(stop_) {
         cv::namedWindow("Test Window");
     }
+
+    Tcw_ = Tcw;
     
     //Convert image to grayscale if needed
     cv::Mat grayIm = convertImageToGrayScale(im);
@@ -125,7 +127,7 @@ bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMP
     mapper_.doMapping(lastKeyFrame, nMPs);
 
     //Run deformation optimization
-    deformationOptimization();
+    deformationOptimization(pMap_, settings_, mapVisualizer_);
 
     visualizer_->updateWindows();
 
@@ -133,7 +135,7 @@ bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMP
     return true;
 }
 
-bool SLAM::processSimulatedImage( int &nMPs, clock_t &timer) {
+bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
     if(stop_) {
         cv::namedWindow("Test Window");
     }
@@ -142,7 +144,7 @@ bool SLAM::processSimulatedImage( int &nMPs, clock_t &timer) {
     mapper_.doSimulatedMapping(currKeyFrame_, prevKeyFrame_, nMPs);
 
     //Run deformation optimization
-    deformationOptimization();
+    deformationOptimization(pMap_, settings_, mapVisualizer_);
 
     visualizer_->updateWindows();
 
@@ -349,7 +351,7 @@ void SLAM::getSimulatedDepthMeasurements() {
 }
 
 
-void SLAM::deformationOptimization() {
+void SLAM::deformationOptimization1() {
     std::cout << "\nINITIAL MEASUREMENTS: \n";
     outFile_.open(filePath_);
     if (outFile_.is_open()) {

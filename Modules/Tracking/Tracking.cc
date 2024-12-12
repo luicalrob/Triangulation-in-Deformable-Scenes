@@ -84,7 +84,8 @@ bool Tracking::doTracking(const cv::Mat &im, Sophus::SE3f &Tcw, int &nKF, int &n
     if(status_ == NOT_INITIALIZED){
         if(monocularMapInitialization()){
             status_ = GOOD;
-            Tcw = currFrame_.getPose();
+            //Tcw = currFrame_.getPose();
+            Tcw_ = Tcw;
 
             //Update motion model
             updateMotionModel();
@@ -109,7 +110,7 @@ bool Tracking::doTracking(const cv::Mat &im, Sophus::SE3f &Tcw, int &nKF, int &n
                 //Update motion model
                 updateMotionModel();
 
-                Tcw = currFrame_.getPose();
+                //Tcw = currFrame_.getPose();
 
                 visualizer_->drawCurrentFrame(currFrame_);
 
@@ -209,7 +210,7 @@ bool Tracking::monocularMapInitialization() {
     }
 
     //Try to initialize by finding an Essential matrix
-    Sophus::SE3f Tcw;
+    Sophus::SE3f Tcw = Tcw_;
     vector<Eigen::Vector3f> v3DPoints;
     v3DPoints.reserve(vMatches_.capacity());
     vector<bool> vTriangulated(vMatches_.capacity(),false);
@@ -228,7 +229,7 @@ bool Tracking::monocularMapInitialization() {
     const float scale = vDepths[vDepths.size()/2];
 
     //Create map
-    Tcw.translation() = Tcw.translation() / scale;
+    //Tcw.translation() = Tcw.translation() / scale;
 
     currFrame_.setPose(Tcw);
 
@@ -288,15 +289,16 @@ bool Tracking::monocularMapInitialization() {
 bool Tracking::cameraTracking() {
     //Set pose estimation for the current frame with the motion model
     Sophus::SE3f currPose;
-    if(bMotionModel_){
-        currPose = motionModel_ * prevFrame_.getPose();
-    }
-    else{
-        currPose = prevFrame_.getPose();
-        bMotionModel_ = true;
-    }
+    // if(bMotionModel_){
+    //     currPose = motionModel_ * prevFrame_.getPose();
+    // }
+    // else{
+    //     currPose = prevFrame_.getPose();
+    //     bMotionModel_ = true;
+    // }
 
-    currFrame_.setPose(currPose);
+    //currFrame_.setPose(currPose);
+    currFrame_.setPose(Tcw_);
 
     //Match features between current and previous frame
     int nMatches = guidedMatching(prevFrame_,currFrame_,settings_.getMatchingGuidedTh(),vMatches_,1);
@@ -306,7 +308,7 @@ bool Tracking::cameraTracking() {
     }
 
     //Run a pose optimization
-    nFeatTracked_ = poseOnlyOptimization(currFrame_);
+    //nFeatTracked_ = poseOnlyOptimization(currFrame_);
 
     currFrame_.checkAllMapPointsAreGood();
 
@@ -315,7 +317,7 @@ bool Tracking::cameraTracking() {
     mapVisualizer_->updateCurrentPose(currPose);
 
     //We enforce a minimum of 20 MapPoint matches to consider the estimation as good
-    return nFeatTracked_ >= 20;
+    return nMatches >= 20;
 }
 
 bool Tracking::trackLocalMap() {
