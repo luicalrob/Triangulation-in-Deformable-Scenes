@@ -143,6 +143,18 @@ bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
     // //Do mapping
     mapper_.doSimulatedMapping(currKeyFrame_, prevKeyFrame_, nMPs);
 
+    std::cout << "\nINITIAL MEASUREMENTS: \n";
+    outFile_.open(filePath_);
+    if (outFile_.is_open()) {
+        outFile_ << "INITIAL MEASUREMENTS: \n";
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
+    
+    stop();
+    
     //Run deformation optimization
     deformationOptimization(pMap_, settings_, mapVisualizer_);
 

@@ -475,16 +475,6 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
     std::string filePath_ = settings.getExpFilePath();
     outFile_.imbue(std::locale("es_ES.UTF-8"));
 
-    std::cout << "\nINITIAL MEASUREMENTS: \n";
-    outFile_.open(filePath_);
-    if (outFile_.is_open()) {
-        outFile_ << "INITIAL MEASUREMENTS: \n";
-
-        outFile_.close();
-    } else {
-        std::cerr << "Unable to open file for writing" << std::endl;
-    }
-
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
 
     double optimizationUpdate = 100;
