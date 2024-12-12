@@ -86,11 +86,6 @@ public:
     void getSimulatedDepthMeasurements();
 
     /*
-     * Deformation optimization of triangulated points
-     */
-    void deformationOptimization1();
-
-    /*
      * Create camera orientation matrix from two points
      */
     Eigen::Matrix3f lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY());
