@@ -113,7 +113,7 @@ void FrameVisualizer::drawCurrentFrame(Frame &f) {
     imText.rowRange(im.rows,imText.rows) = cv::Mat::zeros(textSize.height+10,im.cols,im.type());
     cv::putText(imText,s.str(),cv::Point(5,imText.rows-5),cv::FONT_HERSHEY_PLAIN,1,cv::Scalar(255,255,255),1,8);
 
-    cv::imshow("Mini-SLAM: current Frame", imText);
+    cv::imshow("SLAM: current Frame", imText);
 }
 
 void FrameVisualizer::updateWindows() {

@@ -391,13 +391,11 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
             KeyFrame_ pKF1 = k2->second;
             KeyFrame_ pKF2 = k1->second;
-            std::cout << "Pair pKF1: " << k2->first << ", pKF2: " << k1->first<< ")\n";
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
 
             std::shared_ptr<CameraModel> pCamera1 = pKF1->getCalibration();
-
             g2o::SE3Quat camera1Pose = g2o::SE3Quat(pKF1->getPose().unit_quaternion().cast<double>(),pKF1->getPose().translation().cast<double>());
             std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
             g2o::SE3Quat camera2Pose = g2o::SE3Quat(pKF2->getPose().unit_quaternion().cast<double>(),pKF2->getPose().translation().cast<double>());

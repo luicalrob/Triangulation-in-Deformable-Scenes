@@ -5,7 +5,9 @@
 
 using namespace std;
 
-void measureAbsoluteMapErrors(std::shared_ptr<Map> pMap, std::vector<Eigen::Vector3f> originalPoints, std::vector<Eigen::Vector3f> movedPoints, std::string filePath) {
+void measureSimAbsoluteMapErrors(const std::shared_ptr<Map> pMap, 
+                                const std::vector<Eigen::Vector3f> originalPoints, const std::vector<Eigen::Vector3f> movedPoints, 
+                                const std::string filePath) {
     std::ofstream outFile;
     outFile.imbue(std::locale("es_ES.UTF-8"));
 
@@ -95,6 +97,145 @@ void measureAbsoluteMapErrors(std::shared_ptr<Map> pMap, std::vector<Eigen::Vect
     } 
 }
 
+
+void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::string filePath) {
+    std::ofstream outFile;
+    outFile.imbue(std::locale("es_ES.UTF-8"));
+
+    // 3D Error measurement in map points
+    std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
+
+    float total_movement = 0.0f;
+    float total_error_original = 0.0f;
+    float total_error_moved = 0.0f;
+    float total_error = 0.0f;
+    float total_squared_error_original = 0.0f;
+    float total_squared_error_moved = 0.0f;
+    float total_squared_error = 0.0f;
+    int point_count = mapPoints_corrected.size();
+    int point_count_in_kf = mapPoints_corrected.size() / 2.0;
+    
+    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
+
+    for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
+        for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
+            std::shared_ptr<KeyFrame> pKF1 = k2->second;
+            std::shared_ptr<KeyFrame> pKF2 = k1->second;
+            std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
+
+            vector<std::shared_ptr<MapPoint>>& v1MPs = pKF1->getMapPoints();
+            vector<std::shared_ptr<MapPoint>>& v2MPs = pKF2->getMapPoints();
+            
+            std::shared_ptr<CameraModel> pCamera1 = pKF1->getCalibration();
+            g2o::SE3Quat camera1Pose = g2o::SE3Quat(pKF1->getPose().unit_quaternion().cast<double>(),pKF1->getPose().translation().cast<double>());
+            std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
+            g2o::SE3Quat camera2Pose = g2o::SE3Quat(pKF2->getPose().unit_quaternion().cast<double>(),pKF2->getPose().translation().cast<double>());
+            Sophus::SE3f T1w = pKF1->getPose();
+            Sophus::SE3f T2w = pKF2->getPose();
+
+            for (size_t i = 0; i < v1MPs.size(); i++) {
+                std::shared_ptr<MapPoint> pMPi1 = v1MPs[i];
+                std::shared_ptr<MapPoint> pMPi2 = v2MPs[i];
+                if (!pMPi1) continue;
+                if (!pMPi2) continue;
+
+                Eigen::Vector3f opt_original_position = pMPi1->getWorldPosition();
+                Eigen::Vector3f opt_moved_position = pMPi2->getWorldPosition();
+
+                Eigen::Vector3d p3Dw1 = opt_original_position.cast<double>();
+                Eigen::Vector3d p3Dc1 = camera1Pose.map(p3Dw1);
+                Eigen::Vector3d p3Dw2 = opt_moved_position.cast<double>();
+                Eigen::Vector3d p3Dc2 = camera1Pose.map(p3Dw2);
+
+                Eigen::Vector2f p_p1;
+                Eigen::Vector2f p_p2;
+                pCamera1->project(p3Dc1.cast<float>(), p_p1);
+                pCamera2->project(p3Dc2.cast<float>(), p_p2);
+
+                float d1 = pKF1->getDepthMeasure(p_p1[0], p_p1[1]);
+                float d2 = pKF2->getDepthMeasure(p_p2[0], p_p2[1]);
+
+                Eigen::Vector3f original_position_c(p3Dc1[0], p3Dc1[1], d1);
+                Eigen::Vector3f moved_position_c(p3Dc2[0], p3Dc2[1], d2);
+
+                Eigen::Vector3f original_position = T1w.inverse() * original_position_c;
+                Eigen::Vector3f moved_position = T2w.inverse() * moved_position_c;
+
+                // std::cout << "map point 1: (" << p3Dw1[0] << ", "<< p3Dw1[1] << ", "<< p3Dw1[2] << ")" << std::endl;
+                // std::cout << "solution point 1: (" << original_position[0] << ", "<< original_position[1] << ", "<< original_position[2] << ")" << std::endl;
+                // std::cout << "map point 1 Camera: (" << p3Dc1[0] << ", "<< p3Dc1[1] << ", "<< p3Dc1[2] << ")" << std::endl;
+                // std::cout << "solution point 1 Camera: (" << original_position_c[0] << ", "<< original_position_c[1] << ", "<< original_position_c[2] << ")" << std::endl;
+                
+                // std::cout << "map point 2: (" << p3Dw2[0] << ", "<< p3Dw2[1] << ", "<< p3Dw2[2] << ")" << std::endl;
+                // std::cout << "solution point 2: (" << moved_position[0] << ", "<< moved_position[1] << ", "<< original_position[2] << ")" << std::endl;
+                // std::cout << "map point 2 Camera: (" << p3Dc2[0] << ", "<< p3Dc2[1] << ", "<< p3Dc2[2] << ")" << std::endl;
+                // std::cout << "solution point 2 Camera: (" << moved_position_c[0] << ", "<< moved_position_c[1] << ", "<< moved_position_c[2] << ")" << std::endl;
+
+
+                Eigen::Vector3f movement = original_position - moved_position;
+                Eigen::Vector3f original_error = opt_original_position - original_position;
+                Eigen::Vector3f moved_error = opt_moved_position - moved_position;
+                float error_magnitude_movement = movement.norm();
+                float error_magnitude_original = original_error.norm();
+                float error_magnitude_moved = moved_error.norm();
+
+                float squared_error_magnitude_original = original_error.squaredNorm();
+                float squared_error_magnitude_moved = moved_error.squaredNorm();
+                
+                total_movement += error_magnitude_movement;
+                total_error_original += error_magnitude_original;
+                total_error_moved += error_magnitude_moved;
+                total_error += error_magnitude_moved + error_magnitude_original;
+                
+                total_squared_error_original += squared_error_magnitude_original;
+                total_squared_error_moved += squared_error_magnitude_moved;
+                total_squared_error += squared_error_magnitude_original + squared_error_magnitude_moved;
+
+                // std::cout << "\nError for point: " << mapPoint1->getId() << " and " << mapPoint2->getId() << "\n";
+                // std::cout << "Position " << mapPoints_corrected[j] << "\n";
+                // std::cout << "Mappoint x: " << opt_original_position.x() << " y: " << opt_original_position.y() << " z: " << opt_original_position.z() << std::endl;
+                // std::cout << "point x: " << original_position.x() << " y: " << original_position.y() << " z: " << original_position.z() << std::endl;
+                // std::cout << "moved Mappoint x: " << opt_moved_position.x() << " y: " << opt_moved_position.y() << " z: " << opt_moved_position.z() << std::endl;
+                // std::cout << "moved point x: " << moved_position.x() << " y: " << moved_position.y() << " z: " << moved_position.z() << std::endl;
+                // std::cout << "x: " << total_error << std::endl;
+                //point_count++;
+            }
+        }
+    }
+
+    // std::cout << "point_count: " << point_count << std::endl;
+    if (point_count > 0) {
+        std::cout << "\nABSOLUTE MEASUREMENTS: \n";
+
+        float average_movement = total_movement / point_count_in_kf;
+        //std::cout << "\nTotal movement: " << total_movement << std::endl;
+        std::cout << "Average movement: " << average_movement * 1000 << std::endl;
+        float average_error_original = total_error_original / point_count_in_kf;
+        //std::cout << "Average error in ORIGINAL 3D: " << average_error_original * 1000 << std::endl;
+        float average_error_moved = total_error_moved / point_count_in_kf;
+        //std::cout << "Average error in MOVED 3D: " << average_error_moved * 1000 << std::endl;
+        float average_error = total_error / point_count;
+        //std::cout << "\nTotal error in 3D: " << total_error << std::endl;
+        float rmse = std::sqrt(total_squared_error / point_count);
+        std::cout << "Average error in 3D: " << average_error * 1000 << std::endl;
+        std::cout << "RMSE in 3D: " << rmse * 1000 << "\n" << std::endl;
+        
+        outFile.open(filePath, std::ios::app);
+        if (outFile.is_open()) {
+            outFile << "Av. movement: " << average_movement * 1000 << '\n';
+            outFile << "Av. error: " << average_error * 1000 << '\n';
+            outFile << "RMSE: " << rmse * 1000 << "\n\n";
+
+            outFile.close();
+            std::cout << "Data has been written to Experiment.txt" << std::endl;
+        } else {
+            std::cerr << "Unable to open file for writing" << std::endl;
+        }
+    } else {
+        std::cout << "No points to compare." << std::endl;
+    } 
+}
+
 void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
     std::ofstream outFile;
     outFile.imbue(std::locale("es_ES.UTF-8"));
@@ -153,11 +294,6 @@ void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
             for (const auto& pair : posIndexes) {
                 invertedPosIndexes[pair.second] = pair.first;
             } 
-            
-            std::shared_ptr<CameraModel> pCamera1 = pKF1->getCalibration();
-            g2o::SE3Quat camera1Pose = g2o::SE3Quat(pKF1->getPose().unit_quaternion().cast<double>(),pKF1->getPose().translation().cast<double>());
-            std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
-            g2o::SE3Quat camera2Pose = g2o::SE3Quat(pKF2->getPose().unit_quaternion().cast<double>(),pKF2->getPose().translation().cast<double>());
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 MapPoint_ pMPi1 = v1MPs[i];

@@ -69,6 +69,11 @@ public:
     float getDepthMeasure(size_t idx);
 
     /*
+     * Gets the depth measure of the depth image
+     */
+    float getDepthMeasure(float x, float y);
+
+    /*
      * Gets all the depth measurements of the Frame
      */
     std::vector<float>& getDepthMeasurements();
@@ -173,6 +178,7 @@ private:
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
     std::vector<float> vDepthMeasurements_;
     float depthScale_ = 1.0f;
+    cv::Mat depthIm_;
 
     Sophus::SE3f Tcw_;
 

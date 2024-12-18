@@ -18,6 +18,8 @@
 
 
 #include "MapVisualizer.h"
+#include "Utils/Geometry.h"
+#include "Utils/Measurements.h"
 
 #include <Eigen/Core>
 
@@ -76,11 +78,28 @@ void MapVisualizer::drawMapPoints() {
             continue;
         }
         std::vector<std::shared_ptr<MapPoint>> mapPoints = kf->getMapPoints();
+
+        std::shared_ptr<CameraModel> pCamera = kf->getCalibration();
+        g2o::SE3Quat cameraPose = g2o::SE3Quat(kf->getPose().unit_quaternion().cast<double>(),kf->getPose().translation().cast<double>());
+        Sophus::SE3f Tcw = kf->getPose();
+
         for(std::shared_ptr<MapPoint> mp: mapPoints) {
             if (!mp) {
                 continue;
             }
+
             Eigen::Vector3f pos = mp->getWorldPosition(); 
+
+            Eigen::Vector3d p3Dc = cameraPose.map(pos.cast<double>());
+            Eigen::Vector2f projection;
+            pCamera->project(p3Dc.cast<float>(), projection);
+            float d = kf->getDepthMeasure(projection[0], projection[1]);
+            Eigen::Vector3f m_pos_c(p3Dc[0], p3Dc[1], d);
+            Eigen::Vector3f m_pos = Tcw.inverse() * m_pos_c;
+            
+            glColor3f(0.0,1.0,0.0);
+            glVertex3f(m_pos(0),m_pos(1),m_pos(2));
+            
             if(id%2 == 0) {
                 glColor3f(1.0,0.3,0.3);
             } else {

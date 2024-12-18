@@ -39,11 +39,13 @@ int main(int argc, char **argv){
     int nKF = 0;
 
     cv::Mat currIm;
+    cv::Mat currDepthIm;
     double currTs;
     PoseData currPose;
     //for(int i = 0; i < sequence.getLenght(); i++){
     for(int i = 0; i < 30; i++){
         sequence.getRGBImage(i,currIm);
+        sequence.getDepthImage(i,currDepthIm);
         sequence.getTimeStamp(i,currTs);
         sequence.getPoseData(i,currPose);
 
@@ -60,7 +62,7 @@ int main(int argc, char **argv){
                     << ", x: " << quaternion.x()
                     << ", y: " << quaternion.y()
                     << ", z: " << quaternion.z() << "]" << endl;
-        SLAM.processImage(currIm, Tcw, nKF, nMPs, timer);
+        SLAM.processImage(currIm, currDepthIm, Tcw, nKF, nMPs, timer);
     }
     
     timer = clock() - timer;

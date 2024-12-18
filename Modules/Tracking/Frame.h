@@ -199,9 +199,19 @@ public:
     void setIm(cv::Mat& im);
 
     /*
+     * Sets the depth image for the Frame
+     */
+    void setDepthIm(cv::Mat& im);
+
+    /*
      * Gets the image of the frame
      */
     cv::Mat getIm();
+
+    /*
+     * Gets the depth image of the frame
+     */
+    cv::Mat getDepthIm();
 
     /*
      * Checks that all MapPoints matched are good i.e. their error is low. ONLY USED FOR DEBUG PURPOSES
@@ -257,6 +267,7 @@ private:
     std::vector<float> vSigma2_, vInvSigma2_;           //Uncertainties for a KeyPoint extracted at a image scale
 
     cv::Mat im_;
+    cv::Mat depthIm_;
     double timestamp_;
 };
 

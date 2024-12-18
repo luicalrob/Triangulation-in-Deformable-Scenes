@@ -53,7 +53,7 @@ public:
     /*
      * Process an image. Computes in Tcw the camera pose of the image
      */
-    bool processImage(const cv::Mat& im, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer);
+    bool processImage(const cv::Mat& im, const cv::Mat &depthIm, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer);
 
     /*
      * Process simulated images.
@@ -81,9 +81,14 @@ public:
     void createKeyPoints();
 
     /*
-     * Get real depth measurements and create depth measurements with gaussian error
+     * Get solutions depth and create depth measurements with gaussian error
      */
     void getSimulatedDepthMeasurements();
+
+    /*
+     * Get real depth measurements from depth images
+     */
+    void getDepthMeasurements();
 
     /*
      * Create camera orientation matrix from two points
@@ -141,6 +146,7 @@ private:
     Settings settings_;
 
     cv::Mat currIm_;
+    cv::Mat currDepthIm_;
 
     Frame prevFrame_, currFrame_;
     std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
@@ -160,11 +166,6 @@ private:
 
     Eigen::Vector3f C1Pose_;
     Eigen::Vector3f C2Pose_;
-
-    std::vector<float> C1PointsDepth;
-    std::vector<float> C2PointsDepth;
-    std::vector<float> C1DepthMeasurements;
-    std::vector<float> C2DepthMeasurements;
 
     float simulatedRepErrorStanDesv_;
     int decimalsRepError_;

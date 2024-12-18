@@ -111,7 +111,7 @@ SLAM::SLAM(const std::string &settingsFile) {
     bFirstTriang_ = true;
 }
 
-bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer) {
+bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer) {
     if(stop_) {
         cv::namedWindow("Test Window");
     }
@@ -130,7 +130,7 @@ bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMP
     std::cerr << "Let's do Tracking! " << std::endl;
 
     // //Predic camera pose
-    bool goodTracked = tracker_.doTracking(grayIm, Tcw_, nKF, nMPs, timer);
+    bool goodTracked = tracker_.doTracking(grayIm, depthIm, Tcw_, nKF, nMPs, timer);
     
     std::cerr << "Let's do Mapping! "<< goodTracked << std::endl;
 
@@ -354,11 +354,6 @@ void SLAM::createKeyPoints() {
 }
 
 void SLAM::getSimulatedDepthMeasurements() {
-    C1PointsDepth.clear();
-    C2PointsDepth.clear();
-    C1DepthMeasurements.clear();
-    C2DepthMeasurements.clear();
-
     std::default_random_engine generator;
     std::normal_distribution<float> distribution(0.0f, SimulatedDepthErrorStanDesv_/1000);
 
@@ -369,13 +364,8 @@ void SLAM::getSimulatedDepthMeasurements() {
         Eigen::Vector3f p3Dcam1 = T1w * originalPoints_[i];
         Eigen::Vector3f p3Dcam2 = T2w * movedPoints_[i];
 
-        C1PointsDepth.push_back(p3Dcam1[2]);
-        C2PointsDepth.push_back(p3Dcam2[2]);
         float d1 = p3Dcam1[2] * SimulatedDepthScaleC1_ + distribution(generator);
         float d2 = p3Dcam2[2] * SimulatedDepthScaleC2_ + distribution(generator);
-
-        C1DepthMeasurements.push_back(d1);
-        C2DepthMeasurements.push_back(d2);
 
         prevFrame_.setDepthMeasure(d1, i);
         currFrame_.setDepthMeasure(d2, i);
@@ -405,5 +395,5 @@ Eigen::Vector3f SLAM::getSecondCameraPos(){
 
 void SLAM::stop(){
     stopWithMeasurements(pMap_, Tcw_, mapVisualizer_, filePath_ , drawRaysSelection_, 
-                            stop_, showScene_);
+                            stop_, showScene_, originalPoints_, movedPoints_);
 }

@@ -71,8 +71,9 @@ Tracking::Tracking(Settings& settings, std::shared_ptr<FrameVisualizer>& visuali
     settings_ = settings;
 }
 
-bool Tracking::doTracking(const cv::Mat &im, Sophus::SE3f &Tcw, int &nKF, int &nMPs, clock_t &timer) {
+bool Tracking::doTracking(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f &Tcw, int &nKF, int &nMPs, clock_t &timer) {
     currIm_ = im.clone();
+    cv::Mat dIm = depthIm.clone();
 
     currFrame_.setPose(Tcw);
 
@@ -84,6 +85,7 @@ bool Tracking::doTracking(const cv::Mat &im, Sophus::SE3f &Tcw, int &nKF, int &n
     Eigen::Vector3f translation = pos.translation();
 
     currFrame_.setIm(currIm_);
+    currFrame_.setDepthIm(dIm);
 
     //Extract features in the current image
     extractFeatures(im);

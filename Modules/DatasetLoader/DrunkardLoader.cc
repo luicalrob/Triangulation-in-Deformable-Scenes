@@ -12,6 +12,7 @@ DrunkardLoader::DrunkardLoader(std::string folderPath, std::string timesPath) {
     fTimes.open(timesPath.c_str());
     vTimeStamps_.reserve(5000);
     vRGBPaths.reserve(5000);
+    vDepthPaths.reserve(5000);
 
     if(!fTimes.is_open()){
         cerr << "[drunkardLoader]: Could not load dataset at " << folderPath << endl;
@@ -34,8 +35,8 @@ DrunkardLoader::DrunkardLoader(std::string folderPath, std::string timesPath) {
                 >> pose.qx >> pose.qy >> pose.qz >> pose.qw;
             vPoseData_.push_back(pose);
 
-            string sRGB;
             vRGBPaths.push_back(folderPath + "/color/" + t + ".png");
+            vDepthPaths.push_back(folderPath + "/depth/" + t + ".png");
         }
     }
 
@@ -57,6 +58,15 @@ bool DrunkardLoader::getRGBImage(size_t idx, cv::Mat& im) {
 
     //cout << "[DrunkardLoader]: loading image at " << vImgsPairs_[idx].first << endl;
     im = cv::imread(vRGBPaths[idx], cv::IMREAD_UNCHANGED);
+
+    return true;
+}
+
+bool DrunkardLoader::getDepthImage(size_t idx, cv::Mat& im) {
+    if(idx >= vTimeStamps_.size()) return false;
+
+    //cout << "[DrunkardLoader]: loading image at " << vImgsPairs_[idx].first << endl;
+    im = cv::imread(vDepthPaths[idx], cv::IMREAD_UNCHANGED);
 
     return true;
 }

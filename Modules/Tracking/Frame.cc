@@ -150,6 +150,7 @@ void Frame::assign(Frame &F) {
     Tcw_ = F.Tcw_;
 
     im_ = F.im_.clone();
+    depthIm_ = F.depthIm_.clone();
 }
 
 void Frame::distributeFeatures() {
@@ -327,8 +328,16 @@ void Frame::setIm(cv::Mat& im){
     im_ = im.clone();
 }
 
+void Frame::setDepthIm(cv::Mat& im){
+    depthIm_ = im.clone();
+}
+
 cv::Mat Frame::getIm(){
     return im_.clone();
+}
+
+cv::Mat Frame::getDepthIm(){
+    return depthIm_.clone();
 }
 
 void Frame::checkAllMapPointsAreGood(){

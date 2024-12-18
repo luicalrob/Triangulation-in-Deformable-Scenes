@@ -26,6 +26,10 @@ public:
      */
     bool getRGBImage(size_t idx, cv::Mat& im);
 
+    /*
+     * Retrieves the i RGB image. Returns false if the image does not exit
+     */
+    bool getDepthImage(size_t idx, cv::Mat& im);
 
     /*
      * Retrieves the timestamp for the i image pair .Returns false if the timestamp does not exit
@@ -40,7 +44,8 @@ public:
     cv::Size getImageSize();
 
 private:
-    std::vector<std::string> vRGBPaths;     //Image paths
+    std::vector<std::string> vRGBPaths;     //RGB images paths
+    std::vector<std::string> vDepthPaths;   //Depth images paths
     std::vector<double> vTimeStamps_;       //Vector with the timestamps
     std::vector<PoseData> vPoseData_;
 

@@ -5,7 +5,7 @@
 
 using namespace std;
 
-void stopExecution(std::shared_ptr<MapVisualizer>& mapVisualizer, Sophus::SE3f Tcw, bool drawRaysSelection) {
+void stopExecution(const std::shared_ptr<MapVisualizer>& mapVisualizer, Sophus::SE3f Tcw, bool drawRaysSelection) {
     std::cout << "Press esc to continue... " << std::endl;
     while ((cv::waitKey(10) & 0xEFFFFF) != 27) {
         mapVisualizer->update(drawRaysSelection);
@@ -13,10 +13,15 @@ void stopExecution(std::shared_ptr<MapVisualizer>& mapVisualizer, Sophus::SE3f T
     }
 }
 
-void stopWithMeasurements(std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw, std::shared_ptr<MapVisualizer> mapVisualizer, 
-                         std::string filePath, bool drawRaysSelection, bool stop, bool showScene){
+void stopWithMeasurements(const std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw,
+                        const std::shared_ptr<MapVisualizer> mapVisualizer, const std::string filePath, bool drawRaysSelection, bool stop, bool showScene,
+                        const std::vector<Eigen::Vector3f> originalPoints, const std::vector<Eigen::Vector3f> movedPoints){
     measureRelativeMapErrors(pMap, filePath);
-    //measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
+    if(originalPoints.empty() || movedPoints.empty()) {
+        measureRealAbsoluteMapErrors(pMap, filePath);
+    } else {
+        measureSimAbsoluteMapErrors(pMap, originalPoints, movedPoints, filePath);
+    }
 
     if (stop) {
         stopExecution(mapVisualizer, Tcw, drawRaysSelection);
