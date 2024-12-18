@@ -22,6 +22,7 @@
 #include "Optimization/nloptOptimization.h"
 #include "Optimization/EigenOptimization.h"
 #include "Utils/Measurements.h"
+#include "Utils/Utils.h"
 
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
@@ -485,6 +486,8 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
         } else if(OptSelection == "twoOptimizations") {
             if (OptWeightsSelection == "nlopt") {
                 std::cout << "START new optimization. "  << std::endl;
+
+                std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
                 nlopt::opt opt(nlopt::LN_NELDERMEAD, 3);
                 
                 std::vector<double> lb = {NloptRepLowerBound, NloptGlobalLowerBound, NloptArapLowerBound};

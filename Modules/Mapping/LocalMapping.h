@@ -82,16 +82,9 @@ private:
     /*
      * Check positive z and minimum parallax of triangulated points
      */
-    bool isValidTriangulation(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
-                                        const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
-                                        const Eigen::Vector3f& x3D_1, const Eigen::Vector3f& x3D_2);
-
-    /*
-     * Triangulate points using the triangulation method selected
-     */
-    bool triangulate(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
-                               const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
-                               Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2);
+    bool isValidParallax(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                        const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                        const Eigen::Vector3f& x3D_1, const Eigen::Vector3f& x3D_2);
 
     std::shared_ptr<Map> pMap_;
 
@@ -102,7 +95,6 @@ private:
 
     Settings settings_;
 
-    std::string TrianSelection_;
     std::string TrianMethod_;
     std::string TrianLocation_;
 };

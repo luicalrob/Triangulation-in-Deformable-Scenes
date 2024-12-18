@@ -276,6 +276,7 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
     vector<ID> vKfIds(nObservations);
 
     int i = 0;
+
     for(pair<ID,size_t> pair : mMapPointObs_[mpId]){
         ID kfId = pair.first;
         size_t idxInKf = pair.second;
@@ -289,7 +290,6 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
 
         i++;
     }
-
     normal = (normal/i).normalized();
     pMP->setNormalOrientation(normal);
 
@@ -306,7 +306,6 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
             obsIdx = i;
         }
     }
-
     shared_ptr<KeyFrame> pRefKf = mKeyFrames_[vKfIds[obsIdx]];
 
     float dist = (pMP->getWorldPosition() - pRefKf->getPose().inverse().translation()).norm();

@@ -172,7 +172,7 @@ private:
     cv::Mat descriptors_;
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
     std::vector<float> vDepthMeasurements_;
-    float depthScale_ = 0.0f;
+    float depthScale_ = 1.0f;
 
     Sophus::SE3f Tcw_;
 

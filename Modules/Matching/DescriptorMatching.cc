@@ -117,7 +117,6 @@ int guidedMatching(Frame& refFrame, Frame& currFrame, int th, std::vector<int>& 
 
     shared_ptr<CameraModel> currCamera = currFrame.getCalibration();
     Sophus::SE3f Tcw = currFrame.getPose();
-
     int nMatches = 0;
     for(size_t i = 0; i < vRefMapPoints.size(); i++){
         if(!vRefMapPoints[i]){
@@ -161,6 +160,7 @@ int guidedMatching(Frame& refFrame, Frame& currFrame, int th, std::vector<int>& 
                 secondBestDist = dist;
             }
         }
+
         if(bestDist <= th && (float)bestDist < (float(secondBestDist)*0.9)){
             vMatches[i] = bestIdx;
             currFrame.setMapPoint(bestIdx,vRefMapPoints[i]);

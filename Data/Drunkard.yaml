@@ -16,7 +16,7 @@ Camera.cols: 320
 Camera.rows: 320
 
 # Number of features per image
-FeatureExtractor.nFeatures: 1000
+FeatureExtractor.nFeatures: 500
 
 # Number of levels in the scale pyramid
 FeatureExtractor.nScales: 8
@@ -42,7 +42,8 @@ Matching.fuse: 50
 Map.minObs: 15
 
 #Min cos parallax to triangulate
-Triangulation.minCos: 0.9998
+#Triangulation.minCos: 0.995
+Triangulation.minCos: 0.02
 
 
 # LUIS
@@ -59,9 +60,9 @@ Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 3.0
-Measurements.DepthScale.C1: 0.5
-Measurements.DepthScale.C2: 1.3
+Measurements.DepthError: 0.0
+Measurements.DepthScale.C1: 1
+Measurements.DepthScale.C2: 1
 
 # 100000000: 3 stand
 # 90000: 6.38
@@ -71,7 +72,7 @@ Measurements.DepthScale.C2: 1.3
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 50
-Optimization.arap: 200000
+Optimization.arap: 0.00001
 Optimization.alpha:  1
 Optimization.beta: 1
 
@@ -89,7 +90,7 @@ Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
 Optimization.nlopt.global.lowerBound: 50
 Optimization.nlopt.global.upperBound: 50
-Optimization.nlopt.arap.lowerBound: 0.00001
+Optimization.nlopt.arap.lowerBound: 0.00000001
 Optimization.nlopt.arap.upperBound: 10000000
 
 Experiment.Filepath: "./Data/Experiment.txt"
@@ -100,7 +101,7 @@ Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
 # DepthMeasurement: use depth measurements 
-Triangulation.seed.location: "FarPoints"
+Triangulation.seed.location: "inRays"
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction

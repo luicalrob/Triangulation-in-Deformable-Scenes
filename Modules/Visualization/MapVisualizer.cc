@@ -63,21 +63,31 @@ void MapVisualizer::updateCurrentPose(Sophus::SE3f &currPose) {
 }
 
 void MapVisualizer::drawMapPoints() {
-    auto mapPoints = pMap_->getMapPoints();
+    std::unordered_map<ID,std::shared_ptr<KeyFrame>> keyFrames = pMap_->getKeyFrames();
 
     glPointSize(6);
     glBegin(GL_POINTS);
     //glColor3f(0.0,0.0,0.0);
 
-    for(auto mp : mapPoints){
-        int id = mp.first;
-        Eigen::Vector3f pos = mp.second->getWorldPosition();
-        if(id%2 == 0) {
-            glColor3f(1.0,0.3,0.3);
-        } else {
-            glColor3f(0.0,0.0,0.0);
+    for(auto kf_info : keyFrames){
+        int id = kf_info.first; 
+        std::shared_ptr<KeyFrame> kf = kf_info.second;
+        if (!kf) {
+            continue;
         }
-        glVertex3f(pos(0),pos(1),pos(2));
+        std::vector<std::shared_ptr<MapPoint>> mapPoints = kf->getMapPoints();
+        for(std::shared_ptr<MapPoint> mp: mapPoints) {
+            if (!mp) {
+                continue;
+            }
+            Eigen::Vector3f pos = mp->getWorldPosition(); 
+            if(id%2 == 0) {
+                glColor3f(1.0,0.3,0.3);
+            } else {
+                glColor3f(0.0,0.0,0.0);
+            }
+            glVertex3f(pos(0),pos(1),pos(2));
+        }
     }
 
     glEnd();
@@ -90,7 +100,8 @@ void MapVisualizer::drawRays() {
     glBegin(GL_LINES);
 
     for(auto kf : keyFrames){
-        auto kps = kf.second->getKeyPoints();   
+        auto kps = kf.second->getKeyPoints();  
+        
         if(kf.second->getId()%2 == 0){
             glColor3f(1.0f,0.0f,0.0f);
         }
@@ -126,7 +137,6 @@ void MapVisualizer::drawKeyFrames() {
     const float z = w*0.6;
 
     auto keyFrames = pMap_->getKeyFrames();
-
     for(auto kf : keyFrames){
         if(kf.second->getId() == 0){
             glColor3f(1.0f,0.0f,0.0f);

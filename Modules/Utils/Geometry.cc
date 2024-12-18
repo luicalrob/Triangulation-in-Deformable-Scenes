@@ -216,6 +216,22 @@ void triangulateDepth(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, co
     x3D_2 = T2w.inverse() * p3D2;
 }
 
+bool useTriangulationMethod(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                                const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                                Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2,
+                                std::string TrianMethod, std::string TrianLocation) {
+    if (TrianMethod == "Classic") {
+        triangulateClassic(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation);
+    } else if (TrianMethod == "ORBSLAM") {
+        triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation);
+    } else if (TrianMethod == "DepthMeasurement") {
+        triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation);
+    } else {
+        triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation);
+    }
+    return true;
+}
+
 float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2){
     float errx = p1.x - p2.x;
     float erry = p1.y - p2.y;
@@ -375,12 +391,13 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
             KeyFrame_ pKF1 = k2->second;
             KeyFrame_ pKF2 = k1->second;
-            //std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
+            std::cout << "Pair pKF1: " << k2->first << ", pKF2: " << k1->first<< ")\n";
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
 
             std::shared_ptr<CameraModel> pCamera1 = pKF1->getCalibration();
+
             g2o::SE3Quat camera1Pose = g2o::SE3Quat(pKF1->getPose().unit_quaternion().cast<double>(),pKF1->getPose().translation().cast<double>());
             std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
             g2o::SE3Quat camera2Pose = g2o::SE3Quat(pKF2->getPose().unit_quaternion().cast<double>(),pKF2->getPose().translation().cast<double>());
@@ -395,8 +412,8 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
                 MapPoint_ pMPi2 = v2MPs[i];
                 if (!pMPi1 || !pMPi2) continue;
 
-                // Reprojection error for C1
                 cv::Point2f uv = pKF1->getKeyPoint(i).pt;
+                
                 Eigen::Vector2d obs;
                 obs << uv.x, uv.y;
 
@@ -407,10 +424,8 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
 
                 Eigen::Vector2d pixelsErrorC1 = (obs - projected.cast<double>()).cwiseAbs();
 
-                // Reprojection error for C2
                 uv = pKF2->getKeyPoint(i).pt;
                 obs << uv.x, uv.y;
-
                 p3Dw = pMPi2->getWorldPosition().cast<double>();
                 p3Dc = camera2Pose.map(p3Dw);
                 pCamera2->project(p3Dc.cast<float>(), projected);

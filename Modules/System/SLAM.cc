@@ -107,6 +107,8 @@ SLAM::SLAM(const std::string &settingsFile) {
 
     filePath_ = settings_.getExpFilePath();
     outFile_.imbue(std::locale("es_ES.UTF-8"));
+
+    bFirstTriang_ = true;
 }
 
 bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer) {
@@ -114,22 +116,40 @@ bool SLAM::processImage(const cv::Mat &im, Sophus::SE3f& Tcw, int &nKF, int &nMP
         cv::namedWindow("Test Window");
     }
 
-    Tcw_ = Tcw;
+    if (firstCall_) {
+        Tcw_reference_ = Tcw;
+        Tcw_ = Sophus::SE3f();
+        firstCall_ = false;
+    } else {
+        Tcw_ = Tcw_reference_.inverse() * Tcw; 
+    }
     
     //Convert image to grayscale if needed
     cv::Mat grayIm = convertImageToGrayScale(im);
 
+    std::cerr << "Let's do Tracking! " << std::endl;
+
     // //Predic camera pose
-    bool goodTracked = tracker_.doTracking(grayIm, Tcw, nKF, nMPs, timer);
+    bool goodTracked = tracker_.doTracking(grayIm, Tcw_, nKF, nMPs, timer);
+    
+    std::cerr << "Let's do Mapping! "<< goodTracked << std::endl;
 
     // //Do mapping
     shared_ptr<KeyFrame> lastKeyFrame = tracker_.getLastKeyFrame();
     mapper_.doMapping(lastKeyFrame, nMPs);
 
-    //Run deformation optimization
-    deformationOptimization(pMap_, settings_, mapVisualizer_);
 
-    visualizer_->updateWindows();
+    if(!bFirstTriang_) {
+        std::cerr << "Let's do deformation optimization!"<< std::endl;
+        deformationOptimization(pMap_, settings_, mapVisualizer_);
+    }
+
+    //Run deformation optimization
+    if(bFirstTriang_ && goodTracked) {
+        bFirstTriang_ = false;
+    }
+
+    //visualizer_->updateWindows();
 
     // return goodTracked;
     return true;
@@ -158,7 +178,7 @@ bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
     //Run deformation optimization
     deformationOptimization(pMap_, settings_, mapVisualizer_);
 
-    visualizer_->updateWindows();
+    //visualizer_->updateWindows();
 
     return true;
 }
@@ -269,7 +289,7 @@ void SLAM::viusualizeSolution() {
         pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
         pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
 
-        prevKeyFrame_->setMapPoint(i, map_point_1); // vMatches[i]?
+        prevKeyFrame_->setMapPoint(i, map_point_1);
         currKeyFrame_->setMapPoint(i, map_point_2);
 
         nTriangulated++;
@@ -384,15 +404,6 @@ Eigen::Vector3f SLAM::getSecondCameraPos(){
 }
 
 void SLAM::stop(){
-    measureRelativeMapErrors(pMap_, filePath_);
-    measureAbsoluteMapErrors(pMap_, originalPoints_, movedPoints_, filePath_);
-
-    if (stop_) {
-        stopExecution(mapVisualizer_, drawRaysSelection_);
-    } else {
-        if(showScene_) {
-            mapVisualizer_->update(drawRaysSelection_);
-            mapVisualizer_->updateCurrentPose(Tcw_);
-        }
-    }
+    stopWithMeasurements(pMap_, Tcw_, mapVisualizer_, filePath_ , drawRaysSelection_, 
+                            stop_, showScene_);
 }

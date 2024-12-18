@@ -24,6 +24,7 @@
 #include "Map/KeyFrame.h"
 #include "Map/MapPoint.h"
 #include "Matching/DescriptorMatching.h"
+#include "Utils/Utils.h"
 
 #include "Optimization/g2oBundleAdjustment.h"
 
@@ -51,7 +52,8 @@ Tracking::Tracking(Settings& settings, std::shared_ptr<FrameVisualizer>& visuali
     bFirstIm_ = true;
     bMotionModel_ = false;
 
-    monoInitializer_ = MonocularMapInitializer(settings.getFeaturesPerImage(),settings.getCalibration(),settings.getEpipolarTh(),settings.getMinCos());
+    monoInitializer_ = MonocularMapInitializer(settings.getFeaturesPerImage(),settings.getCalibration(),settings.getEpipolarTh(),
+                                                settings.getMinCos(), settings.getTrianMethod(), settings.getTrianLocation());
 
     visualizer_ = visualizer;
     mapVisualizer_ = mapVisualizer;
@@ -63,15 +65,23 @@ Tracking::Tracking(Settings& settings, std::shared_ptr<FrameVisualizer>& visuali
 
     bInserted = false;
 
+    filePath_ = settings.getExpFilePath();
+    outFile_.imbue(std::locale("es_ES.UTF-8"));
+
     settings_ = settings;
 }
 
 bool Tracking::doTracking(const cv::Mat &im, Sophus::SE3f &Tcw, int &nKF, int &nMPs, clock_t &timer) {
     currIm_ = im.clone();
 
+    currFrame_.setPose(Tcw);
+
     //Update previous frame
     if(status_ != NOT_INITIALIZED)
         prevFrame_.assign(currFrame_);
+    
+    Sophus::SE3f pos = prevFrame_.getPose();
+    Eigen::Vector3f translation = pos.translation();
 
     currFrame_.setIm(currIm_);
 
@@ -82,14 +92,14 @@ bool Tracking::doTracking(const cv::Mat &im, Sophus::SE3f &Tcw, int &nKF, int &n
 
     //If no map is initialized, perform monocular initialization
     if(status_ == NOT_INITIALIZED){
+        Tcw_ = Tcw;
         if(monocularMapInitialization()){
             status_ = GOOD;
             //Tcw = currFrame_.getPose();
-            Tcw_ = Tcw;
 
             //Update motion model
-            updateMotionModel();
-
+            //updateMotionModel();
+        
             return true;
         }
         else{
@@ -100,6 +110,7 @@ bool Tracking::doTracking(const cv::Mat &im, Sophus::SE3f &Tcw, int &nKF, int &n
     else if(status_ == GOOD){
         //Mapping may has added/deleted MapPoints
         updateLastMapPoints();
+        cout << "updateLastMapPoints " << endl;
         if(cameraTracking()){
             if(trackLocalMap()){
                 //Check if we need to insert a new KeyFrame into the system
@@ -108,7 +119,7 @@ bool Tracking::doTracking(const cv::Mat &im, Sophus::SE3f &Tcw, int &nKF, int &n
                 }
 
                 //Update motion model
-                updateMotionModel();
+                //updateMotionModel();
 
                 //Tcw = currFrame_.getPose();
 
@@ -149,6 +160,7 @@ void Tracking::updateLastMapPoints() {
         Sophus::SE3f Tcw = pMap_->getKeyFrame(nLastKeyFrameId)->getPose();
         prevFrame_.setPose(Tcw);
 
+        cout << "vMps.size(): " << vMps.size() << endl;
         for(size_t i = 0; i < vMps.size(); i++){
             if(vMps[i]){
                 prevFrame_.setMapPoint(i,vMps[i]);
@@ -175,9 +187,11 @@ void Tracking::extractFeatures(const cv::Mat &im) {
 
 bool Tracking::monocularMapInitialization() {
     //Set first frame received as the reference frame
+
     if(bFirstIm_){
         monoInitializer_.changeReference(currFrame_.getKeyPoints());
         prevFrame_.assign(currFrame_);
+        prevFrame_.setPose(Tcw_);
 
         bFirstIm_ = false;
 
@@ -192,6 +206,8 @@ bool Tracking::monocularMapInitialization() {
 
     //Find matches between previous and current frame
     int nMatches = searchForInitializaion(prevFrame_,currFrame_,settings_.getMatchingInitTh(),vMatches_,vPrevMatched_);
+
+    std::cerr << "nMatches: "<< nMatches << std::endl;
 
     visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
 
@@ -210,19 +226,22 @@ bool Tracking::monocularMapInitialization() {
     }
 
     //Try to initialize by finding an Essential matrix
+    Sophus::SE3f Tcw_prev = prevFrame_.getPose();
     Sophus::SE3f Tcw = Tcw_;
     vector<Eigen::Vector3f> v3DPoints;
     v3DPoints.reserve(vMatches_.capacity());
     vector<bool> vTriangulated(vMatches_.capacity(),false);
-    if(!monoInitializer_.initialize(currFrame_.getKeyPoints(), vMatches_, nMatches, Tcw, v3DPoints, vTriangulated)){
+    if(!monoInitializer_.initialize(currFrame_.getKeyPoints(), vMatches_, nMatches, Tcw_prev, Tcw, v3DPoints, vTriangulated)){
         return false;
     }
 
     //Get map scale
     vector<float> vDepths;
-    for(int i = 0; i < vTriangulated.size(); i++){
-        if(vTriangulated[i])
-            vDepths.push_back(v3DPoints[i](2));
+    for(int i = 0, j = 0; i < vTriangulated.size(); i++, j+=2){
+        if(vTriangulated[i]) {
+            vDepths.push_back(v3DPoints[j](2));
+            vDepths.push_back(v3DPoints[j+1](2));
+        }
     }
 
     nth_element(vDepths.begin(),vDepths.begin()+vDepths.size()/2,vDepths.end());
@@ -235,16 +254,22 @@ bool Tracking::monocularMapInitialization() {
 
     int nTriangulated = 0;
 
-    for(size_t i = 0; i < vTriangulated.size(); i++){
+    for(int i = 0, j = 0; i < vTriangulated.size(); i++, j+=2){
         if(vTriangulated[i]){
-            Eigen::Vector3f v = v3DPoints[i] / scale;
-            shared_ptr<MapPoint> pMP(new MapPoint(v));
+            //Eigen::Vector3f v = v3DPoints[i] / scale;
+            shared_ptr<MapPoint> pMP1(new MapPoint(v3DPoints[j]));
+            shared_ptr<MapPoint> pMP2(new MapPoint(v3DPoints[j+1]));
 
-            prevFrame_.setMapPoint(i,pMP);
-            currFrame_.setMapPoint(vMatches_[i],pMP);
+            prevFrame_.setMapPoint(i,pMP1);
+            currFrame_.setMapPoint(vMatches_[i],pMP2);
 
-            pMap_->insertMapPoint(pMP);
+            pMap_->insertMapPoint(pMP1);
+            pMap_->insertMapPoint(pMP2);
 
+            Eigen::Vector3f x3D_mp1 = pMP1->getWorldPosition();
+            Eigen::Vector3f x3D_mp2 = pMP2->getWorldPosition();
+
+            nTriangulated++;
             nTriangulated++;
         }
     }
@@ -258,28 +283,65 @@ bool Tracking::monocularMapInitialization() {
     pMap_->insertKeyFrame(kf1);
 
     //Set observations into the map
-    vector<shared_ptr<MapPoint>>& vMapPoints = kf0->getMapPoints();
-    for(size_t i = 0; i < vMapPoints.size(); i++){
-        auto pMP = vMapPoints[i];
-        if(pMP){
-            //Add observation
-            pMap_->addObservation(0,pMP->getId(),i);
-            pMap_->addObservation(1,pMP->getId(),vMatches_[i]);
-        }
-    }
+    // vector<shared_ptr<MapPoint>>& vMapPoints = kf0->getMapPoints();
+    // std::unordered_map<long unsigned int, size_t> ids_map;
+    // for(size_t i = 0; i < vMapPoints.size(); i++){
+    //     auto pMP = vMapPoints[i];
+    //     if(pMP){
+    //         std::cout << "addObservation pMP1 " << pMP->getId() << std::endl;
+    //         //Add observation
+    //         pMap_->addObservation(0,pMP->getId(),i);
+    //         pMap_->addObservation(1,pMP->getId(),vMatches_[i]);
+    //         ids_map[pMP->getId() + 1] = i;
+    //     }
+    // }
+
+    // vMapPoints = kf1->getMapPoints();
+    // for(size_t idx = 0; idx < vMapPoints.size(); idx++){
+    //     auto pMP = vMapPoints[idx];
+    //     if(pMP){
+    //         std::cout << "addObservation pMP2 " << pMP->getId() << std::endl;
+    //         size_t i = 0;
+    //         long unsigned int id = pMP->getId();
+    //         if (ids_map.find(id) != ids_map.end()) {
+    //             i = ids_map[id];
+    //         } else {
+    //             continue;
+    //         }
+
+    //         //Add observation
+    //         pMap_->addObservation(0,id,i);
+    //         pMap_->addObservation(1,id,vMatches_[i]);
+    //     }
+    // }
 
     //Run a Bundle Adjustment to refine the solution
-    bundleAdjustment(pMap_.get());
+    //bundleAdjustment(pMap_.get());
+    //std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
 
-    Tcw = kf1->getPose();
-    currFrame_.setPose(Tcw);
 
-    updateMotionModel();
+    std::cout << "\nINITIAL MEASUREMENTS: \n";
+    outFile_.open(filePath_);
+    if (outFile_.is_open()) {
+        outFile_ << "INITIAL MEASUREMENTS: \n";
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
+    
+    stopWithMeasurements(pMap_, Tcw, mapVisualizer_, filePath_ , settings_.getDrawRaysSelection(), 
+                            settings_.getStopExecutionOption(), settings_.getShowScene());
+
+    deformationOptimization(pMap_, settings_, mapVisualizer_);
+
+    // Tcw = kf1->getPose();
+    // currFrame_.setPose(Tcw);
+
+    // updateMotionModel();
 
     pLastKeyFrame_ = kf1;
     nLastKeyFrameId = kf1->getId();
-
-    mapVisualizer_->updateCurrentPose(Tcw);
 
     bInserted = true;
 
@@ -310,19 +372,21 @@ bool Tracking::cameraTracking() {
     //Run a pose optimization
     //nFeatTracked_ = poseOnlyOptimization(currFrame_);
 
-    currFrame_.checkAllMapPointsAreGood();
+    //currFrame_.checkAllMapPointsAreGood();
 
     //Update MapDrawer
     currPose = currFrame_.getPose();
     mapVisualizer_->updateCurrentPose(currPose);
 
     //We enforce a minimum of 20 MapPoint matches to consider the estimation as good
+
+    cout << "guidedMatching nMatches: " << nMatches << endl;
     return nMatches >= 20;
 }
 
 bool Tracking::trackLocalMap() {
     //Get local map from the last KeyFrame
-    currFrame_.checkAllMapPointsAreGood();
+    //currFrame_.checkAllMapPointsAreGood();
 
     set<ID> sLocalMapPoints, sLocalKeyFrames, sFixedKeyFrames;
     pMap_->getLocalMapOfKeyFrame(nLastKeyFrameId,sLocalMapPoints,sLocalKeyFrames,sFixedKeyFrames);
@@ -352,16 +416,16 @@ bool Tracking::trackLocalMap() {
 
 
     //Run a pose optimization
-    nFeatTracked_ = poseOnlyOptimization(currFrame_);
+    //nFeatTracked_ = poseOnlyOptimization(currFrame_);
 
-    currFrame_.checkAllMapPointsAreGood();
+    //currFrame_.checkAllMapPointsAreGood();
 
     //Update MapDrawer
     Sophus::SE3f currPose = currFrame_.getPose();
     mapVisualizer_->updateCurrentPose(currPose);
 
     //We enforce a minimum of 20 MapPoint matches to consider the estimation as good
-    return nFeatTracked_ >= 20;
+    return nMatches >= 20;
 }
 
 bool Tracking::needNewKeyFrame(int &nKF) {
@@ -369,7 +433,7 @@ bool Tracking::needNewKeyFrame(int &nKF) {
      * Your code for Lab 4 - Task 1 here!
      */
     int minTrackedFeat = 100;
-    int maxFramesBtwKF = 2;  //2, 4, 6
+    int maxFramesBtwKF = 0;  //2, 4, 6
     if(nFramesFromLastKF_ > maxFramesBtwKF || nFeatTracked_ < minTrackedFeat || status_ == LOST) {
         if(status_ != LOST) {
             nKF++;

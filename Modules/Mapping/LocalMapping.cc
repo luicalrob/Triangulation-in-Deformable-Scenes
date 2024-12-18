@@ -189,7 +189,6 @@ void LocalMapping::triangulateNewMapPoints() {
                 settings_.getEpipolarTh(),E,vMatches);
 
         vector<cv::KeyPoint> vTriangulated1, vTriangulated2;
-        vector<int> vMatches_;
         //Try to triangulate a new MapPoint with each match
         for(size_t i = 0; i < vMatches.size(); i++){
             if(vMatches[i] != -1){
@@ -209,9 +208,9 @@ void LocalMapping::triangulateNewMapPoints() {
                     xn2 = calibration2->unproject(x2, d2);
                 }
 
-                if (!triangulate(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
+                if (!useTriangulationMethod(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianMethod_, TrianLocation_)) continue;
 
-                if (!isValidTriangulation(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
+                if (!isValidParallax(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
 
                 //Check reprojection error
 
@@ -283,9 +282,9 @@ void LocalMapping::triangulateSimulatedMapPoints() {
 
         Eigen::Vector3f x3D_1, x3D_2;
 
-        if (!triangulate(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
+        if (!useTriangulationMethod(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianMethod_, TrianLocation_)) continue;
 
-        if (!isValidTriangulation(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
+        if (!isValidParallax(xn1, xn2, T1w, T2w, x3D_1, x3D_2)) continue;
 
         //Check reprojection error
         Eigen::Vector2f p_p1;
@@ -336,9 +335,9 @@ void LocalMapping::checkDuplicatedMapPoints() {
     }
 }
 
-bool LocalMapping::isValidTriangulation(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
-                                        const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
-                                        const Eigen::Vector3f& x3D_1, const Eigen::Vector3f& x3D_2) {
+bool LocalMapping::isValidParallax(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                        const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                        const Eigen::Vector3f& x3D_1, const Eigen::Vector3f& x3D_2) {
     auto x_1 = T1w * x3D_1;
     auto x_2 = T2w * x3D_2;
 
@@ -349,19 +348,4 @@ bool LocalMapping::isValidTriangulation(const Eigen::Vector3f& xn1, const Eigen:
     auto parallax = cosRayParallax(ray1, ray2);
 
     return parallax <= settings_.getMinCos();
-}
-
-bool LocalMapping::triangulate(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
-                               const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
-                               Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2) {
-    if (TrianMethod_ == "Classic") {
-        triangulateClassic(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
-    } else if (TrianMethod_ == "ORBSLAM") {
-        triangulateORBSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
-    } else if (TrianMethod_ == "DepthMeasurement") {
-        triangulateDepth(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
-    } else {
-        triangulateNRSLAM(xn1, xn2, T1w, T2w, x3D_1, x3D_2, TrianLocation_);
-    }
-    return true;
 }

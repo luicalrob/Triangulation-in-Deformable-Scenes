@@ -146,6 +146,7 @@ private:
     std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
 
     Sophus::SE3f Tcw_;
+    Sophus::SE3f Tcw_reference_;
 
     std::shared_ptr<CameraModel> prevCalibration_;
     std::shared_ptr<CameraModel> currCalibration_;
@@ -199,6 +200,9 @@ private:
     bool showScene_;
 
     std::ofstream outFile_;
+
+    bool bFirstTriang_;         //Flag to check if we have already received the first optimization
+    bool firstCall_;
 };
 
 

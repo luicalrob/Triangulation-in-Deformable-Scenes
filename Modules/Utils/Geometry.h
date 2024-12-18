@@ -61,6 +61,15 @@ void triangulateDepth(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, co
                         const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2, std::string location);
 
 /*
+* Triangulate points using the triangulation method selected
+*/
+bool useTriangulationMethod(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2, 
+                                const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, 
+                                Eigen::Vector3f& x3D_1, Eigen::Vector3f& x3D_2,
+                                std::string TrianMethod, std::string TrianLocation);
+
+                        
+/*
  * Squared reprojection error
  */
 float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2);

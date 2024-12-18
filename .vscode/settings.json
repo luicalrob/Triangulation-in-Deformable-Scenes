@@ -98,6 +98,7 @@
         "csetjmp": "cpp",
         "cuchar": "cpp",
         "charconv": "cpp",
-        "netfwd": "cpp"
+        "netfwd": "cpp",
+        "*.isph": "cpp"
     }
 }

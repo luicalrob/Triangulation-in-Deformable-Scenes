@@ -42,7 +42,7 @@ int main(int argc, char **argv){
     double currTs;
     PoseData currPose;
     //for(int i = 0; i < sequence.getLenght(); i++){
-    for(int i = 0; i < 4; i++){
+    for(int i = 0; i < 30; i++){
         sequence.getRGBImage(i,currIm);
         sequence.getTimeStamp(i,currTs);
         sequence.getPoseData(i,currPose);
@@ -54,7 +54,7 @@ int main(int argc, char **argv){
         Tcw = Sophus::SE3f(quaternion, translation);
 
         cout << "[" << i <<"] TimeStamp: " << currTs << endl;
-        cout << "Translation: " << translation[0]  << translation[1]  << translation[2] << endl;
+        cout << "Translation: " << translation[0]  << " " << translation[1]  << " "  << translation[2] << " " << endl;
         cout << "Rotation: "
                     << "[w: " << quaternion.w()
                     << ", x: " << quaternion.x()
