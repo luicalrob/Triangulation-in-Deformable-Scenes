@@ -275,9 +275,11 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
     for(size_t i = 0, j = 0; i < vTriangulated.size(); i++, j+=2){
         if(vTriangulated[i]){
             //Unproject KeyPoints to rays
-            Eigen::Vector3f r1 = calibration_->unproject(refKeys_[i].pt.x,refKeys_[i].pt.y).normalized();
-            Eigen::Vector3f r2 = calibration_->unproject(currKeys_[vMatches_[i]].pt.x,currKeys_[vMatches_[i]].pt.y).normalized();
-
+            cv::Point2f x1 = refKeys_[i].pt;
+            cv::Point2f x2 = currKeys_[vMatches_[i]].pt;
+            Eigen::Vector3f r1 = calibration_->unproject(x1).normalized();
+            Eigen::Vector3f r2 = calibration_->unproject(x2).normalized();
+            
             //Triangulate point
             Eigen::Vector3f p3D_1, p3D_2;
             //triangulateClassic(r1,r2,Tpw,Tcw, p3D_1, p3D_2, TrianLocation_);
@@ -334,6 +336,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
                 std::cout << "p3D_2: " << p3D_2[0]  << " " << p3D_2[1]  << " "  << p3D_2[2] << " " << std::endl;
 
             }
+
             v3DPoints[j] = p3D_1;
             v3DPoints[j+1] = p3D_2;
 

@@ -273,6 +273,15 @@ bool Tracking::monocularMapInitialization() {
 
             nTriangulated++;
             nTriangulated++;
+            
+            if (i == 3 || i == 12 || i == 17) {
+                std::cout << "i: " << i  << std::endl;
+                std::cout << "pMP1 id: " << pMP1->getId()  << std::endl;
+                std::cout << "pMPi2 id: " << pMP2->getId()  << std::endl;
+                std::cout << "x3D_mp1: " << x3D_mp1[0]  << " " << x3D_mp1[1]  << " "  << x3D_mp1[2] << " " << std::endl;
+                std::cout << "x3D_mp2: " << x3D_mp2[0]  << " " << x3D_mp2[1]  << " "  << x3D_mp2[2] << " " << std::endl;
+
+            }
         }
     }
 
@@ -333,7 +342,8 @@ bool Tracking::monocularMapInitialization() {
     }
     
     stopWithMeasurements(pMap_, Tcw, mapVisualizer_, filePath_ , settings_.getDrawRaysSelection(), 
-                            settings_.getStopExecutionOption(), settings_.getShowScene());
+                            settings_.getStopExecutionOption(), settings_.getShowScene(),
+                             {}, {}, vMatches_);
 
     deformationOptimization(pMap_, settings_, mapVisualizer_);
 

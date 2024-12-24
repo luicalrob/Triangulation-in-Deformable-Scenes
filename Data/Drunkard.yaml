@@ -43,7 +43,7 @@ Map.minObs: 15
 
 #Min cos parallax to triangulate
 #Triangulation.minCos: 0.995
-Triangulation.minCos: 0.998
+Triangulation.minCos: 0.99998
 
 
 # LUIS
@@ -96,7 +96,7 @@ Optimization.nlopt.arap.upperBound: 10000000
 Experiment.Filepath: "./Data/Experiment.txt"
 
 #Method selection
-Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM
+Triangulation.method: "Classic" # Classic NRSLAM ORBSLAM
 # Classic: Use standard triangulation calculation
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method

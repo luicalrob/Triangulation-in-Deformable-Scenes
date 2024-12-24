@@ -15,10 +15,11 @@ void stopExecution(const std::shared_ptr<MapVisualizer>& mapVisualizer, Sophus::
 
 void stopWithMeasurements(const std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw,
                         const std::shared_ptr<MapVisualizer> mapVisualizer, const std::string filePath, bool drawRaysSelection, bool stop, bool showScene,
-                        const std::vector<Eigen::Vector3f> originalPoints, const std::vector<Eigen::Vector3f> movedPoints){
-    measureRelativeMapErrors(pMap, filePath);
+                        const std::vector<Eigen::Vector3f> originalPoints, const std::vector<Eigen::Vector3f> movedPoints,
+                        const std::vector<int> vMatches){
+    measureRelativeMapErrors(pMap, filePath, vMatches);
     if(originalPoints.empty() || movedPoints.empty()) {
-        measureRealAbsoluteMapErrors(pMap, filePath);
+        measureRealAbsoluteMapErrors(pMap, filePath, vMatches);
     } else {
         measureSimAbsoluteMapErrors(pMap, originalPoints, movedPoints, filePath);
     }

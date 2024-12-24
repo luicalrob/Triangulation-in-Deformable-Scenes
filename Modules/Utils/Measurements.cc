@@ -98,7 +98,7 @@ void measureSimAbsoluteMapErrors(const std::shared_ptr<Map> pMap,
 }
 
 
-void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::string filePath) {
+void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::string filePath, const std::vector<int> vMatches) {
     std::ofstream outFile;
     outFile.imbue(std::locale("es_ES.UTF-8"));
 
@@ -134,8 +134,13 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
             Sophus::SE3f T2w = pKF2->getPose();
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
-                std::shared_ptr<MapPoint> pMPi1 = v1MPs[i];
-                std::shared_ptr<MapPoint> pMPi2 = v2MPs[i];
+                std::shared_ptr<MapPoint> pMPi1, pMPi2;
+                pMPi1 = v1MPs[i];
+                if (vMatches.empty() || i >= vMatches.size() || vMatches[i] < 0 || vMatches[i] >= v2MPs.size()) {
+                    pMPi2 = v2MPs[i];
+                } else {
+                    pMPi2 = v2MPs[vMatches[i]];
+                }
                 if (!pMPi1) continue;
                 if (!pMPi2) continue;
 
@@ -170,6 +175,10 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                     std::cout << "i: " << i  << std::endl;
                     std::cout << "refKeys_[i].pt: " << p_p1[0]  << " " << p_p1[1] << " " << std::endl;
                     std::cout << "currKeys_[vMatches_[i]].pt: " << p_p2[0]  << " " << p_p2[1] << " " << std::endl;
+                    std::cout << "pMPi1 id: " << pMPi1->getId()  << std::endl;
+                    std::cout << "pMPi2 id: " << pMPi2->getId()  << std::endl;
+                    std::cout << "opt_original_position: " << opt_original_position[0]  << " " << opt_original_position[1]  << " "  << opt_original_position[2] << " " << std::endl;
+                    std::cout << "opt_moved_position: " << opt_moved_position[0]  << " " << opt_moved_position[1]  << " "  << opt_moved_position[2] << " " << std::endl;
                     std::cout << "original_position: " << original_position[0]  << " " << original_position[1]  << " "  << original_position[2] << " " << std::endl;
                     std::cout << "moved_position: " << moved_position[0]  << " " << moved_position[1]  << " "  << moved_position[2] << " " << std::endl;
 
@@ -250,7 +259,7 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
     } 
 }
 
-void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
+void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath, const std::vector<int> vMatches){
     std::ofstream outFile;
     outFile.imbue(std::locale("es_ES.UTF-8"));
     
@@ -310,11 +319,6 @@ void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
             } 
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
-                MapPoint_ pMPi1 = v1MPs[i];
-                MapPoint_ pMPi2 = v2MPs[i];
-                if (!pMPi1) continue;
-                if (!pMPi2) continue;
-
                 //ARAP error
                 auto it = invertedPosIndexes.find(i);
                 size_t meshIndex = 0;
@@ -329,12 +333,30 @@ void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
                 std::unordered_set<int> jIndexes = mesh->adjacency_list_[meshIndex];
 
                 for (int j : jIndexes) {
-                    Eigen::Vector3d pi1 = v1Positions[i];
-                    Eigen::Vector3d pj1 = v1Positions[posIndexes[j]];
-                    Eigen::Vector3d pi2 = v2Positions[i];
-                    Eigen::Vector3d pj2 = v2Positions[posIndexes[j]];
+                    Eigen::Vector3d pi1, pj1, pi2, pj2;
+
+                    if(vMatches.empty()) {
+                        pi1 = v1Positions[i];
+                        pj1 = v1Positions[posIndexes[j]];
+                        pi2 = v2Positions[i];
+                        pj2 = v2Positions[posIndexes[j]];
+                    } else {
+                        pi1 = v1Positions[i];
+                        pj1 = v1Positions[posIndexes[j]];
+                        pi2 = v2Positions[vMatches[i]];
+                        pj2 = v2Positions[vMatches[posIndexes[j]]];
+                    }
 
                     if (!pi1.allFinite() || !pj1.allFinite() || !pi2.allFinite() || !pj2.allFinite()) continue;
+
+
+                     if (i == 3 || i == 12 || i == 17) {
+                        std::cout << "i: " << i  << std::endl;
+                        std::cout << "pi1: " << pi1[0]  << " " << pi1[1] << " "  << pi1[2] << " " << std::endl;
+                        std::cout << "pj1: " << pj1[0]  << " " << pj1[1] << " "  << pj1[2] << " " << std::endl;
+                        std::cout << "pi2: " << pi2[0]  << " " << pi2[1]  << " "  << pi2[2] << " " << std::endl;
+                        std::cout << "pj2: " << pj2[0]  << " " << pj2[1]  << " "  << pj2[2] << " " << std::endl;
+                    }
 
                     Eigen::Vector3d d1 = pi1 - pj1;
                     Eigen::Vector3d d2 = pi2 - pj2;
