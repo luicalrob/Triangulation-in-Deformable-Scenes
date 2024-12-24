@@ -95,12 +95,9 @@ void triangulateClassic(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
         p3D2 = lambda1 * m1;
     }
 
-    // std::cout << "x3D_1: x:" << x3D_w.x() << " y: " << x3D_w.y() << " z: " << x3D_w.z() << "\n";
-    // std::cout << "x3D_2: x:" << x3D_w_test.x() << " y: " << x3D_w_test.y() << " z: " << x3D_w_test.z() << "\n";
-
     // point, rayOrigin, rayDir
-    x3D_1 = T2w.inverse() * x3D_1;
-    x3D_2 = T2w.inverse() * x3D_2;
+    x3D_1 = T2w.inverse() * p3D1;
+    x3D_2 = T2w.inverse() * p3D2;
 }
 
 void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,

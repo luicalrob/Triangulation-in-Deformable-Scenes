@@ -118,17 +118,11 @@ float KeyFrame::getDepthMeasure(float x, float y) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
-    uint16_t rawDepth = depthIm_.at<uint16_t>(y, x);
-    // std::cout << "rawDepth: " << rawDepth  << std::endl;
+    uint16_t rawDepth = depthIm_.at<uint16_t>(x, y);
 
-    double scaleFactor = 30.0f * (pow(2, 16)-1); // (2^16 - 1) * 30
+    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
 
-    // std::cout << "scaleFactor: (" << scaleFactor << ")" << std::endl;
-    // std::cout << "final value: (" << static_cast<float>(rawDepth) * scaleFactor << ")" << std::endl;
-    // std::cout << "test1 value: (" << static_cast<float>(rawDepth) * 100 / scaleFactor << ")" << std::endl;
-    // std::cout << "test2 value: (" << static_cast<float>(rawDepth) * 30.0f / pow(2, 16) << ")" << std::endl;
-    // std::cout << "test3 value: (" << static_cast<float>(rawDepth) / (pow(2, 16) * 30.0f)<< ")" << std::endl;
-    return static_cast<float>(rawDepth) / (scaleFactor);
+    return static_cast<float>(rawDepth) / (pow(2, 16)-1) * 30.0f;
 }
 
 std::vector<float>& KeyFrame::getDepthMeasurements() {

@@ -157,9 +157,23 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
 
                 Eigen::Vector3f original_position_c(p3Dc1[0], p3Dc1[1], d1);
                 Eigen::Vector3f moved_position_c(p3Dc2[0], p3Dc2[1], d2);
+                
+                cv::Point2f p_p1_cv(p_p1.x(), p_p1.y());
+                cv::Point2f p_p2_cv(p_p2.x(), p_p2.y());
 
-                Eigen::Vector3f original_position = T1w.inverse() * original_position_c;
-                Eigen::Vector3f moved_position = T2w.inverse() * moved_position_c;
+                Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(p_p1_cv, d1);
+                Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(p_p2_cv, d2);
+                Eigen::Vector3f original_position = T1w.inverse() * x3D1.transpose();
+                Eigen::Vector3f moved_position = T2w.inverse() * x3D2.transpose();
+
+                if (i == 3 || i == 12 || i == 17) {
+                    std::cout << "i: " << i  << std::endl;
+                    std::cout << "refKeys_[i].pt: " << p_p1[0]  << " " << p_p1[1] << " " << std::endl;
+                    std::cout << "currKeys_[vMatches_[i]].pt: " << p_p2[0]  << " " << p_p2[1] << " " << std::endl;
+                    std::cout << "original_position: " << original_position[0]  << " " << original_position[1]  << " "  << original_position[2] << " " << std::endl;
+                    std::cout << "moved_position: " << moved_position[0]  << " " << moved_position[1]  << " "  << moved_position[2] << " " << std::endl;
+
+                }
 
                 // std::cout << "map point 1: (" << p3Dw1[0] << ", "<< p3Dw1[1] << ", "<< p3Dw1[2] << ")" << std::endl;
                 // std::cout << "solution point 1: (" << original_position[0] << ", "<< original_position[1] << ", "<< original_position[2] << ")" << std::endl;

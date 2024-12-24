@@ -32,18 +32,13 @@ void PinHole::project(const Eigen::Vector3f& p3D, Eigen::Vector2f& p2D){
 }
 
 void PinHole::unproject(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D) {
-    /*
-     * Your code for Lab 3 - Task 2 here!
-     */
+
     p3D[0] = (p2D[0] - cx) / fx;
     p3D[1] = (p2D[1] - cy) / fy;
     p3D[2] = 1.0;
 }
 
 void PinHole::unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, float z) {
-    /*
-     * Your code for Lab 3 - Task 2 here!
-     */
     p3D[0] = (p2D[0] - cx) * z / fx;
     p3D[1] = (p2D[1] - cy) * z / fy;
     p3D[2] = z;
