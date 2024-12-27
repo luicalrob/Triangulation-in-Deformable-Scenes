@@ -117,20 +117,28 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     }
 
     if (firstCall_) {
-        Tcw_reference_ = Tcw;
-        Tcw_ = Sophus::SE3f();
+        Tcref_w_ = Tcw;
+        Tc_cref_ = Sophus::SE3f();
         firstCall_ = false;
     } else {
-        Tcw_ = Tcw_reference_.inverse() * Tcw; 
+        Tc_cref_ = Tcw * Tcref_w_.inverse(); 
     }
-    
+
+
+    Eigen::Vector3f O3 = Tcw.translation();
+    cout << "Twc Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
+    Eigen::Vector3f O2 = Tcref_w_.translation();
+    cout << "Tcref_w_ Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
+    Eigen::Vector3f O1 = Tc_cref_.translation();
+    cout << "Tc_cref_ Translation: " << O1[0]  << " " << O1[1]  << " "  << O1[2] << " " << endl;
+
     //Convert image to grayscale if needed
     cv::Mat grayIm = convertImageToGrayScale(im);
 
     std::cerr << "Let's do Tracking! " << std::endl;
 
     // //Predic camera pose
-    bool goodTracked = tracker_.doTracking(grayIm, depthIm, Tcw_, nKF, nMPs, timer);
+    bool goodTracked = tracker_.doTracking(grayIm, depthIm, Tc_cref_, nKF, nMPs, timer);
     
     std::cerr << "Let's do Mapping! "<< goodTracked << std::endl;
 
@@ -141,7 +149,7 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
 
     if(!bFirstTriang_) {
         std::cerr << "Let's do deformation optimization!"<< std::endl;
-        deformationOptimization(pMap_, settings_, mapVisualizer_);
+        deformationOptimization(pMap_, settings_, mapVisualizer_, tracker_.vMatches_);
     }
 
     //Run deformation optimization
@@ -258,7 +266,7 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     R = lookAt(secondCamera, movedPoints_[0]);
     Sophus::SE3f T2w(R, secondCamera);
     currFrame_.setPose(T2w);
-    Tcw_ = T2w;
+    Tc_cref_ = T2w;
 
     if(showScene_) {
         mapVisualizer_->updateCurrentPose(T2w);
@@ -307,7 +315,7 @@ void SLAM::viusualizeSolution() {
     // visualize
     if(showScene_) {
         mapVisualizer_->update(drawRaysSelection_);
-        mapVisualizer_->updateCurrentPose(Tcw_);
+        mapVisualizer_->updateCurrentPose(Tc_cref_);
     }
 }
 
@@ -394,6 +402,6 @@ Eigen::Vector3f SLAM::getSecondCameraPos(){
 }
 
 void SLAM::stop(){
-    stopWithMeasurements(pMap_, Tcw_, mapVisualizer_, filePath_ , drawRaysSelection_, 
+    stopWithMeasurements(pMap_, Tc_cref_, mapVisualizer_, filePath_ , drawRaysSelection_, 
                             stop_, showScene_, originalPoints_, movedPoints_);
 }

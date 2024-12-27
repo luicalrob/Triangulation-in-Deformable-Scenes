@@ -27,6 +27,7 @@ KeyFrame::KeyFrame(Frame &f) {
     vMapPoints_ = f.getMapPoints();
     vDepthMeasurements_ = f.getDepthMeasurements();
     depthIm_ = f.getDepthIm();
+    depthScale_ = f.getDepthScale();
 
     Tcw_ = f.getPose();
 
@@ -61,6 +62,7 @@ KeyFrame::KeyFrame(Frame &f) {
 KeyFrame::KeyFrame(const KeyFrame& other)
     : vKeys_(other.vKeys_),
       vDepthMeasurements_(other.vDepthMeasurements_),
+      depthScale_(other.depthScale_),
       depthIm_(other.depthIm_),
       descriptors_(other.descriptors_.clone()),
       Tcw_(other.Tcw_),
@@ -112,17 +114,22 @@ float KeyFrame::getDepthMeasure(size_t idx) {
 
 float KeyFrame::getDepthMeasure(float x, float y) {
     if (depthIm_.empty()) {
-        throw std::runtime_error("Depth image is not initialized.");
+        return -1;
+        //throw std::runtime_error("Depth image is not initialized.");
     }
     if (x >= depthIm_.cols || y >= depthIm_.rows) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
-    uint16_t rawDepth = depthIm_.at<uint16_t>(x, y);
+    uint16_t rawDepth = depthIm_.at<uint16_t>(y, x);
 
     double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
-
-    return static_cast<float>(rawDepth) / (pow(2, 16)-1) * 30.0f;
+    if(depthScale_){
+        return static_cast<float>(rawDepth) * depthScale_;
+    }
+    else {
+        return static_cast<float>(rawDepth) * scaleFactor;
+    }
 }
 
 std::vector<float>& KeyFrame::getDepthMeasurements() {

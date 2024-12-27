@@ -63,6 +63,10 @@ public:
      * Gets the last KeyFrame inserted into the map
      */
     std::shared_ptr<KeyFrame> getLastKeyFrame();
+
+    //Matches between the reference and the current frame
+    std::vector<int> vMatches_;
+
 private:
     //Extracts features and descriptors in the current image
     void extractFeatures(const cv::Mat& im);
@@ -97,9 +101,6 @@ private:
 
     //Last location a KeyPoint was seen. Only used in the monocular initialization
     std::vector<cv::Point2f> vPrevMatched_;
-
-    //Matches between the reference and the current frame
-    std::vector<int> vMatches_;
 
     //Tracking status
     enum TrackStatus{

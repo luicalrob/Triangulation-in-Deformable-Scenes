@@ -46,7 +46,8 @@ public:
     Frame(const int nFeatures, const int nGridCols, const int nGridRows,
           const int nImCols, const int nImRows, int nScales, float fScaleFactor,
           const std::shared_ptr<CameraModel> calibration,
-          const std::vector<float>& vDistortion = {});
+          const std::vector<float>& vDistortion = {},
+          const double dScale = 0.0);
 
     /*
      * Sets the pose of the Frame
@@ -77,6 +78,11 @@ public:
      * Gets the depth measure at index idx in the KeyFrame
      */
     float getDepthMeasure(const size_t idx);
+
+    /*
+     * Gets the depth measure of the depth image
+     */
+    float getDepthMeasure(float x, float y);
 
     /*
      * Gets all the depth measurements of the Frame
@@ -214,6 +220,11 @@ public:
     cv::Mat getDepthIm();
 
     /*
+     * Gets the depth scale of the depth image of the frame
+     */
+    double getDepthScale();
+
+    /*
      * Checks that all MapPoints matched are good i.e. their error is low. ONLY USED FOR DEBUG PURPOSES
      */
     void checkAllMapPointsAreGood();
@@ -269,6 +280,7 @@ private:
     cv::Mat im_;
     cv::Mat depthIm_;
     double timestamp_;
+    double depthScale_;
 };
 
 

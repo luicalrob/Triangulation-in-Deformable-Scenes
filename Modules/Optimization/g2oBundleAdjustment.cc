@@ -443,7 +443,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     }
 }
 
-void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer) {
+void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer, const std::vector<int> vMatches) {
     float simulatedRepErrorStanDesv = settings.getSimulatedRepError();
     float SimulatedDepthErrorStanDesv = settings.getSimulatedDepthError();
 
@@ -477,6 +477,8 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
     outFile_.imbue(std::locale("es_ES.UTF-8"));
 
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
+    if(vMatches.empty())
+    std::cout << "\nMATCHES EMPTY: \n" << std::endl;
 
     double optimizationUpdate = 100;
     for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.00001*mapPoints_corrected.size()); i++){ 
@@ -502,6 +504,7 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
                 optData.alpha = alphaWeight;
                 optData.beta = betaWeight;
                 optData.depthUncertainty = SimulatedDepthErrorStanDesv;
+                optData.vMatches = vMatches;
 
                 opt.set_min_objective(outerObjective, &optData);
 

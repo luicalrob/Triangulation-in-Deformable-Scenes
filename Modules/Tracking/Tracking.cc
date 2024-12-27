@@ -36,10 +36,10 @@ Tracking::Tracking(Settings& settings, std::shared_ptr<FrameVisualizer>& visuali
                     std::shared_ptr<MapVisualizer>& mapVisualizer, std::shared_ptr<Map> map) {
     currFrame_ = Frame(settings.getFeaturesPerImage(),settings.getGridCols(),settings.getGridRows(),
                        settings.getImCols(),settings.getImRows(), settings.getNumberOfScales(), settings.getScaleFactor(),
-                       settings.getCalibration(),settings.getDistortionParameters());
+                       settings.getCalibration(),settings.getDistortionParameters(), settings.getDepthMeasurementsScale());
     prevFrame_ = Frame(settings.getFeaturesPerImage(),settings.getGridCols(),settings.getGridRows(),
                        settings.getImCols(),settings.getImRows(),settings.getNumberOfScales(), settings.getScaleFactor(),
-                       settings.getCalibration(),settings.getDistortionParameters());
+                       settings.getCalibration(),settings.getDistortionParameters(), settings.getDepthMeasurementsScale());
 
     featExtractor_ = shared_ptr<Feature>(new FAST(settings.getNumberOfScales(),settings.getScaleFactor(),settings.getFeaturesPerImage()*2,20,7));
     descExtractor_ = shared_ptr<Descriptor>(new ORB(settings.getNumberOfScales(),settings.getScaleFactor()));
@@ -78,8 +78,8 @@ bool Tracking::doTracking(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3
     currFrame_.setPose(Tcw);
 
     //Update previous frame
-    if(status_ != NOT_INITIALIZED)
-        prevFrame_.assign(currFrame_);
+    // if(status_ != NOT_INITIALIZED)
+    //     prevFrame_.assign(currFrame_);
     
     Sophus::SE3f pos = prevFrame_.getPose();
     Eigen::Vector3f translation = pos.translation();
@@ -217,6 +217,7 @@ bool Tracking::monocularMapInitialization() {
     if(nMatches < 70){
         monoInitializer_.changeReference(currFrame_.getKeyPoints());
         prevFrame_.assign(currFrame_);
+        prevFrame_.setPose(Tcw_);
 
         visualizer_->setReferenceFrame(prevFrame_.getKeyPointsDistorted(),currIm_);
 
@@ -233,7 +234,7 @@ bool Tracking::monocularMapInitialization() {
     vector<Eigen::Vector3f> v3DPoints;
     v3DPoints.reserve(vMatches_.capacity());
     vector<bool> vTriangulated(vMatches_.capacity(),false);
-    if(!monoInitializer_.initialize(currFrame_.getKeyPoints(), vMatches_, nMatches, Tcw_prev, Tcw, v3DPoints, vTriangulated)){
+    if(!monoInitializer_.initialize(prevFrame_, currFrame_, vMatches_, nMatches, v3DPoints, vTriangulated)){
         return false;
     }
 
@@ -252,7 +253,7 @@ bool Tracking::monocularMapInitialization() {
     //Create map
     //Tcw.translation() = Tcw.translation() / scale;
 
-    currFrame_.setPose(Tcw);
+    //currFrame_.setPose(Tcw);
 
     int nTriangulated = 0;
 
@@ -263,7 +264,7 @@ bool Tracking::monocularMapInitialization() {
             shared_ptr<MapPoint> pMP2(new MapPoint(v3DPoints[j+1]));
 
             prevFrame_.setMapPoint(i,pMP1);
-            currFrame_.setMapPoint(vMatches_[i],pMP2);
+            currFrame_.setMapPoint(i,pMP2);
 
             pMap_->insertMapPoint(pMP1);
             pMap_->insertMapPoint(pMP2);
@@ -273,15 +274,6 @@ bool Tracking::monocularMapInitialization() {
 
             nTriangulated++;
             nTriangulated++;
-            
-            if (i == 3 || i == 12 || i == 17) {
-                std::cout << "i: " << i  << std::endl;
-                std::cout << "pMP1 id: " << pMP1->getId()  << std::endl;
-                std::cout << "pMPi2 id: " << pMP2->getId()  << std::endl;
-                std::cout << "x3D_mp1: " << x3D_mp1[0]  << " " << x3D_mp1[1]  << " "  << x3D_mp1[2] << " " << std::endl;
-                std::cout << "x3D_mp2: " << x3D_mp2[0]  << " " << x3D_mp2[1]  << " "  << x3D_mp2[2] << " " << std::endl;
-
-            }
         }
     }
 
@@ -292,6 +284,13 @@ bool Tracking::monocularMapInitialization() {
 
     pMap_->insertKeyFrame(kf0);
     pMap_->insertKeyFrame(kf1);
+
+    Eigen::Vector3f O3 = kf0->getPose().translation();
+    std::cout << "kf0 id: " << kf0->getId() <<  std::endl;
+    std::cout << "kf0 Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << std::endl;
+    Eigen::Vector3f O2 = kf1->getPose().translation();
+    std::cout << "kf1 id: " << kf1->getId() <<  std::endl;
+    std::cout << "kf1 Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << std::endl;
 
     //Set observations into the map
     // vector<shared_ptr<MapPoint>>& vMapPoints = kf0->getMapPoints();
@@ -345,7 +344,10 @@ bool Tracking::monocularMapInitialization() {
                             settings_.getStopExecutionOption(), settings_.getShowScene(),
                              {}, {}, vMatches_);
 
-    deformationOptimization(pMap_, settings_, mapVisualizer_);
+    if(vMatches_.empty())
+    std::cout << "\nMATCHES EMPTY in Tracking: \n" << std::endl;
+
+    deformationOptimization(pMap_, settings_, mapVisualizer_, vMatches_);
 
     // Tcw = kf1->getPose();
     // currFrame_.setPose(Tcw);

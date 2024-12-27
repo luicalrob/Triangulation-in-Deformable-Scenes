@@ -112,7 +112,7 @@ static inline Eigen::Vector2i GetOrderedEdge(int vidx0, int vidx1) {
 /*
  * Given a map with map points, it return the standard desviation of the reprojection error in pixels
  */
-void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors);
+void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors, const std::vector<int> vMatches = {});
 
 /*
  * Function to compute centroids of a set of points

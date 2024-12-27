@@ -188,7 +188,6 @@ void LocalMapping::triangulateNewMapPoints() {
         int nMatches = searchForTriangulation(currKeyFrame_.get(),pKF.get(),settings_.getMatchingForTriangulationTh(),
                 settings_.getEpipolarTh(),E,vMatches);
 
-        vector<cv::KeyPoint> vTriangulated1, vTriangulated2;
         //Try to triangulate a new MapPoint with each match
         for(size_t i = 0; i < vMatches.size(); i++){
             if(vMatches[i] != -1){
@@ -202,7 +201,7 @@ void LocalMapping::triangulateNewMapPoints() {
 
                 if(TrianMethod_ == "DepthMeasurement") {
                     float d1 = currKeyFrame_->getDepthMeasure(i);
-                    float d2 = pKF->getDepthMeasure(i);
+                    float d2 = pKF->getDepthMeasure(vMatches[i]);
 
                     xn1 = calibration1->unproject(x1, d1);
                     xn2 = calibration2->unproject(x2, d2);

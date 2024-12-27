@@ -89,16 +89,19 @@ void MapVisualizer::drawMapPoints() {
             }
 
             Eigen::Vector3f pos = mp->getWorldPosition(); 
+            Eigen::Vector3d p3Dc = cameraPose.map(pos.cast<double>());
+            Eigen::Vector2f projection;
+            pCamera->project(p3Dc.cast<float>(), projection);
+            float d = kf->getDepthMeasure(projection[0], projection[1]);
 
-            // Eigen::Vector3d p3Dc = cameraPose.map(pos.cast<double>());
-            // Eigen::Vector2f projection;
-            // pCamera->project(p3Dc.cast<float>(), projection);
-            // float d = kf->getDepthMeasure(projection[0], projection[1]);
-            // Eigen::Vector3f m_pos_c(p3Dc[0], p3Dc[1], d);
-            // Eigen::Vector3f m_pos = Tcw.inverse() * m_pos_c;
-            
-            // glColor3f(0.0,1.0,0.0);
-            // glVertex3f(m_pos(0),m_pos(1),m_pos(2));
+            if(d != -1) {
+                cv::Point2f p_cv(projection.x(), projection.y());
+                Eigen::Matrix<float,1,3> m_pos_c = pCamera->unproject(p_cv, d);
+                Eigen::Vector3f m_pos = Tcw.inverse() * m_pos_c.transpose();
+                
+                glColor3f(0.0,1.0,0.0);
+                glVertex3f(m_pos(0),m_pos(1),m_pos(2));
+            }
             
             if(id%2 == 0) {
                 glColor3f(1.0,0.3,0.3);

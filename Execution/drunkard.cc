@@ -2,6 +2,7 @@
 #include "Utils/Measurements.h"
 #include "DatasetLoader/DrunkardLoader.h"
 #include "Utils/CommonTypes.h"
+#include <cstdlib>
 
 #include <opencv2/opencv.hpp>
 
@@ -9,15 +10,18 @@ using namespace std;
 
 int main(int argc, char **argv){
     //Check program parameters are good
-    if(argc != 2){
-        cerr << "[Error]: you need to invoke the program with 1 parameter: " << argc << endl;
-        cerr << "\t./Drunkard <dataset_path>" << endl;
+    if(argc != 5){
+        cerr << "[Error]: you need to invoke the program with 4 parameter: " << argc << endl;
+        cerr << "\t./Drunkard <dataset_path> (int)Starting frame (int)Frames step (int)Ending frame" << endl;
         cerr << "Finishing execution..." << endl;
         return -1;
     }
     
     //Load dataset sequence
     string datasetPath = argv[1];
+    int startingFrame = stoi(argv[2]);
+    int framesStep = stoi(argv[3]);
+    int endingFrame = stoi(argv[4]);
     DrunkardLoader sequence(datasetPath, datasetPath + "/pose.txt");
 
     SLAM SLAM("Data/Drunkard.yaml");
@@ -43,7 +47,7 @@ int main(int argc, char **argv){
     double currTs;
     PoseData currPose;
     //for(int i = 0; i < sequence.getLenght(); i++){
-    for(int i = 0; i < 30; i++){
+    for(int i = startingFrame; i < endingFrame; i+=framesStep){
         sequence.getRGBImage(i,currIm);
         sequence.getDepthImage(i,currDepthIm);
         sequence.getTimeStamp(i,currTs);

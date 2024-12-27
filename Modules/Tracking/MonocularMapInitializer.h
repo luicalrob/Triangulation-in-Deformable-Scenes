@@ -46,8 +46,8 @@ public:
      * Tries to initialize using the reference and the current views. Returns true on success with the triangulated points
      * and the estimated camera pose
      */
-    bool initialize(const std::vector<cv::KeyPoint>& vCurrKeys, const std::vector<int>& vMatches, const int nMatches,
-                    Sophus::SE3f& Tpw, Sophus::SE3f& Tcw, std::vector<Eigen::Vector3f>& v3DPoints, std::vector<bool>& vTriangulated);
+    bool initialize(Frame prevFrame, Frame currFrame, const std::vector<int>& vMatches, const int nMatches,
+                     std::vector<Eigen::Vector3f>& v3DPoints, std::vector<bool>& vTriangulated);
 
 private:
     //Essential matrix computation with ransac
@@ -87,6 +87,7 @@ private:
     Eigen::Matrix<float,Eigen::Dynamic,3,Eigen::RowMajor> refRays_, currRays_;
 
     //Calibration of the reference and current view
+    std::shared_ptr<CameraModel> prevCalibration_, currCalibration_;
     std::shared_ptr<CameraModel> calibration_;
 
     float fEpipolarTh_;
@@ -94,6 +95,9 @@ private:
 
     std::string TrianMethod_;
     std::string TrianLocation_;
+
+    std::shared_ptr<Frame> currFrame_;
+    std::shared_ptr<Frame> prevFrame_;
 };
 
 

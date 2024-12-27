@@ -367,7 +367,7 @@ std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
     return triangle_mesh;
 }
 
-void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors){
+void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors, const std::vector<int> vMatches){
     Eigen::Vector2d meanRepErrorUVC1 = Eigen::Vector2d::Zero();
     double meanRepErrorC1 = 0;
     double desvRepErrorC1 = 0;
@@ -382,6 +382,9 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
     size_t validPairs = 0;
 
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = Map->getKeyFrames();
+
+    if(vMatches.empty())
+    std::cout << "\nMATCHES EMPTY: \n" << std::endl;
 
     //std::cout << "\nKEYFRAMES k AND k+1 MEASUREMENTS: \n";
     for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
@@ -419,7 +422,11 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
 
                 Eigen::Vector2d pixelsErrorC1 = (obs - projected.cast<double>()).cwiseAbs();
 
-                uv = pKF2->getKeyPoint(i).pt;
+                if(vMatches.empty()) {
+                    uv = pKF2->getKeyPoint(i).pt;
+                } else {
+                    uv = pKF2->getKeyPoint(vMatches[i]).pt;
+                }
                 obs << uv.x, uv.y;
                 p3Dw = pMPi2->getWorldPosition().cast<double>();
                 p3Dc = camera2Pose.map(p3Dw);

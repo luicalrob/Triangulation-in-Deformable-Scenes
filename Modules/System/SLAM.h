@@ -151,8 +151,8 @@ private:
     Frame prevFrame_, currFrame_;
     std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
 
-    Sophus::SE3f Tcw_;
-    Sophus::SE3f Tcw_reference_;
+    Sophus::SE3f Tc_cref_;
+    Sophus::SE3f Tcref_w_;
 
     std::shared_ptr<CameraModel> prevCalibration_;
     std::shared_ptr<CameraModel> currCalibration_;

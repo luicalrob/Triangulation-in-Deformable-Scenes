@@ -25,7 +25,8 @@ Frame::Frame(){}
 Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
              const int nImCols, const int nImRows, int nScales, float fScaleFactor,
              const std::shared_ptr<CameraModel> calibration,
-             const vector<float>& vDistortion){
+             const vector<float>& vDistortion,
+             const double dScale){
     vKeys_ = vector<cv::KeyPoint>(nFeatures);
     vKeysDis_ = vector<cv::KeyPoint>(nFeatures);
     vDepthMeasurements_ = vector<float>(nFeatures);
@@ -33,6 +34,7 @@ Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
     vMapPoints_ = vector<shared_ptr<MapPoint>>(nFeatures,nullptr);
 
     calibration_ = calibration;
+    depthScale_ = dScale;
 
     //Compute image boundaries as distortion can change typical values
     computeImageBoundaries(vDistortion,nImCols,nImRows);
@@ -89,6 +91,25 @@ cv::KeyPoint Frame::getKeyPoint(const size_t idx) {
 
 float Frame::getDepthMeasure(const size_t idx) {
     return vDepthMeasurements_[idx];
+}
+
+float Frame::getDepthMeasure(float x, float y) {
+    if (depthIm_.empty()) {
+        throw std::runtime_error("Depth image is not initialized.");
+    }
+    if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        throw std::out_of_range("Pixel coordinates are out of range.");
+    }
+
+    uint16_t rawDepth = depthIm_.at<uint16_t>(y, x);
+
+    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
+    if(depthScale_){
+        return static_cast<float>(rawDepth) * depthScale_;
+    }
+    else {
+        return static_cast<float>(rawDepth) * scaleFactor;
+    }
 }
 
 Grid Frame::getGrid() {
@@ -148,6 +169,7 @@ void Frame::assign(Frame &F) {
     }
 
     Tcw_ = F.Tcw_;
+    depthScale_ = F.depthScale_;
 
     im_ = F.im_.clone();
     depthIm_ = F.depthIm_.clone();
@@ -334,6 +356,10 @@ void Frame::setDepthIm(cv::Mat& im){
 
 cv::Mat Frame::getIm(){
     return im_.clone();
+}
+
+double Frame::getDepthScale(){
+    return depthScale_;
 }
 
 cv::Mat Frame::getDepthIm(){

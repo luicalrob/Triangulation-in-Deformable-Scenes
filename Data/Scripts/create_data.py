@@ -105,7 +105,7 @@ z_mean, z_std = 0.2, 0.01
 angle_x, angle_y, angle_z = -45, -0, 45  # in degrees
 
 # Movement
-rigid_movement = 0.01  # Scale of movement for the moved points
+rigid_movement = 0.00  # Scale of movement for the moved points
 gaussian_movement = 0.00  # Scale of movement for the moved points
 movement_type = "Planar" # "Planar" "Gradual or "Curvature"
 gradual_and_curv_intensity = 25.0 # A significant value returns pronunciated gradual/curvature movements

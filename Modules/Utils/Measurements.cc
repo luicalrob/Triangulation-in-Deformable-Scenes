@@ -136,45 +136,46 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 std::shared_ptr<MapPoint> pMPi1, pMPi2;
                 pMPi1 = v1MPs[i];
-                if (vMatches.empty() || i >= vMatches.size() || vMatches[i] < 0 || vMatches[i] >= v2MPs.size()) {
-                    pMPi2 = v2MPs[i];
-                } else {
-                    pMPi2 = v2MPs[vMatches[i]];
-                }
+                pMPi2 = v2MPs[i];
                 if (!pMPi1) continue;
                 if (!pMPi2) continue;
 
                 Eigen::Vector3f opt_original_position = pMPi1->getWorldPosition();
                 Eigen::Vector3f opt_moved_position = pMPi2->getWorldPosition();
 
-                Eigen::Vector3d p3Dw1 = opt_original_position.cast<double>();
-                Eigen::Vector3d p3Dc1 = camera1Pose.map(p3Dw1);
-                Eigen::Vector3d p3Dw2 = opt_moved_position.cast<double>();
-                Eigen::Vector3d p3Dc2 = camera1Pose.map(p3Dw2);
+                // Eigen::Vector3d p3Dw1 = opt_original_position.cast<double>();
+                // Eigen::Vector3f p3Dc1 = T1w * p3Dw1.cast<float>();
+                // Eigen::Vector3d p3Dw2 = opt_moved_position.cast<double>();
+                // Eigen::Vector3f p3Dc2 = T2w * p3Dw2.cast<float>();
 
-                Eigen::Vector2f p_p1;
-                Eigen::Vector2f p_p2;
-                pCamera1->project(p3Dc1.cast<float>(), p_p1);
-                pCamera2->project(p3Dc2.cast<float>(), p_p2);
+                cv::Point2f x1 = pKF1->getKeyPoint(i).pt;
+                cv::Point2f x2 = pKF2->getKeyPoint(vMatches[i]).pt;
 
-                float d1 = pKF1->getDepthMeasure(p_p1[0], p_p1[1]);
-                float d2 = pKF2->getDepthMeasure(p_p2[0], p_p2[1]);
+                // Eigen::Vector2f p_p1;
+                // Eigen::Vector2f p_p2;
+                // pCamera1->project(p3Dc1, p_p1);
+                // pCamera2->project(p3Dc2, p_p2);
 
-                Eigen::Vector3f original_position_c(p3Dc1[0], p3Dc1[1], d1);
-                Eigen::Vector3f moved_position_c(p3Dc2[0], p3Dc2[1], d2);
+                float d1 = pKF1->getDepthMeasure(x1.x, x1.y);
+                float d2 = pKF2->getDepthMeasure(x2.x, x2.y);
+                // float d1 = pKF1->getDepthMeasure(p_p1[0], p_p1[1]);
+                // float d2 = pKF2->getDepthMeasure(p_p2[0], p_p2[1]);
+
+                // Eigen::Vector3f original_position_c(p3Dc1[0], p3Dc1[1], d1);
+                // Eigen::Vector3f moved_position_c(p3Dc2[0], p3Dc2[1], d2);
                 
-                cv::Point2f p_p1_cv(p_p1.x(), p_p1.y());
-                cv::Point2f p_p2_cv(p_p2.x(), p_p2.y());
+                // cv::Point2f p_p1_cv(p_p1.x(), p_p1.y());
+                // cv::Point2f p_p2_cv(p_p2.x(), p_p2.y());
 
-                Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(p_p1_cv, d1);
-                Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(p_p2_cv, d2);
+                Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(x1, d1);
+                Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(x2, d2);
                 Eigen::Vector3f original_position = T1w.inverse() * x3D1.transpose();
                 Eigen::Vector3f moved_position = T2w.inverse() * x3D2.transpose();
 
                 if (i == 3 || i == 12 || i == 17) {
                     std::cout << "i: " << i  << std::endl;
-                    std::cout << "refKeys_[i].pt: " << p_p1[0]  << " " << p_p1[1] << " " << std::endl;
-                    std::cout << "currKeys_[vMatches_[i]].pt: " << p_p2[0]  << " " << p_p2[1] << " " << std::endl;
+                    std::cout << "refKeys_[i].pt: " << x1.x  << " " << x1.y << " " << std::endl;
+                    std::cout << "currKeys_[vMatches_[i]].pt: " << x2.x  << " " << x2.y << " " << std::endl;
                     std::cout << "pMPi1 id: " << pMPi1->getId()  << std::endl;
                     std::cout << "pMPi2 id: " << pMPi2->getId()  << std::endl;
                     std::cout << "opt_original_position: " << opt_original_position[0]  << " " << opt_original_position[1]  << " "  << opt_original_position[2] << " " << std::endl;
@@ -335,28 +336,11 @@ void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath, c
                 for (int j : jIndexes) {
                     Eigen::Vector3d pi1, pj1, pi2, pj2;
 
-                    if(vMatches.empty()) {
-                        pi1 = v1Positions[i];
-                        pj1 = v1Positions[posIndexes[j]];
-                        pi2 = v2Positions[i];
-                        pj2 = v2Positions[posIndexes[j]];
-                    } else {
-                        pi1 = v1Positions[i];
-                        pj1 = v1Positions[posIndexes[j]];
-                        pi2 = v2Positions[vMatches[i]];
-                        pj2 = v2Positions[vMatches[posIndexes[j]]];
-                    }
-
+                    pi1 = v1Positions[i];
+                    pj1 = v1Positions[posIndexes[j]];
+                    pi2 = v2Positions[i];
+                    pj2 = v2Positions[posIndexes[j]];
                     if (!pi1.allFinite() || !pj1.allFinite() || !pi2.allFinite() || !pj2.allFinite()) continue;
-
-
-                     if (i == 3 || i == 12 || i == 17) {
-                        std::cout << "i: " << i  << std::endl;
-                        std::cout << "pi1: " << pi1[0]  << " " << pi1[1] << " "  << pi1[2] << " " << std::endl;
-                        std::cout << "pj1: " << pj1[0]  << " " << pj1[1] << " "  << pj1[2] << " " << std::endl;
-                        std::cout << "pi2: " << pi2[0]  << " " << pi2[1]  << " "  << pi2[2] << " " << std::endl;
-                        std::cout << "pj2: " << pj2[0]  << " " << pj2[1]  << " "  << pj2[2] << " " << std::endl;
-                    }
 
                     Eigen::Vector3d d1 = pi1 - pj1;
                     Eigen::Vector3d d2 = pi2 - pj2;
@@ -372,7 +356,7 @@ void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath, c
 
             if (validPairs > 1) {
                 PixelsError pixelsErrors;
-                calculatePixelsStandDev(pMap, pixelsErrors);
+                calculatePixelsStandDev(pMap, pixelsErrors, vMatches);
 
                 std::cout << "Pixels C1 error (average): " << pixelsErrors.avgc1 << std::endl;
                 std::cout << "Pixels C1 error (standard desv): " << pixelsErrors.desvc1 << std::endl;

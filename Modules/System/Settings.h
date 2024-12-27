@@ -78,6 +78,7 @@ public:
     float getSimulatedDepthError();
     float getSimulatedDepthScaleC1();
     float getSimulatedDepthScaleC2();
+    double getDepthMeasurementsScale();
 
     double getOptRepWeight();
     double getOptArapWeight();
@@ -144,6 +145,7 @@ private:
     float SimulatedDepthError_;
     float SimulatedDepthScaleC1_;
     float SimulatedDepthScaleC2_;
+    double DepthMeasurementsScale_;
 
     double OptRepWeight_;
     double OptArapWeight_;

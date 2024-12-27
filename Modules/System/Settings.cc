@@ -99,6 +99,7 @@ Settings::Settings(const std::string& configFile) {
     SimulatedDepthError_ = fSettings["Measurements.DepthError"];
     SimulatedDepthScaleC1_ = fSettings["Measurements.DepthScale.C1"];
     SimulatedDepthScaleC2_ = fSettings["Measurements.DepthScale.C2"];
+    DepthMeasurementsScale_ = fSettings["Measurements.Depth.Scale"];
 
     OptRepWeight_ = fSettings["Optimization.rep"];
     OptArapWeight_ = fSettings["Optimization.arap"];
@@ -289,6 +290,10 @@ float Settings::getSimulatedDepthScaleC1(){
 
 float Settings::getSimulatedDepthScaleC2(){
     return SimulatedDepthScaleC2_;
+}
+
+double Settings::getDepthMeasurementsScale(){
+    return DepthMeasurementsScale_;
 }
 
 double Settings::getOptRepWeight(){

@@ -49,7 +49,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
 /*
  * Performs a As-Rigid-As-Possible optimization using arapOptimization function inside a external loop to optimize the weights
  */
-void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer);
+void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer, const std::vector<int> vMatches = {});
 
 /*
  * Performs a As-Rigid-As-Possible optimization joined with a reprojection error minimization (optimizes 3D points positions in the space)

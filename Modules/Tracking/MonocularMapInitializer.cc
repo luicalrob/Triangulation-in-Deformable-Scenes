@@ -50,11 +50,21 @@ void MonocularMapInitializer::changeReference(std::vector<cv::KeyPoint> &vKeys) 
     refKeys_ = vKeys;
 }
 
-bool MonocularMapInitializer::initialize(const std::vector<cv::KeyPoint>& vCurrKeys, const std::vector<int>& vMatches, const int nMatches,
-                                         Sophus::SE3f& Tpw, Sophus::SE3f& Tcw, std::vector<Eigen::Vector3f>& v3DPoints, std::vector<bool>& vTriangulated) {
+bool MonocularMapInitializer::initialize(Frame prevFrame, Frame currFrame, const std::vector<int>& vMatches, const int nMatches,
+                                         std::vector<Eigen::Vector3f>& v3DPoints, std::vector<bool>& vTriangulated) {
     //Set up data
-    currKeys_ = vCurrKeys;
+    refKeys_ = prevFrame.getKeyPoints();
+    currKeys_ = currFrame.getKeyPoints();
     vMatches_ = vMatches;
+
+    prevCalibration_ = prevFrame.getCalibration();
+    currCalibration_ = currFrame.getCalibration();
+
+    prevFrame_ = std::make_shared<Frame>(prevFrame);
+    currFrame_ = std::make_shared<Frame>(currFrame);
+
+    Sophus::SE3f Tpw = prevFrame.getPose();
+    Sophus::SE3f Tcw = currFrame.getPose();
 
     //Unproject matches points to its bearing rays
     std::vector<size_t> vRansacToFrameIndeces;
@@ -66,8 +76,8 @@ bool MonocularMapInitializer::initialize(const std::vector<cv::KeyPoint>& vCurrK
 
     for(size_t i = 0; i < vMatches.size(); i++){
         if(vMatches_[i] != -1){
-            refRays_.block(currMatIdx,0,1,3) = calibration_->unproject(refKeys_[i].pt.x,refKeys_[i].pt.y).normalized();
-            currRays_.block(currMatIdx,0,1,3) = calibration_->unproject(currKeys_[vMatches[i]].pt.x,currKeys_[vMatches[i]].pt.y).normalized();
+            refRays_.block(currMatIdx,0,1,3) = prevCalibration_->unproject(refKeys_[i].pt.x,refKeys_[i].pt.y).normalized();
+            currRays_.block(currMatIdx,0,1,3) = currCalibration_->unproject(currKeys_[vMatches[i]].pt.x,currKeys_[vMatches[i]].pt.y).normalized();
 
             refKeysMatched_.push_back(refKeys_[i].pt);
             currKeysMatched_.push_back(currKeys_[vMatches[i]].pt);
@@ -80,7 +90,7 @@ bool MonocularMapInitializer::initialize(const std::vector<cv::KeyPoint>& vCurrK
 
     vector<bool> vInliersOfE(currMatIdx,false);
 
-    //If enough matches found, find an Essential matrix with RANSAC
+    // If enough matches found, find an Essential matrix with RANSAC
     int nInliersOfE;
     Eigen::Matrix3f E = findEssentialWithRANSAC(nMatches,vInliersOfE, nInliersOfE);
 
@@ -92,7 +102,8 @@ bool MonocularMapInitializer::initialize(const std::vector<cv::KeyPoint>& vCurrK
     }
 
     //Reconstruct the environment with the Essential matrix found
-    return reconstructEnvironment(E,Tpw,Tcw,v3DPoints,vTriangulated, nInliersOfE);
+    //return reconstruct(E,Tpw,Tcw,v3DPoints,vTriangulated, nInliersOfE);
+    return reconstructPoints(Tpw,Tcw,v3DPoints,vTriangulated);
 
 }
 
@@ -205,19 +216,19 @@ int MonocularMapInitializer::computeScoreAndInliers(const int nMatched, Eigen::M
 bool MonocularMapInitializer::reconstructEnvironment(Eigen::Matrix3f& E, Sophus::SE3f& Tpw, Sophus::SE3f& Tcw, std::vector<Eigen::Vector3f>& v3DPoints,
                                                      std::vector<bool>& vTriangulated, int& nInliers) {
     //Compute rays of the inliers points
-    // Eigen::MatrixXf refRays(nInliers,3), currRays(nInliers,3);
-    // size_t currMatIdx = 0;
-    // for(int i = 0; i < vTriangulated.size(); i++){
-    //     if(vTriangulated[i]){
-    //         refRays.row(currMatIdx) = calibration_->unproject(refKeys_[i].pt.x,refKeys_[i].pt.y).normalized();
-    //         currRays.row(currMatIdx) = calibration_->unproject(currKeys_[vMatches_[i]].pt.x,currKeys_[vMatches_[i]].pt.y).normalized();
+    Eigen::MatrixXf refRays(nInliers,3), currRays(nInliers,3);
+    size_t currMatIdx = 0;
+    for(int i = 0; i < vTriangulated.size(); i++){
+        if(vTriangulated[i]){
+            refRays.row(currMatIdx) = calibration_->unproject(refKeys_[i].pt.x,refKeys_[i].pt.y).normalized();
+            currRays.row(currMatIdx) = calibration_->unproject(currKeys_[vMatches_[i]].pt.x,currKeys_[vMatches_[i]].pt.y).normalized();
 
-    //         currMatIdx++;
-    //     }
-    // }
+            currMatIdx++;
+        }
+    }
 
     //Reconstruct camera poses
-    //reconstructCameras(E,Tcw,refRays,currRays);
+    reconstructCameras(E,Tcw,refRays,currRays);
 
     //Reconstruct 3D points (try with the 2 possible translations)
     return reconstructPoints(Tpw,Tcw,v3DPoints,vTriangulated);
@@ -263,8 +274,8 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
     vector<float> vParallax;
     int nTriangulated = 0;
 
-    Eigen::Vector3f O2 = Tpw.inverse().translation();
-    Eigen::Vector3f O3 = Tcw.inverse().translation();
+    Eigen::Vector3f O2 = Tpw.translation();
+    Eigen::Vector3f O3 = Tcw.translation();
     cout << "Tpw Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
     cout << "Tcw Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
 
@@ -277,9 +288,18 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
             //Unproject KeyPoints to rays
             cv::Point2f x1 = refKeys_[i].pt;
             cv::Point2f x2 = currKeys_[vMatches_[i]].pt;
-            Eigen::Vector3f r1 = calibration_->unproject(x1).normalized();
-            Eigen::Vector3f r2 = calibration_->unproject(x2).normalized();
-            
+            Eigen::Vector3f r1 = prevCalibration_->unproject(x1).normalized();
+            Eigen::Vector3f r2 = currCalibration_->unproject(x2).normalized();
+
+
+            if(TrianMethod_ == "DepthMeasurement") {
+                float d1 = prevFrame_->getDepthMeasure(refKeys_[i].pt.x, refKeys_[i].pt.y);
+                float d2 = currFrame_->getDepthMeasure(currKeys_[i].pt.x, currKeys_[i].pt.y);
+
+                r1 = prevCalibration_->unproject(x1, d1);
+                r2 = currCalibration_->unproject(x2, d2);
+            }
+
             //Triangulate point
             Eigen::Vector3f p3D_1, p3D_2;
             //triangulateClassic(r1,r2,Tpw,Tcw, p3D_1, p3D_2, TrianLocation_);
@@ -330,8 +350,8 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
 
             if (i == 3 || i == 12 || i == 17) {
                 std::cout << "i: " << i  << std::endl;
-                std::cout << "refKeys_[i].pt: " << refKeys_[i].pt.x  << " " << refKeys_[i].pt.y << " " << std::endl;
-                std::cout << "currKeys_[vMatches_[i]].pt: " << currKeys_[vMatches_[i]].pt.x  << " " << currKeys_[vMatches_[i]].pt.y << " " << std::endl;
+                std::cout << "refKeys_[i].pt: " << refKeys_[i].pt  << " " << refKeys_[i].pt << " " << std::endl;
+                std::cout << "currKeys_[vMatches_[i]].pt: " << currKeys_[vMatches_[i]].pt  << " " << currKeys_[vMatches_[i]].pt << " " << std::endl;
                 std::cout << "p3D_1: " << p3D_1[0]  << " " << p3D_1[1]  << " "  << p3D_1[2] << " " << std::endl;
                 std::cout << "p3D_2: " << p3D_2[0]  << " " << p3D_2[1]  << " "  << p3D_2[2] << " " << std::endl;
 

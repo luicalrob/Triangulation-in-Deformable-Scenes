@@ -1,22 +1,45 @@
 %YAML:1.0
 
 # Camera calibration and distortion parameters
-Camera.fx: 190.68059285
-Camera.fy: 286.02088928
-Camera.cx: 160.0
-Camera.cy: 160.0
+# 320x320 drunkard
+# Camera.fx: 190.68059285
+# Camera.fy: 286.02088928
+# Camera.cx: 160.0
+# Camera.cy: 160.0
 
-Camera.k1: 0.0
-Camera.k2: 0.0
-Camera.p1: 0.0
-Camera.p2: 0.0
+# # 1024x1024 drunkard
+# # Camera.fx: 610.17789714
+# # Camera.fy: 915.2668457
+# # Camera.cx: 512.0
+# # Camera.cy: 512.0
+
+# Camera.k1: 0.0
+# Camera.k2: 0.0
+# Camera.p1: 0.0
+# Camera.p2: 0.0
+
+#640x480 freiburg
+Camera.fx: 517.306408
+Camera.fy: 516.469215
+Camera.cx: 318.643040
+Camera.cy: 255.313989
+
+Camera.k1: 0.262383
+Camera.k2: -0.953104
+Camera.p1: -0.005358
+Camera.p2: 0.002628
+Camera.k3: 1.163314
 
 # Camera resolution
-Camera.cols: 320
-Camera.rows: 320
+# Camera.cols: 320
+# Camera.rows: 320
+# Camera.cols: 1024
+# Camera.rows: 1024
+Camera.cols: 640
+Camera.rows: 480
 
 # Number of features per image
-FeatureExtractor.nFeatures: 500
+FeatureExtractor.nFeatures: 1000
 
 # Number of levels in the scale pyramid
 FeatureExtractor.nScales: 8
@@ -29,6 +52,7 @@ FeatureGrid.nGridCols: 64
 FeatureGrid.nGridRows: 48
 
 #Essential Matrix threshold
+#Epipolar.th: 0.002
 Epipolar.th: 0.002
 
 #Feature matching thresholds
@@ -43,8 +67,8 @@ Map.minObs: 15
 
 #Min cos parallax to triangulate
 #Triangulation.minCos: 0.995
-Triangulation.minCos: 0.99998
-
+Triangulation.minCos: 0.97
+#0.99998
 
 # LUIS
 #Cameras poses
@@ -63,6 +87,9 @@ Keypoints.decimalsApproximation: 1
 Measurements.DepthError: 0.0
 Measurements.DepthScale.C1: 1
 Measurements.DepthScale.C2: 1
+Measurements.Depth.Scale: 0.0002
+#0.0004577706569009
+#0.0002
 
 # 100000000: 3 stand
 # 90000: 6.38
@@ -101,7 +128,7 @@ Triangulation.method: "Classic" # Classic NRSLAM ORBSLAM
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
 # DepthMeasurement: use depth measurements 
-Triangulation.seed.location: "inRays"
+Triangulation.seed.location: "TwoPoints"
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction
