@@ -94,7 +94,8 @@ int main(int argc, char **argv){
                     << ", x: " << quaternion.x()
                     << ", y: " << quaternion.y()
                     << ", z: " << quaternion.z() << "]" << endl;
-        SLAM.processImage(currIm, currDepthIm, Tcw, nKF, nMPs, timer);
+        bool triangulated = SLAM.processImage(currIm, currDepthIm, Tcw, nKF, nMPs, timer);
+        if(triangulated) break;
     }
     
     timer = clock() - timer;

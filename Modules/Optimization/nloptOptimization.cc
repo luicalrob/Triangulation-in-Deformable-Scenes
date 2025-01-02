@@ -24,7 +24,7 @@ double outerObjective(unsigned int n, const double* x, double* grad, void* data)
     arapOptimization(pMapCopy.get(), repBalanceWeight, globalBalanceWeight, arapBalanceWeight, alpha, beta, depthUncertainty, nOptIterations);
 
     PixelsError pixelsErrors;
-    calculatePixelsStandDev(pMapCopy, pixelsErrors, vMatches);
+    calculatePixelsStandDev(pMapCopy, pixelsErrors);
 
     // double objetiveError1 = repErrorStanDesv - pixelsErrors.desvc1;
     // double objetiveError2 = repErrorStanDesv - pixelsErrors.desvc2;

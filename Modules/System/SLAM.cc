@@ -140,17 +140,17 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     // //Predic camera pose
     bool goodTracked = tracker_.doTracking(grayIm, depthIm, Tc_cref_, nKF, nMPs, timer);
     
-    std::cerr << "Let's do Mapping! "<< goodTracked << std::endl;
+    // std::cerr << "Let's do Mapping! "<< goodTracked << std::endl;
 
-    // //Do mapping
-    shared_ptr<KeyFrame> lastKeyFrame = tracker_.getLastKeyFrame();
-    mapper_.doMapping(lastKeyFrame, nMPs);
+    // // //Do mapping
+    // shared_ptr<KeyFrame> lastKeyFrame = tracker_.getLastKeyFrame();
+    // mapper_.doMapping(lastKeyFrame, nMPs);
 
 
-    if(!bFirstTriang_) {
-        std::cerr << "Let's do deformation optimization!"<< std::endl;
-        deformationOptimization(pMap_, settings_, mapVisualizer_, tracker_.vMatches_);
-    }
+    // if(!bFirstTriang_) {
+    //     std::cerr << "Let's do deformation optimization!"<< std::endl;
+    //     deformationOptimization(pMap_, settings_, mapVisualizer_, tracker_.vMatches_);
+    // }
 
     //Run deformation optimization
     if(bFirstTriang_ && goodTracked) {
@@ -160,7 +160,7 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     //visualizer_->updateWindows();
 
     // return goodTracked;
-    return true;
+    return goodTracked;
 }
 
 bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {

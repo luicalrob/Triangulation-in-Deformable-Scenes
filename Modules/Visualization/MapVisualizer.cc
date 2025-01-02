@@ -72,7 +72,7 @@ void MapVisualizer::drawMapPoints() {
     //glColor3f(0.0,0.0,0.0);
 
     for(auto kf_info : keyFrames){
-        int id = kf_info.first; 
+        int kfID = kf_info.first; 
         std::shared_ptr<KeyFrame> kf = kf_info.second;
         if (!kf) {
             continue;
@@ -83,27 +83,30 @@ void MapVisualizer::drawMapPoints() {
         g2o::SE3Quat cameraPose = g2o::SE3Quat(kf->getPose().unit_quaternion().cast<double>(),kf->getPose().translation().cast<double>());
         Sophus::SE3f Tcw = kf->getPose();
 
-        for(std::shared_ptr<MapPoint> mp: mapPoints) {
-            if (!mp) {
-                continue;
-            }
+        for (size_t i = 0; i < mapPoints.size(); i++) {
+            std::shared_ptr<MapPoint> pMP;
+            pMP = mapPoints[i];
+            if (!pMP) continue;
 
-            Eigen::Vector3f pos = mp->getWorldPosition(); 
-            Eigen::Vector3d p3Dc = cameraPose.map(pos.cast<double>());
-            Eigen::Vector2f projection;
-            pCamera->project(p3Dc.cast<float>(), projection);
-            float d = kf->getDepthMeasure(projection[0], projection[1]);
+            Eigen::Vector3f pos = pMP->getWorldPosition(); 
+            
+            int index_in_kf = pMap_->isMapPointInKeyFrame(pMP->getId(), kfID);
+            if(index_in_kf < 0) continue;
 
+            size_t idx = (size_t)index_in_kf;
+
+            cv::Point2f x1 = kf->getKeyPoint(idx).pt;
+            float d = kf->getDepthMeasure(x1.x, x1.y);
+            
             if(d != -1) {
-                cv::Point2f p_cv(projection.x(), projection.y());
-                Eigen::Matrix<float,1,3> m_pos_c = pCamera->unproject(p_cv, d);
+                Eigen::Matrix<float,1,3> m_pos_c = pCamera->unproject(x1, d);
                 Eigen::Vector3f m_pos = Tcw.inverse() * m_pos_c.transpose();
                 
                 glColor3f(0.0,1.0,0.0);
                 glVertex3f(m_pos(0),m_pos(1),m_pos(2));
             }
             
-            if(id%2 == 0) {
+            if(kfID%2 == 0) {
                 glColor3f(1.0,0.3,0.3);
             } else {
                 glColor3f(0.0,0.0,0.0);

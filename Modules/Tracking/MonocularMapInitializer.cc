@@ -387,7 +387,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
 
     std::cerr << "_parallax: "<< _parallax << std::endl;
 
-    if(nTriangulated > 5 && _parallax < fMinParallax_) {
+    if(nTriangulated >= 8 && _parallax < fMinParallax_) {
         return true;
     }
     else{

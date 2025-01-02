@@ -19,7 +19,7 @@ void stopWithMeasurements(const std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw,
                         const std::vector<int> vMatches){
     measureRelativeMapErrors(pMap, filePath, vMatches);
     if(originalPoints.empty() || movedPoints.empty()) {
-        measureRealAbsoluteMapErrors(pMap, filePath, vMatches);
+        measureRealAbsoluteMapErrors(pMap, filePath);
     } else {
         measureSimAbsoluteMapErrors(pMap, originalPoints, movedPoints, filePath);
     }

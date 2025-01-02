@@ -53,7 +53,7 @@ FeatureGrid.nGridRows: 48
 
 #Essential Matrix threshold
 #Epipolar.th: 0.002
-Epipolar.th: 0.035
+Epipolar.th: 1.5
 
 #Feature matching Hamming distance thresholds
 Matching.initialization: 50
@@ -87,7 +87,7 @@ Keypoints.decimalsApproximation: 1
 Measurements.DepthError: 0.0
 Measurements.DepthScale.C1: 1
 Measurements.DepthScale.C2: 1
-Measurements.Depth.Scale: 0.00075
+Measurements.Depth.Scale: 0.00012
 #0.0004577706569009
 #0.0002
 #0.00075
@@ -100,12 +100,12 @@ Measurements.Depth.Scale: 0.00075
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 1
-Optimization.arap: 1
+Optimization.arap: 100000
 Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 2
+Optimization.numberOfOptimizations: 1
 Optimization.numberOfIterations: 25
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
@@ -122,8 +122,8 @@ Optimization.nlopt.rep.upperBound: 1
 # Optimization.nlopt.arap.upperBound: 10000000
 Optimization.nlopt.global.lowerBound: 1
 Optimization.nlopt.global.upperBound: 1
-Optimization.nlopt.arap.lowerBound: 1
-Optimization.nlopt.arap.upperBound: 1
+Optimization.nlopt.arap.lowerBound: 0.00000001
+Optimization.nlopt.arap.upperBound: 1000000000
 
 Experiment.Filepath: "./Data/Experiment.txt"
 
@@ -133,7 +133,7 @@ Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
 # DepthMeasurement: use depth measurements 
-Triangulation.seed.location: "inRays"
+Triangulation.seed.location: "FarPoints"
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction

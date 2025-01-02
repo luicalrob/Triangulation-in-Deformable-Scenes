@@ -21,7 +21,7 @@ void measureSimAbsoluteMapErrors(const std::shared_ptr<Map> pMap,
 /*
 * Measure the 3D error of the mapPoints in real dataset Experiments
 */
-void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::string filePath, const std::vector<int> vMatches = {});
+void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::string filePath);
 
 /*
 /*

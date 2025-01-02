@@ -1,14 +1,28 @@
 INITIAL MEASUREMENTS: 
-C1 standard desv: 6,5121e-06
-C2 standard desv: 5,94718e-06
-Rel. error: 0,184722
+C1 standard desv: 0,812625
+C2 standard desv: 0,808136
+Rel. error: 0,199624
 Global rotation: 1 0 0
 0 1 0
 0 0 1
 Global translation: 0
 0
 0
-Av. movement: 321,049
-Av. error: 702,736
-RMSE: 766,465
+Av. movement: 61,7491
+Av. error: 128,173
+RMSE: 218,404
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 3,88025
+C2 standard desv: 4,91706
+Rel. error: 0,251888
+Global rotation:    0,999995  -0,0028716  0,00132231
+ 0,00286975    0,999995  0,00140114
+-0,00132633 -0,00139734    0,999998
+Global translation:  0,000998363
+-0,000514844
+ -0,00689422
+Av. movement: 61,7491
+Av. error: 128,433
+RMSE: 215,882
 

@@ -66,7 +66,7 @@ int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, vector<int
         int nLastOctave = refFrame.getKeyPoint(i).octave;
 
         //Search radius depends on the size of the point in the image: use 15 pixels
-        float radius = 50 * 1 * currFrame.getScaleFactor(nLastOctave);
+        float radius = 45 * 1 * currFrame.getScaleFactor(nLastOctave);
 
         //Get candidates whose coordinates are close to the current point
         currFrame.getFeaturesInArea(uv.x,uv.y,radius,nLastOctave-1,nLastOctave+1,vIndicesToCheck);

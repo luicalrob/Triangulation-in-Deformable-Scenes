@@ -98,7 +98,7 @@ void measureSimAbsoluteMapErrors(const std::shared_ptr<Map> pMap,
 }
 
 
-void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::string filePath, const std::vector<int> vMatches) {
+void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::string filePath) {
     std::ofstream outFile;
     outFile.imbue(std::locale("es_ES.UTF-8"));
 
@@ -121,6 +121,8 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
             std::shared_ptr<KeyFrame> pKF1 = k2->second;
             std::shared_ptr<KeyFrame> pKF2 = k1->second;
+            int kf1ID = k2->first;
+            int kf2ID = k1->first;
             std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
 
             vector<std::shared_ptr<MapPoint>>& v1MPs = pKF1->getMapPoints();
@@ -143,13 +145,18 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 Eigen::Vector3f opt_original_position = pMPi1->getWorldPosition();
                 Eigen::Vector3f opt_moved_position = pMPi2->getWorldPosition();
 
-                // Eigen::Vector3d p3Dw1 = opt_original_position.cast<double>();
-                // Eigen::Vector3f p3Dc1 = T1w * p3Dw1.cast<float>();
-                // Eigen::Vector3d p3Dw2 = opt_moved_position.cast<double>();
-                // Eigen::Vector3f p3Dc2 = T2w * p3Dw2.cast<float>();
+                Eigen::Vector3f p3Dc1 = T1w * opt_original_position;
+                Eigen::Vector3f p3Dc2 = T2w * opt_moved_position;
 
-                cv::Point2f x1 = pKF1->getKeyPoint(i).pt;
-                cv::Point2f x2 = pKF2->getKeyPoint(vMatches[i]).pt;
+                int index_in_kf1 = pMap->isMapPointInKeyFrame(pMPi1->getId(), kf1ID);
+                int index_in_kf2 = pMap->isMapPointInKeyFrame(pMPi2->getId(), kf2ID);
+
+                if(index_in_kf1 < 0 || index_in_kf2 < 0) continue;
+                size_t idx1 = (size_t)index_in_kf1;
+                size_t idx2 = (size_t)index_in_kf2;
+
+                cv::Point2f x1 = pKF1->getKeyPoint(idx1).pt;
+                cv::Point2f x2 = pKF2->getKeyPoint(idx2).pt;
 
                 // Eigen::Vector2f p_p1;
                 // Eigen::Vector2f p_p2;
@@ -356,7 +363,7 @@ void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath, c
 
             if (validPairs > 1) {
                 PixelsError pixelsErrors;
-                calculatePixelsStandDev(pMap, pixelsErrors, vMatches);
+                calculatePixelsStandDev(pMap, pixelsErrors);
 
                 std::cout << "Pixels C1 error (average): " << pixelsErrors.avgc1 << std::endl;
                 std::cout << "Pixels C1 error (standard desv): " << pixelsErrors.desvc1 << std::endl;

@@ -367,7 +367,7 @@ std::shared_ptr<open3d::geometry::TriangleMesh> ComputeDelaunayTriangulation3D(
     return triangle_mesh;
 }
 
-void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors, const std::vector<int> vMatches){
+void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors){
     Eigen::Vector2d meanRepErrorUVC1 = Eigen::Vector2d::Zero();
     double meanRepErrorC1 = 0;
     double desvRepErrorC1 = 0;
@@ -383,14 +383,13 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
 
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = Map->getKeyFrames();
 
-    if(vMatches.empty())
-    std::cout << "\nMATCHES EMPTY in Geometry: \n" << std::endl;
-
     //std::cout << "\nKEYFRAMES k AND k+1 MEASUREMENTS: \n";
     for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
             KeyFrame_ pKF1 = k2->second;
             KeyFrame_ pKF2 = k1->second;
+            int kf1ID = k2->first;
+            int kf2ID = k1->first;
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
             vector<MapPoint_>& v2MPs = pKF2->getMapPoints();
@@ -410,7 +409,15 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
                 MapPoint_ pMPi2 = v2MPs[i];
                 if (!pMPi1 || !pMPi2) continue;
 
-                cv::Point2f uv = pKF1->getKeyPoint(i).pt;
+                int index_in_kf1 = Map->isMapPointInKeyFrame(pMPi1->getId(), kf1ID);
+                int index_in_kf2 = Map->isMapPointInKeyFrame(pMPi2->getId(), kf2ID);
+
+                if(index_in_kf1 < 0 || index_in_kf2 < 0) continue;
+
+                size_t idx1 = (size_t)index_in_kf1;
+                size_t idx2 = (size_t)index_in_kf2;
+
+                cv::Point2f uv = pKF1->getKeyPoint(idx1).pt;
                 
                 Eigen::Vector2d obs;
                 obs << uv.x, uv.y;
@@ -422,11 +429,8 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
 
                 Eigen::Vector2d pixelsErrorC1 = (obs - projected.cast<double>()).cwiseAbs();
 
-                if(vMatches.empty()) {
-                    uv = pKF2->getKeyPoint(i).pt;
-                } else {
-                    uv = pKF2->getKeyPoint(vMatches[i]).pt;
-                }
+                uv = pKF2->getKeyPoint(idx2).pt;
+
                 obs << uv.x, uv.y;
                 p3Dw = pMPi2->getWorldPosition().cast<double>();
                 p3Dc = camera2Pose.map(p3Dw);

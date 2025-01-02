@@ -293,37 +293,37 @@ bool Tracking::monocularMapInitialization() {
     std::cout << "kf1 Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << std::endl;
 
     //Set observations into the map
-    // vector<shared_ptr<MapPoint>>& vMapPoints = kf0->getMapPoints();
-    // std::unordered_map<long unsigned int, size_t> ids_map;
-    // for(size_t i = 0; i < vMapPoints.size(); i++){
-    //     auto pMP = vMapPoints[i];
-    //     if(pMP){
-    //         std::cout << "addObservation pMP1 " << pMP->getId() << std::endl;
-    //         //Add observation
-    //         pMap_->addObservation(0,pMP->getId(),i);
-    //         pMap_->addObservation(1,pMP->getId(),vMatches_[i]);
-    //         ids_map[pMP->getId() + 1] = i;
-    //     }
-    // }
+    vector<shared_ptr<MapPoint>>& vMapPoints1 = kf0->getMapPoints();
+    std::unordered_map<long unsigned int, size_t> ids_map;
+    for(size_t i = 0; i < vMapPoints1.size(); i++){
+        auto pMP = vMapPoints1[i];
+        if(pMP){
+            // std::cout << "addObservation pMP2 " << pMP->getId() << " i: " << i << " vMatches_[i]: " << vMatches_[i] << std::endl;
+            //Add observation
+            pMap_->addObservation(0,pMP->getId(),i);
+            pMap_->addObservation(1,pMP->getId(),vMatches_[i]);
+            ids_map[pMP->getId() + 1] = i;
+        }
+    }
 
-    // vMapPoints = kf1->getMapPoints();
-    // for(size_t idx = 0; idx < vMapPoints.size(); idx++){
-    //     auto pMP = vMapPoints[idx];
-    //     if(pMP){
-    //         std::cout << "addObservation pMP2 " << pMP->getId() << std::endl;
-    //         size_t i = 0;
-    //         long unsigned int id = pMP->getId();
-    //         if (ids_map.find(id) != ids_map.end()) {
-    //             i = ids_map[id];
-    //         } else {
-    //             continue;
-    //         }
+    vector<shared_ptr<MapPoint>>& vMapPoints2 = kf1->getMapPoints();
+    for(size_t idx = 0; idx < vMapPoints2.size(); idx++){
+        auto pMP = vMapPoints2[idx];
+        if(pMP){
+            size_t i = 0;
+            long unsigned int id = pMP->getId();
+            if (ids_map.find(id) != ids_map.end()) {
+                i = ids_map[id];
+            } else {
+                continue;
+            }
 
-    //         //Add observation
-    //         pMap_->addObservation(0,id,i);
-    //         pMap_->addObservation(1,id,vMatches_[i]);
-    //     }
-    // }
+            //Add observation
+            // std::cout << "addObservation pMP2 " << pMP->getId() << " i: " << i << " vMatches_[i]: " << vMatches_[i] << std::endl;
+            pMap_->addObservation(0,pMP->getId(),i);
+            pMap_->addObservation(1,pMP->getId(),vMatches_[i]);
+        }
+    }
 
     //Run a Bundle Adjustment to refine the solution
     //bundleAdjustment(pMap_.get());

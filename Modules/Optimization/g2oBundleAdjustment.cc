@@ -644,6 +644,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
         for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
             KeyFrame_ pKF1 = k2->second;
             KeyFrame_ pKF2 = k1->second;
+            int kf1ID = k2->first;
+            int kf2ID = k1->first;
             // std::cout << "\nPair: (" << k1->first << ", " << k2->first<< ")\n";
 
             vector<MapPoint_>& v1MPs = pKF1->getMapPoints();
@@ -765,8 +767,16 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
 
                 // REPROJECTION ERROR //
                 //Set fisrt projection edge
-                cv::Point2f uv = pKF1->getKeyPoint(mpIndex).pt;
-                int octave = pKF1->getKeyPoint(mpIndex).octave;
+
+                int index_in_kf1 = pMap->isMapPointInKeyFrame(pMPi1->getId(), kf1ID);
+                int index_in_kf2 = pMap->isMapPointInKeyFrame(pMPi2->getId(), kf2ID);
+
+                if(index_in_kf1 < 0 || index_in_kf2 < 0) continue;
+                size_t idx1 = (size_t)index_in_kf1;
+                size_t idx2 = (size_t)index_in_kf2;
+
+                cv::Point2f uv = pKF1->getKeyPoint(idx1).pt;
+                int octave = pKF1->getKeyPoint(idx1).octave;
                 Eigen::Matrix<double,2,1> obs;
                 obs << uv.x, uv.y;
 
@@ -787,8 +797,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 optimizer.addEdge(eKF1);
 
                 //Set second projection edge
-                uv = pKF2->getKeyPoint(mpIndex).pt;
-                octave = pKF2->getKeyPoint(mpIndex).octave;
+                uv = pKF2->getKeyPoint(idx2).pt;
+                octave = pKF2->getKeyPoint(idx2).octave;
                 obs << uv.x, uv.y;
 
                 EdgeSE3ProjectXYZPerKeyFrameOnlyPoints* eKF2 = new EdgeSE3ProjectXYZPerKeyFrameOnlyPoints();
