@@ -19,7 +19,7 @@ double outerObjective(unsigned int n, const double* x, double* grad, void* data)
     std::vector<int> vMatches = pData->vMatches;
 
     if(vMatches.empty())
-    std::cout << "\nMATCHES EMPTY: \n" << std::endl;
+    std::cout << "\nMATCHES EMPTY in nlOpt: \n" << std::endl;
 
     arapOptimization(pMapCopy.get(), repBalanceWeight, globalBalanceWeight, arapBalanceWeight, alpha, beta, depthUncertainty, nOptIterations);
 

@@ -94,7 +94,7 @@ bool MonocularMapInitializer::initialize(Frame prevFrame, Frame currFrame, const
     int nInliersOfE;
     Eigen::Matrix3f E = findEssentialWithRANSAC(nMatches,vInliersOfE, nInliersOfE);
 
-    fill(vTriangulated.begin(),vTriangulated.end(),false);
+    std::fill(vTriangulated.begin(), vTriangulated.end(), false);
     for(size_t i = 0; i < vInliersOfE.size(); i++){
         if(vInliersOfE[i]){
             vTriangulated[vRansacToFrameIndeces[i]] = true;
@@ -151,7 +151,12 @@ Eigen::Matrix3f MonocularMapInitializer::findEssentialWithRANSAC(const int nMatc
         }
 
         //Compute model with the sample
-        Eigen::Matrix<float,3,3> E = computeE(refRays,currRays);
+        //Eigen::Matrix<float,3,3> E = computeE(refRays,currRays);
+
+        Sophus::SE3f T1w = prevFrame_->getPose();
+        Sophus::SE3f T2w = currFrame_->getPose();
+        Sophus::SE3f T21 = T2w*T1w.inverse();
+        Eigen::Matrix<float,3,3> E = computeEssentialMatrixFromPose(T21);
 
         //Get score and inliers for the computed model
         int score = computeScoreAndInliers(nMatches,E,vInliers);
@@ -327,26 +332,27 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
             }
 
             //Check Reprojection error
-            // cv::Point2f uv1 = calibration_->project(p3D_1);
+            cv::Point2f uv1 = prevCalibration_->project(p3D_c1);
 
-            // if(squaredReprojectionError(refKeys_[i].pt,uv1) > 5.991){
-            //     vTriangulated[i] = false;
-            //     err1++;
-            //     continue;
-            // }
+            if(squaredReprojectionError(refKeys_[i].pt,uv1) > 5.991){
+                vTriangulated[i] = false;
+                err1++;
+                continue;
+            }
+
             if(p3D_c2(2) < 0.0f){
                 vTriangulated[i] = false;
                 depth2++;
                 continue;
             }
 
-            // cv::Point2f uv2 = calibration_->project(p3D2);
+            cv::Point2f uv2 = currCalibration_->project(p3D_c2);
 
-            // if(squaredReprojectionError(currKeys_[vMatches_[i]].pt,uv2) > 5.991){
-            //     vTriangulated[i] = false;
-            //     err2++;
-            //     continue;
-            // }
+            if(squaredReprojectionError(currKeys_[vMatches_[i]].pt,uv2) > 5.991){
+                vTriangulated[i] = false;
+                err2++;
+                continue;
+            }
 
             if (i == 3 || i == 12 || i == 17) {
                 std::cout << "i: " << i  << std::endl;
@@ -366,6 +372,10 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
         }
     }
 
+    std::cerr << "err rep 1: "<< err1 << std::endl;
+    std::cerr << "err rep 2: "<< err2 << std::endl;
+    std::cerr << "err depth 1: "<< depth1 << std::endl;
+    std::cerr << "err depth 2: "<< depth2 << std::endl;
     std::cerr << "nTriangulated: "<< nTriangulated << std::endl;
 
     if(nTriangulated == 0)
@@ -377,7 +387,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
 
     std::cerr << "_parallax: "<< _parallax << std::endl;
 
-    if(nTriangulated > 150 && _parallax > fMinParallax_) {
+    if(nTriangulated > 5 && _parallax < fMinParallax_) {
         return true;
     }
     else{

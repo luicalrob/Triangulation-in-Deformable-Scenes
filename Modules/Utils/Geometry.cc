@@ -384,7 +384,7 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = Map->getKeyFrames();
 
     if(vMatches.empty())
-    std::cout << "\nMATCHES EMPTY: \n" << std::endl;
+    std::cout << "\nMATCHES EMPTY in Geometry: \n" << std::endl;
 
     //std::cout << "\nKEYFRAMES k AND k+1 MEASUREMENTS: \n";
     for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {

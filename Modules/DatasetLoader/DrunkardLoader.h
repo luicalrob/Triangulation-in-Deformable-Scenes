@@ -39,7 +39,7 @@ public:
     /*
      * Returns the number of images in the sequence
      */
-    int getLenght();
+    int getLength();
 
     cv::Size getImageSize();
 

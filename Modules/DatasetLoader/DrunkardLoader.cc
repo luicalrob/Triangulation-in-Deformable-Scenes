@@ -79,7 +79,7 @@ bool DrunkardLoader::getTimeStamp(size_t idx, double &timestamp) {
     return true;
 }
 
-int DrunkardLoader::getLenght() {
+int DrunkardLoader::getLength() {
     return (int)vTimeStamps_.size();
 }
 

@@ -10,8 +10,10 @@ using namespace std;
 
 int main(int argc, char **argv){
     //Check program parameters are good
-    if(argc != 5){
-        cerr << "[Error]: you need to invoke the program with 4 parameter: " << argc << endl;
+    if(argc != 2 && argc != 5){
+        cerr << "[Error]: you need to invoke the program with 1 parameter: " << argc << endl;
+        cerr << "\t./Drunkard <dataset_path>" << endl;
+        cerr << "Or with 4 parameter: " << argc << endl;
         cerr << "\t./Drunkard <dataset_path> (int)Starting frame (int)Frames step (int)Ending frame" << endl;
         cerr << "Finishing execution..." << endl;
         return -1;
@@ -19,10 +21,36 @@ int main(int argc, char **argv){
     
     //Load dataset sequence
     string datasetPath = argv[1];
-    int startingFrame = stoi(argv[2]);
-    int framesStep = stoi(argv[3]);
-    int endingFrame = stoi(argv[4]);
     DrunkardLoader sequence(datasetPath, datasetPath + "/pose.txt");
+
+    int startingFrame, framesStep, endingFrame;
+    if (argc == 5) {
+        try {
+            startingFrame = std::stoi(argv[2]);
+        } catch (const std::exception&) {
+            cerr << "[Warning]: Invalid starting frame. Using default value: 0." << endl;
+            startingFrame = 0;
+        }
+
+        try {
+            framesStep = std::stoi(argv[3]);
+        } catch (const std::exception&) {
+            cerr << "[Warning]: Invalid frames step. Using default value: 1." << endl;
+            framesStep = 1;
+        }
+
+        try {
+            endingFrame = std::stoi(argv[4]);
+        } catch (const std::exception&) {
+            cerr << "[Warning]: Invalid ending frame. Using default value: " << sequence.getLength() << "." << endl;
+            endingFrame = sequence.getLength();
+        }
+    } else {
+        // Default values are already set.
+        startingFrame = 0;
+        framesStep = 1;
+        endingFrame = sequence.getLength();
+    }
 
     SLAM SLAM("Data/Drunkard.yaml");
 

@@ -478,7 +478,7 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
 
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
     if(vMatches.empty())
-    std::cout << "\nMATCHES EMPTY: \n" << std::endl;
+    std::cout << "\nMATCHES EMPTY in g2oBundle: \n" << std::endl;
 
     double optimizationUpdate = 100;
     for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.00001*mapPoints_corrected.size()); i++){ 
