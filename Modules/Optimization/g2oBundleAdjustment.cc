@@ -443,7 +443,8 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
     }
 }
 
-void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer, const std::vector<int> vMatches) {
+void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer,
+                            const std::vector<Eigen::Vector3f> originalPoints, const std::vector<Eigen::Vector3f> movedPoints) {
     float simulatedRepErrorStanDesv = settings.getSimulatedRepError();
     float SimulatedDepthErrorStanDesv = settings.getSimulatedDepthError();
 
@@ -477,8 +478,6 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
     outFile_.imbue(std::locale("es_ES.UTF-8"));
 
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
-    if(vMatches.empty())
-    std::cout << "\nMATCHES EMPTY in g2oBundle: \n" << std::endl;
 
     double optimizationUpdate = 100;
     for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.00001*mapPoints_corrected.size()); i++){ 
@@ -504,7 +503,6 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
                 optData.alpha = alphaWeight;
                 optData.beta = betaWeight;
                 optData.depthUncertainty = SimulatedDepthErrorStanDesv;
-                optData.vMatches = vMatches;
 
                 opt.set_min_objective(outerObjective, &optData);
 
@@ -589,7 +587,11 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
             }
 
             measureRelativeMapErrors(pMap, filePath_);
-            //measureAbsoluteMapErrors(pMap, originalPoints_, movedPoints_, filePath_);
+            if(originalPoints.empty() || movedPoints.empty()) {
+                measureRealAbsoluteMapErrors(pMap, filePath_);
+            } else {
+                measureSimAbsoluteMapErrors(pMap, originalPoints, movedPoints, filePath_);
+            }
         }
     }
 

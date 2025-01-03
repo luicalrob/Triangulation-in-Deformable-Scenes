@@ -179,18 +179,18 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 Eigen::Vector3f original_position = T1w.inverse() * x3D1.transpose();
                 Eigen::Vector3f moved_position = T2w.inverse() * x3D2.transpose();
 
-                if (i == 3 || i == 12 || i == 17) {
-                    std::cout << "i: " << i  << std::endl;
-                    std::cout << "refKeys_[i].pt: " << x1.x  << " " << x1.y << " " << std::endl;
-                    std::cout << "currKeys_[vMatches_[i]].pt: " << x2.x  << " " << x2.y << " " << std::endl;
-                    std::cout << "pMPi1 id: " << pMPi1->getId()  << std::endl;
-                    std::cout << "pMPi2 id: " << pMPi2->getId()  << std::endl;
-                    std::cout << "opt_original_position: " << opt_original_position[0]  << " " << opt_original_position[1]  << " "  << opt_original_position[2] << " " << std::endl;
-                    std::cout << "opt_moved_position: " << opt_moved_position[0]  << " " << opt_moved_position[1]  << " "  << opt_moved_position[2] << " " << std::endl;
-                    std::cout << "original_position: " << original_position[0]  << " " << original_position[1]  << " "  << original_position[2] << " " << std::endl;
-                    std::cout << "moved_position: " << moved_position[0]  << " " << moved_position[1]  << " "  << moved_position[2] << " " << std::endl;
+                // if (i == 3 || i == 12 || i == 17) {
+                //     std::cout << "i: " << i  << std::endl;
+                //     std::cout << "refKeys_[i].pt: " << x1.x  << " " << x1.y << " " << std::endl;
+                //     std::cout << "currKeys_[vMatches_[i]].pt: " << x2.x  << " " << x2.y << " " << std::endl;
+                //     std::cout << "pMPi1 id: " << pMPi1->getId()  << std::endl;
+                //     std::cout << "pMPi2 id: " << pMPi2->getId()  << std::endl;
+                //     std::cout << "opt_original_position: " << opt_original_position[0]  << " " << opt_original_position[1]  << " "  << opt_original_position[2] << " " << std::endl;
+                //     std::cout << "opt_moved_position: " << opt_moved_position[0]  << " " << opt_moved_position[1]  << " "  << opt_moved_position[2] << " " << std::endl;
+                //     std::cout << "original_position: " << original_position[0]  << " " << original_position[1]  << " "  << original_position[2] << " " << std::endl;
+                //     std::cout << "moved_position: " << moved_position[0]  << " " << moved_position[1]  << " "  << moved_position[2] << " " << std::endl;
 
-                }
+                // }
 
                 // std::cout << "map point 1: (" << p3Dw1[0] << ", "<< p3Dw1[1] << ", "<< p3Dw1[2] << ")" << std::endl;
                 // std::cout << "solution point 1: (" << original_position[0] << ", "<< original_position[1] << ", "<< original_position[2] << ")" << std::endl;
@@ -267,7 +267,7 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
     } 
 }
 
-void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath, const std::vector<int> vMatches){
+void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
     std::ofstream outFile;
     outFile.imbue(std::locale("es_ES.UTF-8"));
     

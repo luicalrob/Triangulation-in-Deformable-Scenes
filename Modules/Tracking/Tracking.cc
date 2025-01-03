@@ -285,12 +285,12 @@ bool Tracking::monocularMapInitialization() {
     pMap_->insertKeyFrame(kf0);
     pMap_->insertKeyFrame(kf1);
 
-    Eigen::Vector3f O3 = kf0->getPose().translation();
-    std::cout << "kf0 id: " << kf0->getId() <<  std::endl;
-    std::cout << "kf0 Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << std::endl;
-    Eigen::Vector3f O2 = kf1->getPose().translation();
-    std::cout << "kf1 id: " << kf1->getId() <<  std::endl;
-    std::cout << "kf1 Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << std::endl;
+    // Eigen::Vector3f O3 = kf0->getPose().translation();
+    // std::cout << "kf0 id: " << kf0->getId() <<  std::endl;
+    // std::cout << "kf0 Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << std::endl;
+    // Eigen::Vector3f O2 = kf1->getPose().translation();
+    // std::cout << "kf1 id: " << kf1->getId() <<  std::endl;
+    // std::cout << "kf1 Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << std::endl;
 
     //Set observations into the map
     vector<shared_ptr<MapPoint>>& vMapPoints1 = kf0->getMapPoints();
@@ -341,13 +341,9 @@ bool Tracking::monocularMapInitialization() {
     }
     
     stopWithMeasurements(pMap_, Tcw, mapVisualizer_, filePath_ , settings_.getDrawRaysSelection(), 
-                            settings_.getStopExecutionOption(), settings_.getShowScene(),
-                             {}, {}, vMatches_);
+                            settings_.getStopExecutionOption(), settings_.getShowScene());
 
-    if(vMatches_.empty())
-    std::cout << "\nMATCHES EMPTY in Tracking: \n" << std::endl;
-
-    deformationOptimization(pMap_, settings_, mapVisualizer_, vMatches_);
+    deformationOptimization(pMap_, settings_, mapVisualizer_);
 
     // Tcw = kf1->getPose();
     // currFrame_.setPose(Tcw);

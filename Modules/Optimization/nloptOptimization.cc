@@ -16,10 +16,6 @@ double outerObjective(unsigned int n, const double* x, double* grad, void* data)
     double alpha = pData->alpha;
     double beta = pData->beta;
     float depthUncertainty = pData->depthUncertainty;
-    std::vector<int> vMatches = pData->vMatches;
-
-    if(vMatches.empty())
-    std::cout << "\nMATCHES EMPTY in nlOpt: \n" << std::endl;
 
     arapOptimization(pMapCopy.get(), repBalanceWeight, globalBalanceWeight, arapBalanceWeight, alpha, beta, depthUncertainty, nOptIterations);
 

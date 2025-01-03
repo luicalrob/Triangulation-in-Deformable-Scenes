@@ -27,6 +27,6 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
 /*
 * Measure the relative distances errors of the mapPoints
 */
-void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath, const std::vector<int> vMatches = {});
+void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath);
 
 #endif //SLAM_MEASUREMENTS_H

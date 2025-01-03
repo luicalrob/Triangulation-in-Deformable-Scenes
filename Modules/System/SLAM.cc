@@ -125,12 +125,12 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     }
 
 
-    Eigen::Vector3f O3 = Tcw.translation();
-    cout << "Twc Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
-    Eigen::Vector3f O2 = Tcref_w_.translation();
-    cout << "Tcref_w_ Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
-    Eigen::Vector3f O1 = Tc_cref_.translation();
-    cout << "Tc_cref_ Translation: " << O1[0]  << " " << O1[1]  << " "  << O1[2] << " " << endl;
+    // Eigen::Vector3f O3 = Tcw.translation();
+    // cout << "Twc Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
+    // Eigen::Vector3f O2 = Tcref_w_.translation();
+    // cout << "Tcref_w_ Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
+    // Eigen::Vector3f O1 = Tc_cref_.translation();
+    // cout << "Tc_cref_ Translation: " << O1[0]  << " " << O1[1]  << " "  << O1[2] << " " << endl;
 
     //Convert image to grayscale if needed
     cv::Mat grayIm = convertImageToGrayScale(im);
@@ -184,7 +184,7 @@ bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
     stop();
 
     //Run deformation optimization
-    deformationOptimization(pMap_, settings_, mapVisualizer_);
+    deformationOptimization(pMap_, settings_, mapVisualizer_, originalPoints_ , movedPoints_);
 
     //visualizer_->updateWindows();
 

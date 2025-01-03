@@ -354,14 +354,14 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
                 continue;
             }
 
-            if (i == 3 || i == 12 || i == 17) {
-                std::cout << "i: " << i  << std::endl;
-                std::cout << "refKeys_[i].pt: " << refKeys_[i].pt  << " " << refKeys_[i].pt << " " << std::endl;
-                std::cout << "currKeys_[vMatches_[i]].pt: " << currKeys_[vMatches_[i]].pt  << " " << currKeys_[vMatches_[i]].pt << " " << std::endl;
-                std::cout << "p3D_1: " << p3D_1[0]  << " " << p3D_1[1]  << " "  << p3D_1[2] << " " << std::endl;
-                std::cout << "p3D_2: " << p3D_2[0]  << " " << p3D_2[1]  << " "  << p3D_2[2] << " " << std::endl;
+            // if (i == 3 || i == 12 || i == 17) {
+            //     std::cout << "i: " << i  << std::endl;
+            //     std::cout << "refKeys_[i].pt: " << refKeys_[i].pt  << " " << refKeys_[i].pt << " " << std::endl;
+            //     std::cout << "currKeys_[vMatches_[i]].pt: " << currKeys_[vMatches_[i]].pt  << " " << currKeys_[vMatches_[i]].pt << " " << std::endl;
+            //     std::cout << "p3D_1: " << p3D_1[0]  << " " << p3D_1[1]  << " "  << p3D_1[2] << " " << std::endl;
+            //     std::cout << "p3D_2: " << p3D_2[0]  << " " << p3D_2[1]  << " "  << p3D_2[2] << " " << std::endl;
 
-            }
+            // }
 
             v3DPoints[j] = p3D_1;
             v3DPoints[j+1] = p3D_2;
@@ -372,10 +372,10 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
         }
     }
 
-    std::cerr << "err rep 1: "<< err1 << std::endl;
-    std::cerr << "err rep 2: "<< err2 << std::endl;
-    std::cerr << "err depth 1: "<< depth1 << std::endl;
-    std::cerr << "err depth 2: "<< depth2 << std::endl;
+    // std::cerr << "err rep 1: "<< err1 << std::endl;
+    // std::cerr << "err rep 2: "<< err2 << std::endl;
+    // std::cerr << "err depth 1: "<< depth1 << std::endl;
+    // std::cerr << "err depth 2: "<< depth2 << std::endl;
     std::cerr << "nTriangulated: "<< nTriangulated << std::endl;
 
     if(nTriangulated == 0)

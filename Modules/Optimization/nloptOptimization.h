@@ -11,7 +11,6 @@ struct OptimizationData {
     double alpha;
     double beta;
     float depthUncertainty;
-    std::vector<int> vMatches;
 };
 
 //double outerObjective(const std::vector<double>& x, std::vector<double>& grad, void* data);
