@@ -111,17 +111,21 @@ SLAM::SLAM(const std::string &settingsFile) {
     bFirstTriang_ = true;
 }
 
-bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer) {
+bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f& Twc, int &nKF, int &nMPs, clock_t &timer) {
     if(stop_) {
         cv::namedWindow("Test Window");
     }
+    // T_world_to_camera = Twc
+    // pw = wTc pc
 
     if (firstCall_) {
-        Tcref_w_ = Tcw;
+        Tcref_w_ = Twc.inverse();
+        //Tw_cref_ = Tcw.inverse();
         Tc_cref_ = Sophus::SE3f();
         firstCall_ = false;
     } else {
-        Tc_cref_ = Tcw * Tcref_w_.inverse(); 
+        //Tc_cref_ = Tcw * Tcref_w_.inverse(); 
+        Tc_cref_ = Tcref_w_.inverse() * Twc;
     }
 
 

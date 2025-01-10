@@ -26,6 +26,7 @@
 #define SLAM_FRAMEVISUALIZER_H
 
 #include "Tracking/Frame.h"
+#include "Map/Map.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -42,6 +43,11 @@ public:
      * Draw matches between the reference frame and the given frame
      */
     void drawFrameMatches(std::vector<cv::KeyPoint>& vKeys, cv::Mat& im, std::vector<int>& vMatches);
+
+    /*
+     * Draw matches triangulated between the reference keyframe and the next keyframe
+     */
+    void drawFrameTriangulatedMatches(const std::shared_ptr<Map> pMap, std::vector<cv::KeyPoint> &vKeys, cv::Mat &im, std::vector<int>& vMatches);
 
     /*
      * Draws matches between 2 vectors of KeyPoints
@@ -62,7 +68,12 @@ public:
     /*
      * Draws the current matched MapPoints of a frame
      */
-    void drawCurrentFrame(Frame& f);
+    void drawCurrentFrame(Frame& f, std::string text = "");
+
+    /*
+     * Show the depth image of a frame
+     */
+    void drawFrameDepthImage(Frame &f, std::string text = "");
 
     /*
      * Updates the windows (so they show the last drawn image)

@@ -145,8 +145,8 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 Eigen::Vector3f opt_original_position = pMPi1->getWorldPosition();
                 Eigen::Vector3f opt_moved_position = pMPi2->getWorldPosition();
 
-                Eigen::Vector3f p3Dc1 = T1w * opt_original_position;
-                Eigen::Vector3f p3Dc2 = T2w * opt_moved_position;
+                // Eigen::Vector3f p3Dc1 = T1w * opt_original_position;
+                // Eigen::Vector3f p3Dc2 = T2w * opt_moved_position;
 
                 int index_in_kf1 = pMap->isMapPointInKeyFrame(pMPi1->getId(), kf1ID);
                 int index_in_kf2 = pMap->isMapPointInKeyFrame(pMPi2->getId(), kf2ID);
@@ -173,11 +173,24 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 
                 // cv::Point2f p_p1_cv(p_p1.x(), p_p1.y());
                 // cv::Point2f p_p2_cv(p_p2.x(), p_p2.y());
+                Eigen::Vector3f O2 = T1w.translation();
+                Eigen::Vector3f O3 = T2w.translation();
+                cout << "T1w Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
+                cout << "T2w Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
 
                 Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(x1, d1);
                 Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(x2, d2);
-                Eigen::Vector3f original_position = T1w.inverse() * x3D1.transpose();
-                Eigen::Vector3f moved_position = T2w.inverse() * x3D2.transpose();
+                Eigen::Matrix<float, 1, 4> x3D1_h;
+                Eigen::Matrix<float, 1, 4> x3D2_h;
+                x3D1_h << x3D1[0], x3D1[1], x3D1[2], 1;
+                x3D2_h << x3D2[0], x3D2[1], x3D2[2], 1; 
+                Eigen::Vector4f original_position_h = T1w.inverse().matrix() * x3D1_h.transpose();
+                Eigen::Vector4f moved_position_h = T2w.inverse().matrix() * x3D2_h.transpose();
+
+                Eigen::Vector3f original_position;
+                Eigen::Vector3f moved_position;
+                original_position << original_position_h[0], original_position_h[1], original_position_h[2];
+                moved_position << moved_position_h[0], moved_position_h[1], moved_position_h[2];
 
                 // if (i == 3 || i == 12 || i == 17) {
                 //     std::cout << "i: " << i  << std::endl;

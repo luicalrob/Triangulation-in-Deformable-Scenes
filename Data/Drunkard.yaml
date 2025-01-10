@@ -53,7 +53,7 @@ FeatureGrid.nGridRows: 48
 
 #Essential Matrix threshold
 #Epipolar.th: 0.002
-Epipolar.th: 1.5
+Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
 Matching.initialization: 50
@@ -67,7 +67,7 @@ Map.minObs: 15
 
 #Min cos parallax to triangulate
 #Triangulation.minCos: 0.995
-Triangulation.minCos: 0.981
+Triangulation.minCos: 0.9996
 #0.99998
 
 # LUIS
@@ -85,9 +85,9 @@ Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.0
-Measurements.DepthScale.C1: 1
-Measurements.DepthScale.C2: 1
-Measurements.Depth.Scale: 0.00061
+Measurements.DepthScale.C1: 0.0004577706569009
+Measurements.DepthScale.C2: 0.0004577706569009
+Measurements.Depth.Scale: 0.0006
 #0.0004577706569009
 #0.00012  580-595 000000/level0
 #0.000315 580-596 000000/level1
@@ -103,12 +103,12 @@ Measurements.Depth.Scale: 0.00061
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 100
-Optimization.arap: 10
+Optimization.arap: 100000
 Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 2
+Optimization.numberOfOptimizations: 1
 Optimization.numberOfIterations: 25
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
@@ -125,8 +125,8 @@ Optimization.nlopt.rep.upperBound: 1
 # Optimization.nlopt.arap.upperBound: 10000000
 Optimization.nlopt.global.lowerBound: 100
 Optimization.nlopt.global.upperBound: 100
-Optimization.nlopt.arap.lowerBound: 0.000001
-Optimization.nlopt.arap.upperBound: 10000000
+Optimization.nlopt.arap.lowerBound: 0.000000001
+Optimization.nlopt.arap.upperBound: 100000000
 
 Experiment.Filepath: "./Data/Experiment.txt"
 

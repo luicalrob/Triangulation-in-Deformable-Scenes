@@ -100,7 +100,14 @@ void MapVisualizer::drawMapPoints() {
             
             if(d != -1) {
                 Eigen::Matrix<float,1,3> m_pos_c = pCamera->unproject(x1, d);
-                Eigen::Vector3f m_pos = Tcw.inverse() * m_pos_c.transpose();
+                //Eigen::Vector3f m_pos = Tcw.inverse() * m_pos_c.transpose();
+
+                Eigen::Matrix<float,1,4> m_pos_c_h;
+                m_pos_c_h << m_pos_c[0], m_pos_c[1], m_pos_c[2], 1;
+                
+                Eigen::Vector4f m_pos_h = Tcw.inverse().matrix() * m_pos_c_h.transpose();
+                Eigen::Vector3f m_pos;
+                m_pos << m_pos_h[0], m_pos_h[1], m_pos_h[2];
                 
                 glColor3f(0.0,1.0,0.0);
                 glVertex3f(m_pos(0),m_pos(1),m_pos(2));

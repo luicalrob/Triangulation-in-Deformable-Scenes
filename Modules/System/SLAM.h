@@ -153,6 +153,7 @@ private:
 
     Sophus::SE3f Tc_cref_;
     Sophus::SE3f Tcref_w_;
+    Sophus::SE3f Tw_cref_;
 
     std::shared_ptr<CameraModel> prevCalibration_;
     std::shared_ptr<CameraModel> currCalibration_;

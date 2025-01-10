@@ -36,10 +36,10 @@ Tracking::Tracking(Settings& settings, std::shared_ptr<FrameVisualizer>& visuali
                     std::shared_ptr<MapVisualizer>& mapVisualizer, std::shared_ptr<Map> map) {
     currFrame_ = Frame(settings.getFeaturesPerImage(),settings.getGridCols(),settings.getGridRows(),
                        settings.getImCols(),settings.getImRows(), settings.getNumberOfScales(), settings.getScaleFactor(),
-                       settings.getCalibration(),settings.getDistortionParameters(), settings.getDepthMeasurementsScale());
+                       settings.getCalibration(),settings.getDistortionParameters(), settings.getSimulatedDepthScaleC1());
     prevFrame_ = Frame(settings.getFeaturesPerImage(),settings.getGridCols(),settings.getGridRows(),
                        settings.getImCols(),settings.getImRows(),settings.getNumberOfScales(), settings.getScaleFactor(),
-                       settings.getCalibration(),settings.getDistortionParameters(), settings.getDepthMeasurementsScale());
+                       settings.getCalibration(),settings.getDistortionParameters(), settings.getSimulatedDepthScaleC2());
 
     featExtractor_ = shared_ptr<Feature>(new FAST(settings.getNumberOfScales(),settings.getScaleFactor(),settings.getFeaturesPerImage()*2,20,7));
     descExtractor_ = shared_ptr<Descriptor>(new ORB(settings.getNumberOfScales(),settings.getScaleFactor()));
@@ -277,8 +277,6 @@ bool Tracking::monocularMapInitialization() {
         }
     }
 
-    cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;
-
     shared_ptr<KeyFrame> kf0(new KeyFrame(prevFrame_));
     shared_ptr<KeyFrame> kf1(new KeyFrame(currFrame_));
 
@@ -324,6 +322,16 @@ bool Tracking::monocularMapInitialization() {
             pMap_->addObservation(1,pMP->getId(),vMatches_[i]);
         }
     }
+
+    cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;
+
+    visualizer_->drawFrameTriangulatedMatches(pMap_, currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
+
+    // visualizer_->drawCurrentFrame(prevFrame_, "1");
+    // visualizer_->drawFrameDepthImage(prevFrame_, "1");
+
+    // visualizer_->drawCurrentFrame(currFrame_, "2");
+    // visualizer_->drawFrameDepthImage(currFrame_, "2");
 
     //Run a Bundle Adjustment to refine the solution
     //bundleAdjustment(pMap_.get());

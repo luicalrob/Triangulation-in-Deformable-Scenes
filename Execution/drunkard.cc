@@ -10,7 +10,7 @@ using namespace std;
 
 int main(int argc, char **argv){
     //Check program parameters are good
-    if(argc != 2 && argc != 5){
+    if(argc < 2 && argc > 5){
         cerr << "[Error]: you need to invoke the program with 1 parameter: " << argc << endl;
         cerr << "\t./Drunkard <dataset_path>" << endl;
         cerr << "Or with 4 parameter: " << argc << endl;
@@ -24,7 +24,7 @@ int main(int argc, char **argv){
     DrunkardLoader sequence(datasetPath, datasetPath + "/pose.txt");
 
     int startingFrame, framesStep, endingFrame;
-    if (argc == 5) {
+    if (argc >= 3) {
         try {
             startingFrame = std::stoi(argv[2]);
         } catch (const std::exception&) {

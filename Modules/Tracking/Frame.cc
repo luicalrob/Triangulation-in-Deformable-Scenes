@@ -169,7 +169,7 @@ void Frame::assign(Frame &F) {
     }
 
     Tcw_ = F.Tcw_;
-    depthScale_ = F.depthScale_;
+    // depthScale_ = F.depthScale_;
 
     im_ = F.im_.clone();
     depthIm_ = F.depthIm_.clone();
