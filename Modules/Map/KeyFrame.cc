@@ -112,7 +112,7 @@ float KeyFrame::getDepthMeasure(size_t idx) {
     return vDepthMeasurements_[idx];
 }
 
-float KeyFrame::getDepthMeasure(float x, float y) {
+double KeyFrame::getDepthMeasure(float x, float y) {
     if (depthIm_.empty()) {
         return -1;
         //throw std::runtime_error("Depth image is not initialized.");
@@ -124,12 +124,13 @@ float KeyFrame::getDepthMeasure(float x, float y) {
     uint16_t rawDepth = depthIm_.at<uint16_t>(y, x);
 
     double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
-    if(depthScale_){
-        return static_cast<float>(rawDepth) * depthScale_;
-    }
-    else {
-        return static_cast<float>(rawDepth) * scaleFactor;
-    }
+    // if(depthScale_){
+    //     return static_cast<float>(rawDepth) * depthScale_;
+    // }
+    // else {
+    //     return static_cast<float>(rawDepth) * scaleFactor;
+    // }
+    return static_cast<double>(rawDepth) * scaleFactor;
 }
 
 std::vector<float>& KeyFrame::getDepthMeasurements() {

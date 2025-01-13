@@ -145,6 +145,8 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 Eigen::Vector3f opt_original_position = pMPi1->getWorldPosition();
                 Eigen::Vector3f opt_moved_position = pMPi2->getWorldPosition();
 
+                // Eigen::Vector3f p3Dc1 = camera1Pose.map(opt_original_position);
+                // Eigen::Vector3f p3Dc2 = camera2Pose.map(opt_moved_position);
                 // Eigen::Vector3f p3Dc1 = T1w * opt_original_position;
                 // Eigen::Vector3f p3Dc2 = T2w * opt_moved_position;
 
@@ -163,20 +165,18 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 // pCamera1->project(p3Dc1, p_p1);
                 // pCamera2->project(p3Dc2, p_p2);
 
-                float d1 = pKF1->getDepthMeasure(x1.x, x1.y);
-                float d2 = pKF2->getDepthMeasure(x2.x, x2.y);
-                // float d1 = pKF1->getDepthMeasure(p_p1[0], p_p1[1]);
-                // float d2 = pKF2->getDepthMeasure(p_p2[0], p_p2[1]);
+                double d1 = pKF1->getDepthMeasure(x1.x, x1.y);
+                double d2 = pKF2->getDepthMeasure(x2.x, x2.y);
+                // double d1 = pKF1->getDepthMeasure(p_p1[0], p_p1[1]);
+                // double d2 = pKF2->getDepthMeasure(p_p2[0], p_p2[1]);
 
                 // Eigen::Vector3f original_position_c(p3Dc1[0], p3Dc1[1], d1);
                 // Eigen::Vector3f moved_position_c(p3Dc2[0], p3Dc2[1], d2);
                 
                 // cv::Point2f p_p1_cv(p_p1.x(), p_p1.y());
                 // cv::Point2f p_p2_cv(p_p2.x(), p_p2.y());
-                Eigen::Vector3f O2 = T1w.translation();
-                Eigen::Vector3f O3 = T2w.translation();
-                cout << "T1w Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
-                cout << "T2w Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
+                Eigen::Vector3f O2 = T1w.inverse().translation();
+                Eigen::Vector3f O3 = T2w.inverse().translation();
 
                 Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(x1, d1);
                 Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(x2, d2);

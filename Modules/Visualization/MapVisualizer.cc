@@ -25,7 +25,7 @@
 
 using namespace std;
 
-MapVisualizer::MapVisualizer(shared_ptr<Map> pMap) : pMap_(pMap){
+MapVisualizer::MapVisualizer(shared_ptr<Map> pMap, const PoseData initialPose) : pMap_(pMap){
     pangolin::CreateWindowAndBind("SLAM",1024,768);
 
     // 3D Mouse handler requires depth testing to be enabled
@@ -36,20 +36,39 @@ MapVisualizer::MapVisualizer(shared_ptr<Map> pMap) : pMap_(pMap){
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Define Camera Render Object (for view / scene browsing)
-    s_cam = pangolin::OpenGlRenderState(
-            pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.1,1000),
-            pangolin::ModelViewLookAt(0,-0.7,-1.8, 0,0,0,0.0,-1.0, 0.0));
+    if(initialPose.isValid) {
+        Eigen::Vector3f keyframe_position = Eigen::Vector3f(initialPose.tx, initialPose.ty, initialPose.tz);
+
+        Eigen::Quaternionf quaternion(initialPose.qw, initialPose.qx, initialPose.qy, initialPose.qz);
+        Eigen::Matrix3f rotation_matrix = quaternion.toRotationMatrix();
+
+        Eigen::Vector3f camera_offset(0.0f, -0.2f, -0.5f);  // offset behind the keyframe
+        Eigen::Vector3f camera_position = keyframe_position + rotation_matrix * camera_offset;
+        s_cam = pangolin::OpenGlRenderState(
+                pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.1,1000),
+                pangolin::ModelViewLookAt(
+                    camera_position[0], camera_position[1], camera_position[2],
+                    keyframe_position[0], keyframe_position[1], keyframe_position[2],
+                    0.0, 0.0, 1.0));
+    } else {
+        s_cam = pangolin::OpenGlRenderState(
+                pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.1,1000),
+                pangolin::ModelViewLookAt(0,-0.7,-1.8, 0,0,0,0.0,-1.0, 0.0));
+    }
 
     // Add named OpenGL viewport to window and provide 3D Handler
     d_cam = pangolin::CreateDisplay()
             .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
             .SetHandler(new pangolin::Handler3D(s_cam));
+
 }
 
 void MapVisualizer::update(bool drawRaysSelection) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Add named OpenGL viewport to window and provide 3D Handler
     d_cam.Activate(s_cam);
+
     glClearColor(1.0f,1.0f,1.0f,1.0f);
 
     drawMapPoints();
@@ -83,6 +102,12 @@ void MapVisualizer::drawMapPoints() {
         g2o::SE3Quat cameraPose = g2o::SE3Quat(kf->getPose().unit_quaternion().cast<double>(),kf->getPose().translation().cast<double>());
         Sophus::SE3f Tcw = kf->getPose();
 
+        // Eigen::Vector3f O2 = Tcw.inverse().translation();
+        // std::cout << "kfID: " << kfID << std::endl;
+        // std::cout << "Twc Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << std::endl;
+        // Eigen::Quaternionf q = Tcw.unit_quaternion();
+        // std::cout << "Twc Quaternion: w = " << q.w() << ", x = " << q.x() << ", y = " << q.y() << ", z = " << q.z() << std::endl;
+
         for (size_t i = 0; i < mapPoints.size(); i++) {
             std::shared_ptr<MapPoint> pMP;
             pMP = mapPoints[i];
@@ -96,7 +121,7 @@ void MapVisualizer::drawMapPoints() {
             size_t idx = (size_t)index_in_kf;
 
             cv::Point2f x1 = kf->getKeyPoint(idx).pt;
-            float d = kf->getDepthMeasure(x1.x, x1.y);
+            double d = kf->getDepthMeasure(x1.x, x1.y);
             
             if(d != -1) {
                 Eigen::Matrix<float,1,3> m_pos_c = pCamera->unproject(x1, d);
@@ -109,7 +134,11 @@ void MapVisualizer::drawMapPoints() {
                 Eigen::Vector3f m_pos;
                 m_pos << m_pos_h[0], m_pos_h[1], m_pos_h[2];
                 
-                glColor3f(0.0,1.0,0.0);
+                if(kfID%2 == 0) {
+                    glColor3f(0.0,0.7,0.0);
+                } else {
+                    glColor3f(0.0,1.0,0.0);
+                }
                 glVertex3f(m_pos(0),m_pos(1),m_pos(2));
             }
             

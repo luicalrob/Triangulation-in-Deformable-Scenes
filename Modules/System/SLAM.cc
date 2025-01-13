@@ -22,7 +22,6 @@
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
 #include "Utils/Conversions.h"
-#include "Utils/CommonTypes.h"
 #include "Utils/Measurements.h"
 #include "Utils/Utils.h"
 #include "Optimization/nloptOptimization.h"
@@ -36,7 +35,7 @@
 #include <iomanip>
 #include <locale>
 
-SLAM::SLAM(const std::string &settingsFile) {
+SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
     //Load settings from file
     cout << "Loading system settings from: " << settingsFile << endl;
     settings_ = Settings(settingsFile);
@@ -47,7 +46,7 @@ SLAM::SLAM(const std::string &settingsFile) {
 
     //Create visualizers
     showScene_ = settings_.getShowScene();
-    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
+    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_, pose));
     visualizer_ = shared_ptr<FrameVisualizer>(new FrameVisualizer);
 
     //Initialize tracker
@@ -118,15 +117,18 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     // T_world_to_camera = Twc
     // pw = wTc pc
 
-    if (firstCall_) {
-        Tcref_w_ = Twc.inverse();
-        //Tw_cref_ = Tcw.inverse();
-        Tc_cref_ = Sophus::SE3f();
-        firstCall_ = false;
-    } else {
-        //Tc_cref_ = Tcw * Tcref_w_.inverse(); 
-        Tc_cref_ = Tcref_w_.inverse() * Twc;
-    }
+    Tc_cref_ = Twc.inverse();
+    // if (firstCall_) {
+    //     //Tcref_w_ = Twc.inverse();
+    //     Tw_cref_ = Twc;
+    //     Tcref_c_ = Sophus::SE3f();
+    //     Tc_cref_ = Tcref_c_.inverse();
+    //     firstCall_ = false;
+    // } else {
+    //     //Tc_cref_ = Tcw * Tcref_w_.inverse(); 
+    //     Tcref_c_ = Tw_cref_.inverse() * Twc;
+    //     Tc_cref_ = Tcref_c_.inverse();
+    // }
 
 
     // Eigen::Vector3f O3 = Tcw.translation();

@@ -28,6 +28,7 @@
 #include "System/Settings.h"
 #include "Mapping/LocalMapping.h"
 #include "Tracking/Tracking.h"
+#include "Utils/CommonTypes.h"
 
 #include "Visualization/FrameVisualizer.h"
 #include "Visualization/MapVisualizer.h"
@@ -48,12 +49,12 @@ public:
     /*
      * Constructor with the path to the settings file
      */
-    SLAM(const std::string& settingsFile);
+    SLAM(const std::string& settingsFile, const PoseData& pose = PoseData());
 
     /*
      * Process an image. Computes in Tcw the camera pose of the image
      */
-    bool processImage(const cv::Mat& im, const cv::Mat &depthIm, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer);
+    bool processImage(const cv::Mat& im, const cv::Mat &depthIm, Sophus::SE3f& Twc, int &nKF, int &nMPs, clock_t &timer);
 
     /*
      * Process simulated images.
@@ -152,6 +153,7 @@ private:
     std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
 
     Sophus::SE3f Tc_cref_;
+    Sophus::SE3f Tcref_c_;
     Sophus::SE3f Tcref_w_;
     Sophus::SE3f Tw_cref_;
 

@@ -33,6 +33,7 @@ DrunkardLoader::DrunkardLoader(std::string folderPath, std::string timesPath) {
             PoseData pose;
             ss >> pose.tx >> pose.ty >> pose.tz 
                 >> pose.qx >> pose.qy >> pose.qz >> pose.qw;
+                pose.isValid = true;
             vPoseData_.push_back(pose);
 
             vRGBPaths.push_back(folderPath + "/color/" + t + ".png");

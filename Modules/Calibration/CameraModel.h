@@ -56,7 +56,7 @@ public:
     /*
      * Unprojects a given image 2D point with its z measurement into it is bearing ray
      */
-    virtual void unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, float z) = 0;
+    virtual void unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, double z) = 0;
 
     /*
      * Analytic Jacobian of the projection function (stored by rows)
@@ -125,13 +125,13 @@ public:
         return ray;
     }
 
-    Eigen::Matrix<float,1,3> unproject(cv::Point2f puv, float z){
+    Eigen::Matrix<float,1,3> unproject(cv::Point2f puv, double z){
         Eigen::Vector2f uv(puv.x,puv.y);
-        Eigen::Vector3f ray;
+        Eigen::Vector3f x3D;
 
-        this->unprojectWithZ(uv,ray,z);
+        this->unprojectWithZ(uv,x3D,z);
 
-        return ray;
+        return x3D;
     }
 
     Eigen::Matrix<double,2,3> projectJac(Eigen::Vector3d &p3D){

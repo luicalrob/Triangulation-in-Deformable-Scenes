@@ -82,7 +82,7 @@ public:
     /*
      * Gets the depth measure of the depth image
      */
-    float getDepthMeasure(float x, float y);
+    double getDepthMeasure(float x, float y);
 
     /*
      * Gets all the depth measurements of the Frame

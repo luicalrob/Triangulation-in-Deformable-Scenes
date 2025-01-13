@@ -30,6 +30,7 @@ struct PixelsError {
 };
 
 struct PoseData {
-    double tx, ty, tz;
-    double qx, qy, qz, qw;
+    double tx = 0.0, ty = 0.0, tz = 0.0;
+    double qx = 0.0, qy = 0.0, qz = 0.0, qw = 1.0;
+    bool isValid = false; 
 };

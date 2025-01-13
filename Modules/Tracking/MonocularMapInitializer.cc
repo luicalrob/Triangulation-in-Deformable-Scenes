@@ -95,11 +95,16 @@ bool MonocularMapInitializer::initialize(Frame prevFrame, Frame currFrame, const
     Eigen::Matrix3f E = findEssentialWithRANSAC(nMatches,vInliersOfE, nInliersOfE);
 
     std::fill(vTriangulated.begin(), vTriangulated.end(), false);
-    for(size_t i = 0; i < vInliersOfE.size(); i++){
-        if(vInliersOfE[i]){
-            vTriangulated[vRansacToFrameIndeces[i]] = true;
-        }
+    for(size_t i = 0; i < nMatches; i++){
+        vTriangulated[vRansacToFrameIndeces[i]] = true;
     }
+
+    // std::fill(vTriangulated.begin(), vTriangulated.end(), false);
+    // for(size_t i = 0; i < vInliersOfE.size(); i++){
+    //     if(vInliersOfE[i]){
+    //         vTriangulated[vRansacToFrameIndeces[i]] = true;
+    //     }
+    // }
 
     //Reconstruct the environment with the Essential matrix found
     //return reconstruct(E,Tpw,Tcw,v3DPoints,vTriangulated, nInliersOfE);
@@ -279,10 +284,14 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
     vector<float> vParallax;
     int nTriangulated = 0;
 
-    Eigen::Vector3f O2 = Tpw.translation();
-    Eigen::Vector3f O3 = Tcw.translation();
-    cout << "Tpw Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
-    cout << "Tcw Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
+    Eigen::Vector3f O2 = Tpw.inverse().translation();
+    Eigen::Vector3f O3 = Tcw.inverse().translation();
+    cout << "Twp Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
+    Eigen::Quaternionf qp = Tpw.unit_quaternion();
+    std::cout << "Twp Quaternion: w = " << qp.w() << ", x = " << qp.x() << ", y = " << qp.y() << ", z = " << qp.z() << std::endl;
+    cout << "Twc Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
+    Eigen::Quaternionf qc = Tcw.unit_quaternion();
+    std::cout << "Twc Quaternion: w = " << qc.w() << ", x = " << qc.x() << ", y = " << qc.y() << ", z = " << qc.z() << std::endl;
 
 
     int  err1 = 0, err2 = 0, depth1 = 0, depth2 = 0, parallax_ = 0;
@@ -298,8 +307,8 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
 
 
             if(TrianMethod_ == "DepthMeasurement") {
-                float d1 = prevFrame_->getDepthMeasure(refKeys_[i].pt.x, refKeys_[i].pt.y);
-                float d2 = currFrame_->getDepthMeasure(currKeys_[i].pt.x, currKeys_[i].pt.y);
+                double d1 = prevFrame_->getDepthMeasure(refKeys_[i].pt.x, refKeys_[i].pt.y);
+                double d2 = currFrame_->getDepthMeasure(currKeys_[i].pt.x, currKeys_[i].pt.y);
 
                 r1 = prevCalibration_->unproject(x1, d1);
                 r2 = currCalibration_->unproject(x2, d2);
@@ -325,7 +334,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
             float cosParallaxPoint = cosRayParallax(ray1, ray2);
 
             //Check that the point has been triangulated in front of the first camera (possitive depth)
-            if(p3D_c1(2) < 0.0f){
+            if(p3D_c1(2) < 0.0f || p3D_c1(2) > 3.5f){
                 vTriangulated[i] = false;
                 depth1++;
                 continue;
@@ -334,13 +343,13 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
             //Check Reprojection error
             cv::Point2f uv1 = prevCalibration_->project(p3D_c1);
 
-            if(squaredReprojectionError(refKeys_[i].pt,uv1) > 5.991){
-                vTriangulated[i] = false;
-                err1++;
-                continue;
-            }
+            // if(squaredReprojectionError(refKeys_[i].pt,uv1) > 5.991){
+            //     vTriangulated[i] = false;
+            //     err1++;
+            //     continue;
+            // }
 
-            if(p3D_c2(2) < 0.0f){
+            if(p3D_c2(2) < 0.0f || p3D_c2(2) > 3.5f){
                 vTriangulated[i] = false;
                 depth2++;
                 continue;
@@ -348,11 +357,11 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
 
             cv::Point2f uv2 = currCalibration_->project(p3D_c2);
 
-            if(squaredReprojectionError(currKeys_[vMatches_[i]].pt,uv2) > 5.991){
-                vTriangulated[i] = false;
-                err2++;
-                continue;
-            }
+            // if(squaredReprojectionError(currKeys_[vMatches_[i]].pt,uv2) > 5.991){
+            //     vTriangulated[i] = false;
+            //     err2++;
+            //     continue;
+            // }
 
             // if (i == 3 || i == 12 || i == 17) {
             //     std::cout << "i: " << i  << std::endl;

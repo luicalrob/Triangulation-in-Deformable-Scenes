@@ -58,7 +58,7 @@ public:
     /*
      * Implementation of the pinhole unprojection function but using z measurements
      */
-    void unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, float z);
+    void unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, double z);
 
     /*
      * Implementation of the jacobian matrix of the pinhole projection function

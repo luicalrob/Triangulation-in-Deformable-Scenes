@@ -52,8 +52,6 @@ int main(int argc, char **argv){
         endingFrame = sequence.getLength();
     }
 
-    SLAM SLAM("Data/Drunkard.yaml");
-
     // Eigen::Vector3f firstCamera = SLAM.getFirstCameraPos();
     // Eigen::Vector3f secondCamera = SLAM.getSecondCameraPos();
 
@@ -74,6 +72,10 @@ int main(int argc, char **argv){
     cv::Mat currDepthIm;
     double currTs;
     PoseData currPose;
+    sequence.getPoseData(startingFrame,currPose);
+
+    SLAM SLAM("Data/Drunkard.yaml", currPose);
+
     //for(int i = 0; i < sequence.getLenght(); i++){
     for(int i = startingFrame; i < endingFrame; i+=framesStep){
         sequence.getRGBImage(i,currIm);
@@ -81,11 +83,11 @@ int main(int argc, char **argv){
         sequence.getTimeStamp(i,currTs);
         sequence.getPoseData(i,currPose);
 
-        Sophus::SE3f Tcw;
+        Sophus::SE3f Twc;
         Eigen::Vector3f translation(currPose.tx, currPose.ty, currPose.tz);
         Eigen::Quaternionf quaternion(currPose.qw, currPose.qx, currPose.qy, currPose.qz);
-        quaternion.normalize();
-        Tcw = Sophus::SE3f(quaternion, translation);
+        //quaternion.normalize();
+        Twc = Sophus::SE3f(quaternion, translation);
 
         cout << "[" << i <<"] TimeStamp: " << currTs << endl;
         cout << "Translation: " << translation[0]  << " " << translation[1]  << " "  << translation[2] << " " << endl;
@@ -94,7 +96,7 @@ int main(int argc, char **argv){
                     << ", x: " << quaternion.x()
                     << ", y: " << quaternion.y()
                     << ", z: " << quaternion.z() << "]" << endl;
-        bool triangulated = SLAM.processImage(currIm, currDepthIm, Tcw, nKF, nMPs, timer);
+        bool triangulated = SLAM.processImage(currIm, currDepthIm, Twc, nKF, nMPs, timer);
         if(triangulated) break;
     }
     

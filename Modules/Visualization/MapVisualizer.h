@@ -25,6 +25,7 @@
 #define SLAM_MAPVISUALIZER_H
 
 #include "Map/Map.h"
+#include "Utils/CommonTypes.h"
 
 #include <pangolin/pangolin.h>
 
@@ -33,7 +34,7 @@
 class MapVisualizer {
 public:
     MapVisualizer() = delete;
-    MapVisualizer(std::shared_ptr<Map> pMap);
+    MapVisualizer(std::shared_ptr<Map> pMap, const PoseData initialPose = PoseData());
 
     /*
      * Updates the visualization of the map
@@ -55,6 +56,8 @@ private:
 
     pangolin::View d_cam;
     pangolin::OpenGlRenderState s_cam;
+    bool triangulated = false;
+    bool createdDisplay = false;
 
     Sophus::SE3f currPose_;
 };

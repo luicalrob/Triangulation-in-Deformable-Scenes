@@ -398,6 +398,8 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
             g2o::SE3Quat camera1Pose = g2o::SE3Quat(pKF1->getPose().unit_quaternion().cast<double>(),pKF1->getPose().translation().cast<double>());
             std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
             g2o::SE3Quat camera2Pose = g2o::SE3Quat(pKF2->getPose().unit_quaternion().cast<double>(),pKF2->getPose().translation().cast<double>());
+            Sophus::SE3f T1w = pKF1->getPose();
+            Sophus::SE3f T2w = pKF2->getPose();
 
             // calculate the sum of squared differences from the mean for standard deviation
             Eigen::Vector2d sumSquaredDifferencesUVC1 = Eigen::Vector2d::Zero();
@@ -422,19 +424,25 @@ void calculatePixelsStandDev(std::shared_ptr<Map> Map, PixelsError& pixelsErrors
                 Eigen::Vector2d obs;
                 obs << uv.x, uv.y;
 
-                Eigen::Vector3d p3Dw = pMPi1->getWorldPosition().cast<double>();
-                Eigen::Vector3d p3Dc = camera1Pose.map(p3Dw);
+                Eigen::Vector3f p3Dw = pMPi1->getWorldPosition();
+                Eigen::Matrix<float, 1, 4> p3Dw_h;
+                p3Dw_h << p3Dw[0], p3Dw[1], p3Dw[2], 1;
+                Eigen::Vector4f p3Dc_h =  T1w.matrix() * p3Dw_h.transpose();
+                Eigen::Vector3f p3Dc;
+                p3Dc << p3Dc_h[0], p3Dc_h[1], p3Dc_h[2];
                 Eigen::Vector2f projected;
-                pCamera1->project(p3Dc.cast<float>(), projected);
+                pCamera1->project(p3Dc, projected);
 
                 Eigen::Vector2d pixelsErrorC1 = (obs - projected.cast<double>()).cwiseAbs();
 
                 uv = pKF2->getKeyPoint(idx2).pt;
 
                 obs << uv.x, uv.y;
-                p3Dw = pMPi2->getWorldPosition().cast<double>();
-                p3Dc = camera2Pose.map(p3Dw);
-                pCamera2->project(p3Dc.cast<float>(), projected);
+                p3Dw = pMPi2->getWorldPosition();
+                p3Dw_h << p3Dw[0], p3Dw[1], p3Dw[2], 1;
+                p3Dc_h =  T2w.matrix() * p3Dw_h.transpose();
+                p3Dc << p3Dc_h[0], p3Dc_h[1], p3Dc_h[2];
+                pCamera2->project(p3Dc, projected);
 
                 Eigen::Vector2d pixelsErrorC2 = (obs - projected.cast<double>()).cwiseAbs();
 

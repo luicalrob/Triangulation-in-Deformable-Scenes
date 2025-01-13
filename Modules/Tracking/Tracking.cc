@@ -263,6 +263,15 @@ bool Tracking::monocularMapInitialization() {
             shared_ptr<MapPoint> pMP1(new MapPoint(v3DPoints[j]));
             shared_ptr<MapPoint> pMP2(new MapPoint(v3DPoints[j+1]));
 
+            cv::Point2f x1 = prevFrame_.getKeyPoint(i).pt;
+            cv::Point2f x2 = currFrame_.getKeyPoint(vMatches_[i]).pt;
+
+            double d1 = prevFrame_.getDepthMeasure(x1.x, x1.y);
+            double d2 = currFrame_.getDepthMeasure(x2.x, x2.y);
+
+            if(d1 > 4 || d2 > 4)
+            continue;
+
             prevFrame_.setMapPoint(i,pMP1);
             currFrame_.setMapPoint(i,pMP2);
 
@@ -272,8 +281,7 @@ bool Tracking::monocularMapInitialization() {
             Eigen::Vector3f x3D_mp1 = pMP1->getWorldPosition();
             Eigen::Vector3f x3D_mp2 = pMP2->getWorldPosition();
 
-            nTriangulated++;
-            nTriangulated++;
+            nTriangulated += 2;
         }
     }
 
