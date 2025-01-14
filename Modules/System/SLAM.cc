@@ -114,29 +114,8 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     if(stop_) {
         cv::namedWindow("Test Window");
     }
-    // T_world_to_camera = Twc
-    // pw = wTc pc
 
     Tc_cref_ = Twc.inverse();
-    // if (firstCall_) {
-    //     //Tcref_w_ = Twc.inverse();
-    //     Tw_cref_ = Twc;
-    //     Tcref_c_ = Sophus::SE3f();
-    //     Tc_cref_ = Tcref_c_.inverse();
-    //     firstCall_ = false;
-    // } else {
-    //     //Tc_cref_ = Tcw * Tcref_w_.inverse(); 
-    //     Tcref_c_ = Tw_cref_.inverse() * Twc;
-    //     Tc_cref_ = Tcref_c_.inverse();
-    // }
-
-
-    // Eigen::Vector3f O3 = Tcw.translation();
-    // cout << "Twc Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
-    // Eigen::Vector3f O2 = Tcref_w_.translation();
-    // cout << "Tcref_w_ Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
-    // Eigen::Vector3f O1 = Tc_cref_.translation();
-    // cout << "Tc_cref_ Translation: " << O1[0]  << " " << O1[1]  << " "  << O1[2] << " " << endl;
 
     //Convert image to grayscale if needed
     cv::Mat grayIm = convertImageToGrayScale(im);
@@ -145,18 +124,6 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
 
     // //Predic camera pose
     bool goodTracked = tracker_.doTracking(grayIm, depthIm, Tc_cref_, nKF, nMPs, timer);
-    
-    // std::cerr << "Let's do Mapping! "<< goodTracked << std::endl;
-
-    // // //Do mapping
-    // shared_ptr<KeyFrame> lastKeyFrame = tracker_.getLastKeyFrame();
-    // mapper_.doMapping(lastKeyFrame, nMPs);
-
-
-    // if(!bFirstTriang_) {
-    //     std::cerr << "Let's do deformation optimization!"<< std::endl;
-    //     deformationOptimization(pMap_, settings_, mapVisualizer_, tracker_.vMatches_);
-    // }
 
     //Run deformation optimization
     if(bFirstTriang_ && goodTracked) {

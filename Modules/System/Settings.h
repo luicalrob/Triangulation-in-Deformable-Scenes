@@ -66,6 +66,8 @@ public:
     int getMatchingForTriangulationTh();
     int getMatchingFuseTh();
 
+    float getMatchingInitRadius();
+
     int getMinCommonObs();
 
     float getMinCos();
@@ -132,6 +134,8 @@ private:
     int nMatchingProjectionTh_;
     int nMatchingTriangulationTh_;
     int nMatchingFuseTh_;
+
+    float nMatchingInitRadius_;
 
     int nMinCommonObs_;
 

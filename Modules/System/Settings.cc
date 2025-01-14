@@ -81,6 +81,8 @@ Settings::Settings(const std::string& configFile) {
     nMatchingTriangulationTh_ = fSettings["Matching.searchForTriangulation"];
     nMatchingFuseTh_ = fSettings["Matching.fuse"];
 
+    nMatchingInitRadius_ = fSettings["Matching.initialization.radius"];
+
     nMinCommonObs_ = fSettings["Map.minObs"];
     fMinCos_ = fSettings["Triangulation.minCos"];
 
@@ -254,6 +256,10 @@ int Settings::getMatchingForTriangulationTh(){
 
 int Settings::getMatchingFuseTh(){
     return nMatchingFuseTh_;
+}
+
+float Settings::getMatchingInitRadius(){
+    return nMatchingInitRadius_;
 }
 
 int Settings::getMinCommonObs(){

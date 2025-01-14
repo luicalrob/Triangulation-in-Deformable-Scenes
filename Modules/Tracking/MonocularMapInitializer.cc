@@ -160,8 +160,8 @@ Eigen::Matrix3f MonocularMapInitializer::findEssentialWithRANSAC(const int nMatc
 
         Sophus::SE3f T1w = prevFrame_->getPose();
         Sophus::SE3f T2w = currFrame_->getPose();
-        Sophus::SE3f T21 = T2w*T1w.inverse();
-        Eigen::Matrix<float,3,3> E = computeEssentialMatrixFromPose(T21);
+        Sophus::SE3f T12 = T1w*T2w.inverse();
+        Eigen::Matrix<float,3,3> E = computeEssentialMatrixFromPose(T12);
 
         //Get score and inliers for the computed model
         int score = computeScoreAndInliers(nMatches,E,vInliers);
@@ -288,10 +288,12 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
     Eigen::Vector3f O3 = Tcw.inverse().translation();
     cout << "Twp Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << endl;
     Eigen::Quaternionf qp = Tpw.unit_quaternion();
-    std::cout << "Twp Quaternion: w = " << qp.w() << ", x = " << qp.x() << ", y = " << qp.y() << ", z = " << qp.z() << std::endl;
+    //std::cout << "Tcw Quaternion: w = " << qp.w() << ", x = " << qp.x() << ", y = " << qp.y() << ", z = " << qp.z() << std::endl;
     cout << "Twc Translation: " << O3[0]  << " " << O3[1]  << " "  << O3[2] << " " << endl;
     Eigen::Quaternionf qc = Tcw.unit_quaternion();
-    std::cout << "Twc Quaternion: w = " << qc.w() << ", x = " << qc.x() << ", y = " << qc.y() << ", z = " << qc.z() << std::endl;
+    //std::cout << "Tpw Quaternion: w = " << qc.w() << ", x = " << qc.x() << ", y = " << qc.y() << ", z = " << qc.z() << std::endl;
+    float norm = (O2 - O3).norm();
+    std::cout << "Norm of translation between cameras: " << norm << std::endl;
 
 
     int  err1 = 0, err2 = 0, depth1 = 0, depth2 = 0, parallax_ = 0;
@@ -316,7 +318,6 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
 
             //Triangulate point
             Eigen::Vector3f p3D_1, p3D_2;
-            //triangulateClassic(r1,r2,Tpw,Tcw, p3D_1, p3D_2, TrianLocation_);
             if (!useTriangulationMethod(r1, r2, Tpw, Tcw, p3D_1, p3D_2, TrianMethod_, TrianLocation_)) continue;
 
             if (!p3D_1.allFinite() || !p3D_2.allFinite() || p3D_1.isZero() || p3D_2.isZero()) {
@@ -325,8 +326,6 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
             }
             
             //Check the parallax of the triangulated point
-            // Eigen::Vector3f normal1 = p3D_1;
-            // Eigen::Vector3f normal2 = p3D_2 - O2;
             Eigen::Vector3f p3D_c1 = Tpw * p3D_1;
             Eigen::Vector3f p3D_c2 = Tcw * p3D_2;
             auto ray1 = (Tpw.inverse().rotationMatrix() * r1).normalized();
@@ -334,7 +333,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
             float cosParallaxPoint = cosRayParallax(ray1, ray2);
 
             //Check that the point has been triangulated in front of the first camera (possitive depth)
-            if(p3D_c1(2) < 0.0f || p3D_c1(2) > 3.5f){
+            if(p3D_c1(2) < 0.0f || p3D_c1(2) > 5.0f){
                 vTriangulated[i] = false;
                 depth1++;
                 continue;
@@ -349,7 +348,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
             //     continue;
             // }
 
-            if(p3D_c2(2) < 0.0f || p3D_c2(2) > 3.5f){
+            if(p3D_c2(2) < 0.0f || p3D_c2(2) > 5.0f){
                 vTriangulated[i] = false;
                 depth2++;
                 continue;
@@ -363,15 +362,6 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
             //     continue;
             // }
 
-            // if (i == 3 || i == 12 || i == 17) {
-            //     std::cout << "i: " << i  << std::endl;
-            //     std::cout << "refKeys_[i].pt: " << refKeys_[i].pt  << " " << refKeys_[i].pt << " " << std::endl;
-            //     std::cout << "currKeys_[vMatches_[i]].pt: " << currKeys_[vMatches_[i]].pt  << " " << currKeys_[vMatches_[i]].pt << " " << std::endl;
-            //     std::cout << "p3D_1: " << p3D_1[0]  << " " << p3D_1[1]  << " "  << p3D_1[2] << " " << std::endl;
-            //     std::cout << "p3D_2: " << p3D_2[0]  << " " << p3D_2[1]  << " "  << p3D_2[2] << " " << std::endl;
-
-            // }
-
             v3DPoints[j] = p3D_1;
             v3DPoints[j+1] = p3D_2;
 
@@ -381,10 +371,6 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tpw, const S
         }
     }
 
-    // std::cerr << "err rep 1: "<< err1 << std::endl;
-    // std::cerr << "err rep 2: "<< err2 << std::endl;
-    // std::cerr << "err depth 1: "<< depth1 << std::endl;
-    // std::cerr << "err depth 2: "<< depth2 << std::endl;
     std::cerr << "nTriangulated: "<< nTriangulated << std::endl;
 
     if(nTriangulated == 0)

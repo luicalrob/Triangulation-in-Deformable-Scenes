@@ -36,7 +36,7 @@ int HammingDistance(const cv::Mat &a, const cv::Mat &b){
 }
 
 
-int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, vector<int>& vMatches, std::vector<cv::Point2f>& vPrevMatched){
+int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, float windowSizeFactor, vector<int>& vMatches, std::vector<cv::Point2f>& vPrevMatched){
     fill(vMatches.begin(),vMatches.end(),-1);
 
     vector<size_t> vIndicesToCheck(100);
@@ -66,7 +66,7 @@ int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, vector<int
         int nLastOctave = refFrame.getKeyPoint(i).octave;
 
         //Search radius depends on the size of the point in the image: use 15 pixels
-        float radius = 45 * 1 * currFrame.getScaleFactor(nLastOctave);
+        float radius = windowSizeFactor * 1 * currFrame.getScaleFactor(nLastOctave);
 
         //Get candidates whose coordinates are close to the current point
         currFrame.getFeaturesInArea(uv.x,uv.y,radius,nLastOctave-1,nLastOctave+1,vIndicesToCheck);

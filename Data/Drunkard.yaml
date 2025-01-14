@@ -56,18 +56,24 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 50
+Matching.initialization: 30
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
+#radius
+Matching.initialization.radius: 90
+
 #Covisivility graph
 Map.minObs: 15
 
 #Min cos parallax to triangulate
-# Triangulation.minCos: 0.9987
-Triangulation.minCos: 0.9995
+#Triangulation.minCos: 0.9962
+# Triangulation.minCos: 0.9978
+Triangulation.minCos: 0.9989
+# Triangulation.minCos: 0.9995
+# Triangulation.minCos: 0.9991
 #0.99998
 
 # LUIS
@@ -103,8 +109,8 @@ Measurements.Depth.Scale: 0.0004577706569009
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 100
-# Optimization.arap: 100000
-Optimization.arap: 0.1
+Optimization.arap: 10000
+# Optimization.arap: 0.1
 Optimization.alpha:  1
 Optimization.beta: 1
 
@@ -137,7 +143,7 @@ Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
 # DepthMeasurement: use depth measurements 
-Triangulation.seed.location: "FarPoints"
+Triangulation.seed.location: "TwoPoints"
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction
