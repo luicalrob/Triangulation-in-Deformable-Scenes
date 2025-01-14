@@ -208,7 +208,7 @@ private:
 
         ID nKeyFrameId_, nMapPointId_;
         int idxInKf_;
-        std::shared_ptr<GraphNode> pPrevKeyFrame_, pNextKeyFrame_;
+        std::shared_ptr<GraphNode> prefKeyFrame_, pNextKeyFrame_;
         std::shared_ptr<GraphNode> pPrevMapPoint_, pNextMapPoint_;
     };
     typedef std::shared_ptr<GraphNode> GraphNode_;

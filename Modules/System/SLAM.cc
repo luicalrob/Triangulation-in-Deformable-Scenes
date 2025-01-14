@@ -49,13 +49,10 @@ SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
     mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_, pose));
     visualizer_ = shared_ptr<FrameVisualizer>(new FrameVisualizer);
 
-    //Initialize tracker
-    tracker_ = Tracking(settings_, visualizer_, mapVisualizer_, pMap_);
-
     //Initialize mapper
-    mapper_ = LocalMapping(settings_, pMap_);
+    mapper_ = Mapping(settings_, visualizer_, mapVisualizer_, pMap_);
 
-    prevFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
+    refFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
                        settings_.getCalibration(),settings_.getDistortionParameters());
 
@@ -63,7 +60,7 @@ SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
                        settings_.getImCols(),settings_.getImRows(), settings_.getNumberOfScales(), settings_.getScaleFactor(),
                        settings_.getCalibration(),settings_.getDistortionParameters());
 
-    prevCalibration_ = prevFrame_.getCalibration();
+    prevCalibration_ = refFrame_.getCalibration();
     currCalibration_ = currFrame_.getCalibration();
 
     currIm_ = cv::Mat::zeros(settings_.getImRows(), settings_.getImCols(), CV_8UC3);
@@ -120,20 +117,16 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     //Convert image to grayscale if needed
     cv::Mat grayIm = convertImageToGrayScale(im);
 
-    std::cerr << "Let's do Tracking! " << std::endl;
+    std::cerr << "Let's do Mapping! " << std::endl;
 
-    // //Predic camera pose
-    bool goodTracked = tracker_.doTracking(grayIm, depthIm, Tc_cref_, nKF, nMPs, timer);
+    // Do mapping
+    bool goodMapped = mapper_.doMapping(grayIm, depthIm, Tc_cref_, nKF, nMPs, timer);
 
-    //Run deformation optimization
-    if(bFirstTriang_ && goodTracked) {
+    if(bFirstTriang_ && goodMapped) {
         bFirstTriang_ = false;
     }
 
-    //visualizer_->updateWindows();
-
-    // return goodTracked;
-    return goodTracked;
+    return goodMapped;
 }
 
 bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
@@ -141,8 +134,8 @@ bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
         cv::namedWindow("Test Window");
     }
 
-    // //Do mapping
-    mapper_.doSimulatedMapping(currKeyFrame_, prevKeyFrame_, nMPs);
+    // Do mapping
+    mapper_.doSimulatedMapping(currKeyFrame_, refKeyFrame_, nMPs);
 
     std::cout << "\nINITIAL MEASUREMENTS: \n";
     outFile_.open(filePath_);
@@ -234,7 +227,7 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     // set camera poses and orientation
     Eigen::Matrix3f R = Eigen::Matrix3f::Identity();
     Sophus::SE3f T1w(R, firstCamera);
-    prevFrame_.setPose(T1w);
+    refFrame_.setPose(T1w);
 
     R = lookAt(secondCamera, movedPoints_[0]);
     Sophus::SE3f T2w(R, secondCamera);
@@ -252,7 +245,7 @@ void SLAM::viusualizeSolution() {
 
     std::cout << "Number of matches: " << nMatches << std::endl;
 
-    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T1w = refFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
 
     for(size_t i = 0; i < nMatches; i++){
@@ -267,10 +260,10 @@ void SLAM::viusualizeSolution() {
 
         insertedIndexes_.push_back(i);
 
-        pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
+        pMap_->addObservation(refKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
         pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
 
-        prevKeyFrame_->setMapPoint(i, map_point_1);
+        refKeyFrame_->setMapPoint(i, map_point_1);
         currKeyFrame_->setMapPoint(i, map_point_2);
 
         nTriangulated++;
@@ -296,7 +289,7 @@ void SLAM::createKeyPoints() {
     std::default_random_engine generator;
     std::normal_distribution<float> distribution(0.0f, simulatedRepErrorStanDesv_);
 
-    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T1w = refFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
 
     for(size_t i = 0; i < movedPoints_.size(); ++i) {
@@ -318,18 +311,18 @@ void SLAM::createKeyPoints() {
         cv::KeyPoint original_keypoint(original_p2D, 1.0f); // 1.0f is the size of the keypoint
         cv::KeyPoint moved_keypoint(moved_p2D, 1.0f);
 
-        prevFrame_.setKeyPoint(original_keypoint, i);
+        refFrame_.setKeyPoint(original_keypoint, i);
         currFrame_.setKeyPoint(moved_keypoint, i);
     }
 
     // Promote to keyframes for visualization
-    prevKeyFrame_ = std::make_shared<KeyFrame>(prevFrame_);
+    refKeyFrame_ = std::make_shared<KeyFrame>(refFrame_);
     currKeyFrame_ = std::make_shared<KeyFrame>(currFrame_);
-    pMap_->insertKeyFrame(prevKeyFrame_);
+    pMap_->insertKeyFrame(refKeyFrame_);
     pMap_->insertKeyFrame(currKeyFrame_);
 
     if(showScene_) {
-        visualizer_->drawFeatures(prevFrame_.getKeyPoints(), currIm_, "Previous Frame KeyPoints");
+        visualizer_->drawFeatures(refFrame_.getKeyPoints(), currIm_, "Previous Frame KeyPoints");
         visualizer_->drawFeatures(currFrame_.getKeyPoints(), currIm_, "Current Frame KeyPoints");
     }
 }
@@ -338,7 +331,7 @@ void SLAM::getSimulatedDepthMeasurements() {
     std::default_random_engine generator;
     std::normal_distribution<float> distribution(0.0f, SimulatedDepthErrorStanDesv_/1000);
 
-    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T1w = refFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
 
     for(size_t i = 0; i < movedPoints_.size(); ++i) {
@@ -348,7 +341,7 @@ void SLAM::getSimulatedDepthMeasurements() {
         float d1 = p3Dcam1[2] * SimulatedDepthScaleC1_ + distribution(generator);
         float d2 = p3Dcam2[2] * SimulatedDepthScaleC2_ + distribution(generator);
 
-        prevFrame_.setDepthMeasure(d1, i);
+        refFrame_.setDepthMeasure(d1, i);
         currFrame_.setDepthMeasure(d2, i);
     }
 }

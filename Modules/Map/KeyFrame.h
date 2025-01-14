@@ -24,7 +24,7 @@
 #ifndef SLAM_KEYFRAME_H
 #define SLAM_KEYFRAME_H
 
-#include "Tracking/Frame.h"
+#include "Mapping/Frame.h"
 
 class KeyFrame {
 public:
@@ -62,6 +62,11 @@ public:
      * Gets all the KeyPoints of the Frame
      */
     std::vector<cv::KeyPoint>& getKeyPoints();
+    
+    /*
+     * Gets the depth image of the frame
+     */
+    cv::Mat getDepthIm();
 
     /*
      * Gets the depth measure at index idx in the KeyFrame

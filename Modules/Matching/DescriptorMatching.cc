@@ -36,7 +36,7 @@ int HammingDistance(const cv::Mat &a, const cv::Mat &b){
 }
 
 
-int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, float windowSizeFactor, vector<int>& vMatches, std::vector<cv::Point2f>& vPrevMatched){
+int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, float windowSizeFactor, vector<int>& vMatches){
     fill(vMatches.begin(),vMatches.end(),-1);
 
     vector<size_t> vIndicesToCheck(100);
@@ -92,12 +92,6 @@ int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, float wind
         if(bestDist <= th && (float)bestDist < (float(secondBestDist)*0.9)){
             vMatches[i] = bestIdx;
             nMatches++;
-        }
-    }
-
-    for(size_t i = 0; i < vMatches.size(); i++){
-        if(vMatches[i] != -1){
-            vPrevMatched[i]=currFrame.getKeyPoint(vMatches[i]).pt;
         }
     }
 

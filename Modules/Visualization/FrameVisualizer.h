@@ -25,7 +25,7 @@
 #ifndef SLAM_FRAMEVISUALIZER_H
 #define SLAM_FRAMEVISUALIZER_H
 
-#include "Tracking/Frame.h"
+#include "Mapping/Frame.h"
 #include "Map/Map.h"
 
 #include <opencv2/opencv.hpp>

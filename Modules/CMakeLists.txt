@@ -33,7 +33,6 @@ set(HEADER_FILES
         ${root}/Map/KeyFrame.h
         ${root}/Map/Map.h
         ${root}/Map/MapPoint.h
-        ${root}/Mapping/LocalMapping.h
         ${root}/Matching/DescriptorMatching.h
         ${root}/Optimization/nloptOptimization.h
         ${root}/Optimization/EigenOptimization.h
@@ -41,9 +40,9 @@ set(HEADER_FILES
         ${root}/Optimization/g2oTypes.h
         ${root}/System/Settings.h
         ${root}/System/SLAM.h
-        ${root}/Tracking/Frame.h
-        ${root}/Tracking/MonocularMapInitializer.h
-        ${root}/Tracking/Tracking.h
+        ${root}/Mapping/Frame.h
+        ${root}/Mapping/MonocularMapInitializer.h
+        ${root}/Mapping/Mapping.h
         ${root}/Visualization/FrameVisualizer.h
         ${root}/Visualization/MapVisualizer.h
         ${root}/Utils/Geometry.h
@@ -60,16 +59,15 @@ set(SOURCE_FILES
         ${root}/Map/KeyFrame.cc
         ${root}/Map/Map.cc
         ${root}/Map/MapPoint.cc
-        ${root}/Mapping/LocalMapping.cc
         ${root}/Matching/DescriptorMatching.cc
         ${root}/Optimization/nloptOptimization.cc
         ${root}/Optimization/g2oBundleAdjustment.cc
         ${root}/Optimization/g2oTypes.cc
         ${root}/System/Settings.cc
         ${root}/System/SLAM.cc
-        ${root}/Tracking/Frame.cc
-        ${root}/Tracking/MonocularMapInitializer.cc
-        ${root}/Tracking/Tracking.cc
+        ${root}/Mapping/Frame.cc
+        ${root}/Mapping/MonocularMapInitializer.cc
+        ${root}/Mapping/Mapping.cc
         ${root}/Visualization/FrameVisualizer.cc
         ${root}/Visualization/MapVisualizer.cc
         ${root}/Utils/Geometry.cc

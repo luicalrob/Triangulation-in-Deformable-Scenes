@@ -108,6 +108,10 @@ std::vector<cv::KeyPoint>& KeyFrame::getKeyPoints() {
     return vKeys_;
 }
 
+cv::Mat KeyFrame::getDepthIm(){
+    return depthIm_.clone();
+}
+
 float KeyFrame::getDepthMeasure(size_t idx) {
     return vDepthMeasurements_[idx];
 }
@@ -124,12 +128,7 @@ double KeyFrame::getDepthMeasure(float x, float y) {
     uint16_t rawDepth = depthIm_.at<uint16_t>(y, x);
 
     double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
-    // if(depthScale_){
-    //     return static_cast<float>(rawDepth) * depthScale_;
-    // }
-    // else {
-    //     return static_cast<float>(rawDepth) * scaleFactor;
-    // }
+
     return static_cast<double>(rawDepth) * scaleFactor;
 }
 

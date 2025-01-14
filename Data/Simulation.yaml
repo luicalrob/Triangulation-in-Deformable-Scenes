@@ -47,19 +47,25 @@ Triangulation.minCos: 0.9998
 
 # LUIS
 #Cameras poses
-Camera.FirstPose.x: 0.0
-Camera.FirstPose.y: 0.0
-Camera.FirstPose.z: 0.0
+# Camera.FirstPose.x: -0.10
+# Camera.FirstPose.y: 0.02
+# Camera.FirstPose.z: 0.12
 Camera.SecondPose.x: 0.14
 Camera.SecondPose.y: 0.01
 Camera.SecondPose.z: 0.06
+Camera.FirstPose.x: 0.0
+Camera.FirstPose.y: 0.0
+Camera.FirstPose.z: 0.0
+# Camera.SecondPose.x: 0.14
+# Camera.SecondPose.y: 0.01
+# Camera.SecondPose.z: 0.06
 
 #Simulated typical desviation reprojection error for keypoints
 Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 3.0
+Measurements.DepthError: 0.0
 Measurements.DepthScale.C1: 1
 Measurements.DepthScale.C2: 1
 
@@ -95,7 +101,7 @@ Optimization.nlopt.arap.upperBound: 10000000
 Experiment.Filepath: "./Data/Experiment.txt"
 
 #Method selection
-Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM
+Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM DepthMeasurement
 # Classic: Use standard triangulation calculation
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
@@ -108,6 +114,6 @@ Triangulation.seed.location: "TwoPoints"
 
 # Visualization
 MapVisualizer.showScene: "true"
-MapVisualizer.drawRays: "false"
+MapVisualizer.drawRays: "true"
 Visualizer.showSolution: "false"
 Execution.stop: "true"

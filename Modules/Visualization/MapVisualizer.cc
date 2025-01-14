@@ -105,8 +105,23 @@ void MapVisualizer::drawMapPoints() {
         // Eigen::Vector3f O2 = Tcw.inverse().translation();
         // std::cout << "kfID: " << kfID << std::endl;
         // std::cout << "Twc Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << std::endl;
-        // Eigen::Quaternionf q = Tcw.unit_quaternion();
+        // Eigen::Quaternionf q = Tcw.inverse().unit_quaternion();
         // std::cout << "Twc Quaternion: w = " << q.w() << ", x = " << q.x() << ", y = " << q.y() << ", z = " << q.z() << std::endl;
+        
+        // cv::Mat im = kf->getDepthIm().clone();
+
+        // stringstream s;
+        // s << "SLAM MODE | depth ";
+
+        // int baseline=0;
+        // cv::Size textSize = cv::getTextSize(s.str(),cv::FONT_HERSHEY_PLAIN,1,1,&baseline);
+        // cv::Mat imText = cv::Mat(im.rows+textSize.height+10,im.cols,im.type());
+        // im.copyTo(imText.rowRange(0,im.rows).colRange(0,im.cols));
+        // imText.rowRange(im.rows,imText.rows) = cv::Mat::zeros(textSize.height+10,im.cols,im.type());
+        // cv::putText(imText,s.str(),cv::Point(5,imText.rows-5),cv::FONT_HERSHEY_PLAIN,1,cv::Scalar(255,255,255),1,8);
+
+        // std::string windowName = "SLAM: depth image " + std::to_string(kfID);
+        // cv::imshow(windowName, imText);
 
         for (size_t i = 0; i < mapPoints.size(); i++) {
             std::shared_ptr<MapPoint> pMP;
@@ -125,7 +140,6 @@ void MapVisualizer::drawMapPoints() {
             
             if(d != -1) {
                 Eigen::Matrix<float,1,3> m_pos_c = pCamera->unproject(x1, d);
-                //Eigen::Vector3f m_pos = Tcw.inverse() * m_pos_c.transpose();
 
                 Eigen::Matrix<float,1,4> m_pos_c_h;
                 m_pos_c_h << m_pos_c[0], m_pos_c[1], m_pos_c[2], 1;

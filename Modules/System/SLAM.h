@@ -26,14 +26,13 @@
 #define SLAM_SLAM_H
 
 #include "System/Settings.h"
-#include "Mapping/LocalMapping.h"
-#include "Tracking/Tracking.h"
+#include "Mapping/Mapping.h"
 #include "Utils/CommonTypes.h"
 
 #include "Visualization/FrameVisualizer.h"
 #include "Visualization/MapVisualizer.h"
 
-#include "Tracking/Frame.h"
+#include "Mapping/Frame.h"
 #include "Map/KeyFrame.h"
 #include "Map/Map.h"
 
@@ -138,8 +137,7 @@ private:
     /*
      * Tracker and mapper
      */
-    Tracking tracker_;
-    LocalMapping mapper_;
+    Mapping mapper_;
 
     /*
      * Settings of the system. Loaded from a file
@@ -149,8 +147,8 @@ private:
     cv::Mat currIm_;
     cv::Mat currDepthIm_;
 
-    Frame prevFrame_, currFrame_;
-    std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
+    Frame refFrame_, currFrame_;
+    std::shared_ptr<KeyFrame> refKeyFrame_, currKeyFrame_;
 
     Sophus::SE3f Tc_cref_;
     Sophus::SE3f Tcref_c_;
