@@ -49,8 +49,8 @@ Mapping::Mapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualize
 
     vPrevMatched_ = vector<cv::Point2f>(settings.getFeaturesPerImage());
 
-    TrianMethod_ = settings_.getTrianMethod();
-    TrianLocation_ = settings_.getTrianLocation();
+    TrianMethod_ = settings.getTrianMethod();
+    TrianLocation_ = settings.getTrianLocation();
 
     status_ = NOT_INITIALIZED;
     bFirstIm_ = true;
@@ -62,8 +62,6 @@ Mapping::Mapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualize
     mapVisualizer_ = mapVisualizer;
 
     pMap_ = map;
-
-    bInserted = false;
 
     filePath_ = settings.getExpFilePath();
     outFile_.imbue(std::locale("es_ES.UTF-8"));
@@ -131,11 +129,9 @@ bool Mapping::monocularMapInitialization() {
 
     if(bFirstIm_){
         refFrame_.assign(currFrame_);
-        refFrame_.setPose(Tcw_);
+        visualizer_->setReferenceFrame(refFrame_.getKeyPointsDistorted(),currIm_);
 
         bFirstIm_ = false;
-
-        visualizer_->setReferenceFrame(refFrame_.getKeyPointsDistorted(),currIm_);
 
         return false;
     }
@@ -150,8 +146,6 @@ bool Mapping::monocularMapInitialization() {
     //If not enough matches found, updtate reference frame
     if(nMatches < 20){
         refFrame_.assign(currFrame_);
-        refFrame_.setPose(Tcw_);
-
         visualizer_->setReferenceFrame(refFrame_.getKeyPointsDistorted(),currIm_);
 
         return false;
@@ -165,95 +159,44 @@ bool Mapping::monocularMapInitialization() {
         return false;
     }
 
+    refKeyFrame_ = std::make_shared<KeyFrame>(refFrame_);
+    currKeyFrame_ = std::make_shared<KeyFrame>(currFrame_);
+    
+    pMap_->insertKeyFrame(refKeyFrame_);
+    pMap_->insertKeyFrame(currKeyFrame_);
+
     int nTriangulated = 0;
 
     for(int i = 0, j = 0; i < vTriangulated.size(); i++, j+=2){
         if(vTriangulated[i]){
-            //Eigen::Vector3f v = v3DPoints[i] / scale;
             shared_ptr<MapPoint> pMP1(new MapPoint(v3DPoints[j]));
             shared_ptr<MapPoint> pMP2(new MapPoint(v3DPoints[j+1]));
 
-            cv::Point2f x1 = refFrame_.getKeyPoint(i).pt;
-            cv::Point2f x2 = currFrame_.getKeyPoint(vMatches_[i]).pt;
+            // cv::Point2f x1 = refKeyFrame.getKeyPoint(i).pt;
+            // cv::Point2f x2 = currKeyFrame.getKeyPoint(vMatches_[i]).pt;
 
-            double d1 = refFrame_.getDepthMeasure(x1.x, x1.y);
-            double d2 = currFrame_.getDepthMeasure(x2.x, x2.y);
+            // double d1 = refKeyFrame.getDepthMeasure(x1.x, x1.y);
+            // double d2 = currKeyFrame.getDepthMeasure(x2.x, x2.y);
 
-            if(d1 > 5.0 || d2 > 5.0 || pow((d1-d2), 2) > 1.0)
-            continue;
-
-            refFrame_.setMapPoint(i,pMP1);
-            currFrame_.setMapPoint(i,pMP2);
-
+            // if(d1 > 5.0 || d2 > 5.0 || pow((d1-d2), 2) > 1.0)
+            // continue;
+            
             pMap_->insertMapPoint(pMP1);
             pMap_->insertMapPoint(pMP2);
 
+            pMap_->addObservation(refKeyFrame_->getId(), pMP1->getId(), i);
+            pMap_->addObservation(currKeyFrame_->getId(), pMP2->getId(), vMatches_[i]);
+
+            refKeyFrame_->setMapPoint(i, pMP1);
+            currKeyFrame_->setMapPoint(i, pMP2);
+
             nTriangulated += 2;
-        }
-    }
-
-    shared_ptr<KeyFrame> kf0(new KeyFrame(refFrame_));
-    shared_ptr<KeyFrame> kf1(new KeyFrame(currFrame_));
-
-    pMap_->insertKeyFrame(kf0);
-    pMap_->insertKeyFrame(kf1);
-
-    //Set observations into the map
-    vector<shared_ptr<MapPoint>>& vMapPoints1 = kf0->getMapPoints();
-    std::unordered_map<long unsigned int, size_t> ids_map;
-    for(size_t i = 0; i < vMapPoints1.size(); i++){
-        auto pMP = vMapPoints1[i];
-        if(pMP){
-            pMap_->addObservation(0,pMP->getId(),i);
-            pMap_->addObservation(1,pMP->getId(),vMatches_[i]);
-            ids_map[pMP->getId() + 1] = i;
-        }
-    }
-
-    vector<shared_ptr<MapPoint>>& vMapPoints2 = kf1->getMapPoints();
-    for(size_t idx = 0; idx < vMapPoints2.size(); idx++){
-        auto pMP = vMapPoints2[idx];
-        if(pMP){
-            size_t i = 0;
-            long unsigned int id = pMP->getId();
-            if (ids_map.find(id) != ids_map.end()) {
-                i = ids_map[id];
-            } else {
-                continue;
-            }
-
-            pMap_->addObservation(0,pMP->getId(),i);
-            pMap_->addObservation(1,pMP->getId(),vMatches_[i]);
         }
     }
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;
 
     visualizer_->drawFrameTriangulatedMatches(pMap_, currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-
-    // visualizer_->drawCurrentFrame(refFrame_, "1");
-    // visualizer_->drawFrameDepthImage(refFrame_, "1");
-
-    // visualizer_->drawCurrentFrame(currFrame_, "2");
-    // visualizer_->drawFrameDepthImage(currFrame_, "2");
-
-
-    std::cout << "\nINITIAL MEASUREMENTS: \n";
-    outFile_.open(filePath_);
-    if (outFile_.is_open()) {
-        outFile_ << "INITIAL MEASUREMENTS: \n";
-
-        outFile_.close();
-    } else {
-        std::cerr << "Unable to open file for writing" << std::endl;
-    }
-    
-    stopWithMeasurements(pMap_, Tcw_, mapVisualizer_, filePath_ , settings_.getDrawRaysSelection(), 
-                            settings_.getStopExecutionOption(), settings_.getShowScene());
-
-    deformationOptimization(pMap_, settings_, mapVisualizer_);
-
-    bInserted = true;
 
     return true;
 }

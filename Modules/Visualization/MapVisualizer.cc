@@ -84,84 +84,77 @@ void MapVisualizer::updateCurrentPose(Sophus::SE3f &currPose) {
 }
 
 void MapVisualizer::drawMapPoints() {
-    std::unordered_map<ID,std::shared_ptr<KeyFrame>> keyFrames = pMap_->getKeyFrames();
+    std::unordered_map<ID,std::shared_ptr<KeyFrame>> mKeyFrames = pMap_->getKeyFrames();
 
     glPointSize(6);
     glBegin(GL_POINTS);
     //glColor3f(0.0,0.0,0.0);
 
-    for(auto kf_info : keyFrames){
-        int kfID = kf_info.first; 
-        std::shared_ptr<KeyFrame> kf = kf_info.second;
-        if (!kf) {
-            continue;
-        }
-        std::vector<std::shared_ptr<MapPoint>> mapPoints = kf->getMapPoints();
+    for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
+        for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
+            std::shared_ptr<KeyFrame> pKF1 = k2->second;
+            std::shared_ptr<KeyFrame> pKF2 = k1->second;
+            int kf1ID = k2->first;
+            int kf2ID = k1->first;
 
-        std::shared_ptr<CameraModel> pCamera = kf->getCalibration();
-        g2o::SE3Quat cameraPose = g2o::SE3Quat(kf->getPose().unit_quaternion().cast<double>(),kf->getPose().translation().cast<double>());
-        Sophus::SE3f Tcw = kf->getPose();
+            vector<std::shared_ptr<MapPoint>>& v1MPs = pKF1->getMapPoints();
+            vector<std::shared_ptr<MapPoint>>& v2MPs = pKF2->getMapPoints();
 
-        // Eigen::Vector3f O2 = Tcw.inverse().translation();
-        // std::cout << "kfID: " << kfID << std::endl;
-        // std::cout << "Twc Translation: " << O2[0]  << " " << O2[1]  << " "  << O2[2] << " " << std::endl;
-        // Eigen::Quaternionf q = Tcw.inverse().unit_quaternion();
-        // std::cout << "Twc Quaternion: w = " << q.w() << ", x = " << q.x() << ", y = " << q.y() << ", z = " << q.z() << std::endl;
-        
-        // cv::Mat im = kf->getDepthIm().clone();
-
-        // stringstream s;
-        // s << "SLAM MODE | depth ";
-
-        // int baseline=0;
-        // cv::Size textSize = cv::getTextSize(s.str(),cv::FONT_HERSHEY_PLAIN,1,1,&baseline);
-        // cv::Mat imText = cv::Mat(im.rows+textSize.height+10,im.cols,im.type());
-        // im.copyTo(imText.rowRange(0,im.rows).colRange(0,im.cols));
-        // imText.rowRange(im.rows,imText.rows) = cv::Mat::zeros(textSize.height+10,im.cols,im.type());
-        // cv::putText(imText,s.str(),cv::Point(5,imText.rows-5),cv::FONT_HERSHEY_PLAIN,1,cv::Scalar(255,255,255),1,8);
-
-        // std::string windowName = "SLAM: depth image " + std::to_string(kfID);
-        // cv::imshow(windowName, imText);
-
-        for (size_t i = 0; i < mapPoints.size(); i++) {
-            std::shared_ptr<MapPoint> pMP;
-            pMP = mapPoints[i];
-            if (!pMP) continue;
-
-            Eigen::Vector3f pos = pMP->getWorldPosition(); 
+            std::shared_ptr<CameraModel> pCamera1 = pKF1->getCalibration();
+            std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
+            Sophus::SE3f T1w = pKF1->getPose();
+            Sophus::SE3f T2w = pKF2->getPose();
             
-            int index_in_kf = pMap_->isMapPointInKeyFrame(pMP->getId(), kfID);
-            if(index_in_kf < 0) continue;
+            for (size_t i = 0; i < v1MPs.size(); i++) {
+                std::shared_ptr<MapPoint> pMPi1, pMPi2;
+                pMPi1 = v1MPs[i];
+                pMPi2 = v2MPs[i];
+                if (!pMPi1) continue;
+                if (!pMPi2) continue;
 
-            size_t idx = (size_t)index_in_kf;
+                Eigen::Vector3f pos1 = pMPi1->getWorldPosition(); 
+                Eigen::Vector3f pos2 = pMPi2->getWorldPosition(); 
 
-            cv::Point2f x1 = kf->getKeyPoint(idx).pt;
-            double d = kf->getDepthMeasure(x1.x, x1.y);
-            
-            if(d != -1) {
-                Eigen::Matrix<float,1,3> m_pos_c = pCamera->unproject(x1, d);
+                int index_in_kf1 = pMap_->isMapPointInKeyFrame(pMPi1->getId(), kf1ID);
+                int index_in_kf2 = pMap_->isMapPointInKeyFrame(pMPi2->getId(), kf2ID);
 
-                Eigen::Matrix<float,1,4> m_pos_c_h;
-                m_pos_c_h << m_pos_c[0], m_pos_c[1], m_pos_c[2], 1;
-                
-                Eigen::Vector4f m_pos_h = Tcw.inverse().matrix() * m_pos_c_h.transpose();
-                Eigen::Vector3f m_pos;
-                m_pos << m_pos_h[0], m_pos_h[1], m_pos_h[2];
-                
-                if(kfID%2 == 0) {
+                if(index_in_kf1 < 0 || index_in_kf2 < 0) continue;
+                size_t idx1 = (size_t)index_in_kf1;
+                size_t idx2 = (size_t)index_in_kf2;
+
+                cv::Point2f x1 = pKF1->getKeyPoint(idx1).pt;
+                cv::Point2f x2 = pKF2->getKeyPoint(idx2).pt;
+
+                double d1 = pKF1->getDepthMeasure(x1.x, x1.y);
+                double d2 = pKF2->getDepthMeasure(x2.x, x2.y);
+
+                if(d1 != -1 && d2 != -1) {
+                    Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
+                    Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
+
+                    Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
+                    m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
+                    m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
+                    
+                    Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
+                    Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
+                    Eigen::Vector3f m_pos_1, m_pos_2;
+                    m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
+                    m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
+                    
                     glColor3f(0.0,0.7,0.0);
-                } else {
+                    glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
+
                     glColor3f(0.0,1.0,0.0);
+                    glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
                 }
-                glVertex3f(m_pos(0),m_pos(1),m_pos(2));
-            }
-            
-            if(kfID%2 == 0) {
-                glColor3f(1.0,0.3,0.3);
-            } else {
+                
                 glColor3f(0.0,0.0,0.0);
+                glVertex3f(pos2(0),pos2(1),pos2(2));
+
+                glColor3f(1.0,0.3,0.3);
+                glVertex3f(pos1(0),pos1(1),pos1(2));
             }
-            glVertex3f(pos(0),pos(1),pos(2));
         }
     }
 

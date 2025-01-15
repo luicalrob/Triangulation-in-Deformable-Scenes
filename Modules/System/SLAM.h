@@ -135,6 +135,11 @@ private:
     cv::Mat convertImageToGrayScale(const cv::Mat& im);
 
     /*
+     * Open experiments file and start measurements
+     */
+    void startMeasurementsOnFile();
+
+    /*
      * Tracker and mapper
      */
     Mapping mapper_;
@@ -150,10 +155,7 @@ private:
     Frame refFrame_, currFrame_;
     std::shared_ptr<KeyFrame> refKeyFrame_, currKeyFrame_;
 
-    Sophus::SE3f Tc_cref_;
-    Sophus::SE3f Tcref_c_;
-    Sophus::SE3f Tcref_w_;
-    Sophus::SE3f Tw_cref_;
+    Sophus::SE3f Tcw_;
 
     std::shared_ptr<CameraModel> prevCalibration_;
     std::shared_ptr<CameraModel> currCalibration_;

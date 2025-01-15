@@ -175,8 +175,6 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 
                 // cv::Point2f p_p1_cv(p_p1.x(), p_p1.y());
                 // cv::Point2f p_p2_cv(p_p2.x(), p_p2.y());
-                Eigen::Vector3f O2 = T1w.inverse().translation();
-                Eigen::Vector3f O3 = T2w.inverse().translation();
 
                 Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(x1, d1);
                 Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(x2, d2);
@@ -191,30 +189,6 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 Eigen::Vector3f moved_position;
                 original_position << original_position_h[0], original_position_h[1], original_position_h[2];
                 moved_position << moved_position_h[0], moved_position_h[1], moved_position_h[2];
-
-                // if (i == 3 || i == 12 || i == 17) {
-                //     std::cout << "i: " << i  << std::endl;
-                //     std::cout << "refKeys_[i].pt: " << x1.x  << " " << x1.y << " " << std::endl;
-                //     std::cout << "currKeys_[vMatches_[i]].pt: " << x2.x  << " " << x2.y << " " << std::endl;
-                //     std::cout << "pMPi1 id: " << pMPi1->getId()  << std::endl;
-                //     std::cout << "pMPi2 id: " << pMPi2->getId()  << std::endl;
-                //     std::cout << "opt_original_position: " << opt_original_position[0]  << " " << opt_original_position[1]  << " "  << opt_original_position[2] << " " << std::endl;
-                //     std::cout << "opt_moved_position: " << opt_moved_position[0]  << " " << opt_moved_position[1]  << " "  << opt_moved_position[2] << " " << std::endl;
-                //     std::cout << "original_position: " << original_position[0]  << " " << original_position[1]  << " "  << original_position[2] << " " << std::endl;
-                //     std::cout << "moved_position: " << moved_position[0]  << " " << moved_position[1]  << " "  << moved_position[2] << " " << std::endl;
-
-                // }
-
-                // std::cout << "map point 1: (" << p3Dw1[0] << ", "<< p3Dw1[1] << ", "<< p3Dw1[2] << ")" << std::endl;
-                // std::cout << "solution point 1: (" << original_position[0] << ", "<< original_position[1] << ", "<< original_position[2] << ")" << std::endl;
-                // std::cout << "map point 1 Camera: (" << p3Dc1[0] << ", "<< p3Dc1[1] << ", "<< p3Dc1[2] << ")" << std::endl;
-                // std::cout << "solution point 1 Camera: (" << original_position_c[0] << ", "<< original_position_c[1] << ", "<< original_position_c[2] << ")" << std::endl;
-                
-                // std::cout << "map point 2: (" << p3Dw2[0] << ", "<< p3Dw2[1] << ", "<< p3Dw2[2] << ")" << std::endl;
-                // std::cout << "solution point 2: (" << moved_position[0] << ", "<< moved_position[1] << ", "<< original_position[2] << ")" << std::endl;
-                // std::cout << "map point 2 Camera: (" << p3Dc2[0] << ", "<< p3Dc2[1] << ", "<< p3Dc2[2] << ")" << std::endl;
-                // std::cout << "solution point 2 Camera: (" << moved_position_c[0] << ", "<< moved_position_c[1] << ", "<< moved_position_c[2] << ")" << std::endl;
-
 
                 Eigen::Vector3f movement = original_position - moved_position;
                 Eigen::Vector3f original_error = opt_original_position - original_position;

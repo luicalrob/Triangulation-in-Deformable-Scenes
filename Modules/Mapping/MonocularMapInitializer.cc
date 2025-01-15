@@ -306,7 +306,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
 
             if(TrianMethod_ == "DepthMeasurement") {
                 double d1 = refFrame_->getDepthMeasure(refKeys_[i].pt.x, refKeys_[i].pt.y);
-                double d2 = currFrame_->getDepthMeasure(currKeys_[i].pt.x, currKeys_[i].pt.y);
+                double d2 = currFrame_->getDepthMeasure(currKeys_[vMatches_[i]].pt.x, currKeys_[vMatches_[i]].pt.y);
 
                 r1 = prevCalibration_->unproject(x1, d1);
                 r2 = currCalibration_->unproject(x2, d2);

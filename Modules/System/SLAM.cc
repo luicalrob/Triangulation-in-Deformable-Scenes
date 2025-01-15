@@ -103,8 +103,6 @@ SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
 
     filePath_ = settings_.getExpFilePath();
     outFile_.imbue(std::locale("es_ES.UTF-8"));
-
-    bFirstTriang_ = true;
 }
 
 bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f& Twc, int &nKF, int &nMPs, clock_t &timer) {
@@ -112,18 +110,21 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
         cv::namedWindow("Test Window");
     }
 
-    Tc_cref_ = Twc.inverse();
-
-    //Convert image to grayscale if needed
+    Tcw_ = Twc.inverse();
+    
     cv::Mat grayIm = convertImageToGrayScale(im);
 
     std::cerr << "Let's do Mapping! " << std::endl;
 
     // Do mapping
-    bool goodMapped = mapper_.doMapping(grayIm, depthIm, Tc_cref_, nKF, nMPs, timer);
+    bool goodMapped = mapper_.doMapping(grayIm, depthIm, Tcw_, nKF, nMPs, timer);
+    
+    if (goodMapped) {
+        startMeasurementsOnFile();
+        stop();
 
-    if(bFirstTriang_ && goodMapped) {
-        bFirstTriang_ = false;
+        //Run deformation optimization
+        deformationOptimization(pMap_, settings_, mapVisualizer_);
     }
 
     return goodMapped;
@@ -137,22 +138,11 @@ bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
     // Do mapping
     mapper_.doSimulatedMapping(currKeyFrame_, refKeyFrame_, nMPs);
 
-    std::cout << "\nINITIAL MEASUREMENTS: \n";
-    outFile_.open(filePath_);
-    if (outFile_.is_open()) {
-        outFile_ << "INITIAL MEASUREMENTS: \n";
-
-        outFile_.close();
-    } else {
-        std::cerr << "Unable to open file for writing" << std::endl;
-    }
-    
+    startMeasurementsOnFile();
     stop();
 
     //Run deformation optimization
     deformationOptimization(pMap_, settings_, mapVisualizer_, originalPoints_ , movedPoints_);
-
-    //visualizer_->updateWindows();
 
     return true;
 }
@@ -232,7 +222,7 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     R = lookAt(secondCamera, movedPoints_[0]);
     Sophus::SE3f T2w(R, secondCamera);
     currFrame_.setPose(T2w);
-    Tc_cref_ = T2w;
+    Tcw_ = T2w;
 
     if(showScene_) {
         mapVisualizer_->updateCurrentPose(T2w);
@@ -281,7 +271,7 @@ void SLAM::viusualizeSolution() {
     // visualize
     if(showScene_) {
         mapVisualizer_->update(drawRaysSelection_);
-        mapVisualizer_->updateCurrentPose(Tc_cref_);
+        mapVisualizer_->updateCurrentPose(Tcw_);
     }
 }
 
@@ -368,6 +358,18 @@ Eigen::Vector3f SLAM::getSecondCameraPos(){
 }
 
 void SLAM::stop(){
-    stopWithMeasurements(pMap_, Tc_cref_, mapVisualizer_, filePath_ , drawRaysSelection_, 
+    stopWithMeasurements(pMap_, Tcw_, mapVisualizer_, filePath_ , drawRaysSelection_, 
                             stop_, showScene_, originalPoints_, movedPoints_);
+}
+
+void SLAM::startMeasurementsOnFile(){
+    std::cout << "\nINITIAL MEASUREMENTS: \n";
+    outFile_.open(filePath_);
+    if (outFile_.is_open()) {
+        outFile_ << "INITIAL MEASUREMENTS: \n";
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
 }

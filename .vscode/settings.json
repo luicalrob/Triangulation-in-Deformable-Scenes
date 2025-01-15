@@ -100,6 +100,7 @@
         "charconv": "cpp",
         "netfwd": "cpp",
         "*.isph": "cpp",
-        "*.expression": "cpp"
+        "*.expression": "cpp",
+        "tensor": "cpp"
     }
 }

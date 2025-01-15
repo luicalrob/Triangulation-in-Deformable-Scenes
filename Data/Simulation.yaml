@@ -47,15 +47,15 @@ Triangulation.minCos: 0.9998
 
 # LUIS
 #Cameras poses
-# Camera.FirstPose.x: -0.10
-# Camera.FirstPose.y: 0.02
-# Camera.FirstPose.z: 0.12
+Camera.FirstPose.x: -0.10
+Camera.FirstPose.y: 0.02
+Camera.FirstPose.z: 0.12
 Camera.SecondPose.x: 0.14
 Camera.SecondPose.y: 0.01
 Camera.SecondPose.z: 0.06
-Camera.FirstPose.x: 0.0
-Camera.FirstPose.y: 0.0
-Camera.FirstPose.z: 0.0
+# Camera.FirstPose.x: 0.0
+# Camera.FirstPose.y: 0.0
+# Camera.FirstPose.z: 0.0
 # Camera.SecondPose.x: 0.14
 # Camera.SecondPose.y: 0.01
 # Camera.SecondPose.z: 0.06
@@ -114,6 +114,6 @@ Triangulation.seed.location: "TwoPoints"
 
 # Visualization
 MapVisualizer.showScene: "true"
-MapVisualizer.drawRays: "true"
+MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
 Execution.stop: "true"
