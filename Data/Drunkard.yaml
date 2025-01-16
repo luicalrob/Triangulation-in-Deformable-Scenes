@@ -58,20 +58,20 @@ Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 40
+Matching.initialization.radius: 75
 
 #Covisivility graph
 Map.minObs: 6
 
 #Min cos parallax to triangulate
 #Triangulation.minCos: 0.9962
-Triangulation.minCos: 2.4
+Triangulation.minCos: 2
 
 #Inliers and reprojection checks
 Triangulation.checks: "true"
 
 #depth limit
-Triangulation.depthLimit: 3.5
+Triangulation.depthLimit: 6
 
 # LUIS
 #Cameras poses
