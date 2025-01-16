@@ -139,6 +139,8 @@ private:
     //Settings of the system
     Settings settings_;
 
+    float depthLimit_;
+
     std::string filePath_;
     std::ofstream outFile_;
 

@@ -51,12 +51,13 @@ Mapping::Mapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualize
 
     TrianMethod_ = settings.getTrianMethod();
     TrianLocation_ = settings.getTrianLocation();
+    depthLimit_ = settings.getDepthLimit();
 
     status_ = NOT_INITIALIZED;
     bFirstIm_ = true;
 
-    monoInitializer_ = MonocularMapInitializer(settings.getFeaturesPerImage(),settings.getCalibration(),settings.getEpipolarTh(),
-                                                settings.getMinCos(), settings.getTrianMethod(), settings.getTrianLocation());
+    monoInitializer_ = MonocularMapInitializer(settings.getFeaturesPerImage(),settings.getCalibration(),settings.getEpipolarTh(), settings.getMinCos(), 
+                                        settings.getTrianMethod(), settings.getTrianLocation(), settings.getCheckingSelection(), settings.getDepthLimit());
 
     visualizer_ = visualizer;
     mapVisualizer_ = mapVisualizer;
@@ -144,7 +145,7 @@ bool Mapping::monocularMapInitialization() {
     visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
 
     //If not enough matches found, updtate reference frame
-    if(nMatches < 20){
+    if(nMatches < 45){
         refFrame_.assign(currFrame_);
         visualizer_->setReferenceFrame(refFrame_.getKeyPointsDistorted(),currIm_);
 
@@ -172,14 +173,14 @@ bool Mapping::monocularMapInitialization() {
             shared_ptr<MapPoint> pMP1(new MapPoint(v3DPoints[j]));
             shared_ptr<MapPoint> pMP2(new MapPoint(v3DPoints[j+1]));
 
-            // cv::Point2f x1 = refKeyFrame.getKeyPoint(i).pt;
-            // cv::Point2f x2 = currKeyFrame.getKeyPoint(vMatches_[i]).pt;
+            cv::Point2f x1 = refKeyFrame_->getKeyPoint(i).pt;
+            cv::Point2f x2 = currKeyFrame_->getKeyPoint(vMatches_[i]).pt;
 
-            // double d1 = refKeyFrame.getDepthMeasure(x1.x, x1.y);
-            // double d2 = currKeyFrame.getDepthMeasure(x2.x, x2.y);
+            double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
+            double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
 
-            // if(d1 > 5.0 || d2 > 5.0 || pow((d1-d2), 2) > 1.0)
-            // continue;
+            if(d1 > depthLimit_ || d2 > depthLimit_ || pow((d1-d2), 2) > 0.3)
+            continue;
             
             pMap_->insertMapPoint(pMP1);
             pMap_->insertMapPoint(pMP2);

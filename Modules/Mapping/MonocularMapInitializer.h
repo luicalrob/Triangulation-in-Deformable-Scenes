@@ -35,7 +35,8 @@ public:
      * Constructor with the number of expected features, the calibration and thresholds for reconstruction
      */
     MonocularMapInitializer(const int nFeatures, std::shared_ptr<CameraModel> calibration, const float fEpipolarTh, 
-                            float fMinParallax, const std::string TrianMethod, const std::string TrianLocation);
+                            float fMinParallax, const std::string TrianMethod, const std::string TrianLocation, const bool checkingSelection,
+                             const float depthLimit);
 
     /*
      * Tries to initialize using the reference and the current views. Returns true on success with the triangulated points
@@ -87,7 +88,8 @@ private:
 
     float fEpipolarTh_;
     float fMinParallax_;
-
+    bool checkingSelection_;
+    float depthLimit_;
     std::string TrianMethod_;
     std::string TrianLocation_;
 

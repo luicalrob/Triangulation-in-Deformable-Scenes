@@ -71,6 +71,8 @@ public:
     int getMinCommonObs();
 
     float getMinCos();
+    bool getCheckingSelection();
+    float getDepthLimit();
     
     Eigen::Vector3f getFirstCameraPos();
     Eigen::Vector3f getSecondCameraPos();
@@ -140,6 +142,8 @@ private:
     int nMinCommonObs_;
 
     float fMinCos_;
+    bool checkingSelection_;
+    float fDepthLimit_;
 
     Eigen::Vector3f C1Pose_;
     Eigen::Vector3f C2Pose_;

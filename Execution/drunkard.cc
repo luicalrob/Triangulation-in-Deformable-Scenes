@@ -77,7 +77,7 @@ int main(int argc, char **argv){
     SLAM SLAM("Data/Drunkard.yaml", currPose);
 
     //for(int i = 0; i < sequence.getLenght(); i++){
-    for(int i = startingFrame; i < endingFrame; i+=framesStep){
+    for(int i = startingFrame; i <= endingFrame; i+=framesStep){
         sequence.getRGBImage(i,currIm);
         sequence.getDepthImage(i,currDepthIm);
         sequence.getTimeStamp(i,currTs);

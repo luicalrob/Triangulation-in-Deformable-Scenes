@@ -28,8 +28,9 @@ import argparse
 import subprocess
 from itertools import product
 
-from config import default_values, shape_experiment_types, setExperiment
+from config import synthetic_values, shape_experiment_types, setExperiment
 
+default_values = synthetic_values
 
 parser = argparse.ArgumentParser(description="Run experiments automatically.")
 parser.add_argument('--Model', type=str, choices=default_values["Model"] ,required=True, help="Model name (ARAP_NoGlobal, ARAP_OneSet, ARAP, Elastic or HyperElastic)")

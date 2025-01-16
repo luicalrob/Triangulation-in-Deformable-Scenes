@@ -17,6 +17,8 @@
 
 #include "KeyFrame.h"
 
+#include <cmath>
+
 using namespace std;
 
 long unsigned int KeyFrame::nNextId_=0;
@@ -125,7 +127,7 @@ double KeyFrame::getDepthMeasure(float x, float y) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
-    uint16_t rawDepth = depthIm_.at<uint16_t>(y, x);
+    uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
 
     double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
 

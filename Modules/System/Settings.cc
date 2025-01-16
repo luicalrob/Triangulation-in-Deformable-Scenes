@@ -87,6 +87,17 @@ Settings::Settings(const std::string& configFile) {
     fMinCos_ = fSettings["Triangulation.minCos"];
 
     //LUIS
+    std::string checksString;
+    fSettings["Triangulation.checks"] >> checksString;
+
+    if (checksString == "true") {
+        checkingSelection_ = true;
+    } else {
+        checkingSelection_ = false;
+    }
+
+    fDepthLimit_ = fSettings["Triangulation.depthLimit"];
+
     float C1x = fSettings["Camera.FirstPose.x"];
     float C1y = fSettings["Camera.FirstPose.y"];
     float C1z = fSettings["Camera.FirstPose.z"];
@@ -268,6 +279,14 @@ int Settings::getMinCommonObs(){
 
 float Settings::getMinCos(){
     return fMinCos_;
+}
+
+bool Settings::getCheckingSelection(){
+    return checkingSelection_;
+}
+
+float Settings::getDepthLimit(){
+    return fDepthLimit_;
 }
 
 Eigen::Vector3f Settings::getFirstCameraPos(){

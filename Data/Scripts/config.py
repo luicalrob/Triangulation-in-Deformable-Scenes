@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-default_values = {
+synthetic_values = {
     "Model": [
         "ARAP", 
         "ARAP_not_scaled_depth",

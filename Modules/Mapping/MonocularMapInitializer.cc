@@ -17,13 +17,15 @@
 
 #include "Utils/Geometry.h"
 #include "Mapping/MonocularMapInitializer.h"
+#include <cmath>
 
 using namespace std;
 
 MonocularMapInitializer::MonocularMapInitializer(){}
 
 MonocularMapInitializer::MonocularMapInitializer(const int nFeatures, shared_ptr<CameraModel> calibration, const float fEpipolarTh, float fMinParallax,
-                                                const std::string TrianMethod, const std::string TrianLocation){
+                                                const std::string TrianMethod, const std::string TrianLocation, const bool checkingSelection, 
+                                                const float depthLimit){
     //Reserve memory
     refKeys_.reserve(nFeatures);
     currKeys_.reserve(nFeatures);
@@ -41,6 +43,8 @@ MonocularMapInitializer::MonocularMapInitializer(const int nFeatures, shared_ptr
     fEpipolarTh_ = fEpipolarTh;
 
     fMinParallax_ = fMinParallax;
+    checkingSelection_ = checkingSelection;
+    depthLimit_ = depthLimit;
 
     TrianMethod_ = TrianMethod;
     TrianLocation_ = TrianLocation;
@@ -84,26 +88,26 @@ bool MonocularMapInitializer::initialize(Frame refFrame, Frame currFrame, const 
         }
     }
 
-    vector<bool> vInliersOfE(currMatIdx,false);
-
-    // If enough matches found, find an Essential matrix with RANSAC
-    int nInliersOfE;
-    Eigen::Matrix3f E = findEssentialWithRANSAC(nMatches,vInliersOfE, nInliersOfE);
-
     std::fill(vTriangulated.begin(), vTriangulated.end(), false);
-    for(size_t i = 0; i < nMatches; i++){
-        vTriangulated[vRansacToFrameIndeces[i]] = true;
+
+    if(checkingSelection_){
+        vector<bool> vInliersOfE(currMatIdx,false);
+
+        // If enough matches found, find an Essential matrix with RANSAC
+        int nInliersOfE;
+        Eigen::Matrix3f E = findEssentialWithRANSAC(nMatches,vInliersOfE, nInliersOfE);
+
+        for(size_t i = 0; i < vInliersOfE.size(); i++){
+            if(vInliersOfE[i]){
+                vTriangulated[vRansacToFrameIndeces[i]] = true;
+            }
+        }
+    } else {
+        for(size_t i = 0; i < nMatches; i++){
+            vTriangulated[vRansacToFrameIndeces[i]] = true;
+        }
     }
 
-    // std::fill(vTriangulated.begin(), vTriangulated.end(), false);
-    // for(size_t i = 0; i < vInliersOfE.size(); i++){
-    //     if(vInliersOfE[i]){
-    //         vTriangulated[vRansacToFrameIndeces[i]] = true;
-    //     }
-    // }
-
-    //Reconstruct the environment with the Essential matrix found
-    //return reconstruct(E,T1w,T2w,v3DPoints,vTriangulated, nInliersOfE);
     return reconstructPoints(T1w,T2w,v3DPoints,vTriangulated);
 
 }
@@ -329,7 +333,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
             float cosParallaxPoint = cosRayParallax(ray1, ray2);
 
             //Check that the point has been triangulated in front of the first camera (possitive depth)
-            if(p3D_c1(2) < 0.0f || p3D_c1(2) > 5.0f){
+            if(p3D_c1(2) < 0.0f || p3D_c1(2) > depthLimit_){
                 vTriangulated[i] = false;
                 depth1++;
                 continue;
@@ -337,14 +341,16 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
 
             //Check Reprojection error
             cv::Point2f uv1 = prevCalibration_->project(p3D_c1);
+            
+            if(checkingSelection_){
+                if(squaredReprojectionError(refKeys_[i].pt,uv1) > 5.991){
+                    vTriangulated[i] = false;
+                    err1++;
+                    continue;
+                }
+            }
 
-            // if(squaredReprojectionError(refKeys_[i].pt,uv1) > 5.991){
-            //     vTriangulated[i] = false;
-            //     err1++;
-            //     continue;
-            // }
-
-            if(p3D_c2(2) < 0.0f || p3D_c2(2) > 5.0f){
+            if(p3D_c2(2) < 0.0f || p3D_c2(2) > depthLimit_){
                 vTriangulated[i] = false;
                 depth2++;
                 continue;
@@ -352,11 +358,13 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
 
             cv::Point2f uv2 = currCalibration_->project(p3D_c2);
 
-            // if(squaredReprojectionError(currKeys_[vMatches_[i]].pt,uv2) > 5.991){
-            //     vTriangulated[i] = false;
-            //     err2++;
-            //     continue;
-            // }
+            if(checkingSelection_){
+                if(squaredReprojectionError(currKeys_[vMatches_[i]].pt,uv2) > 5.991){
+                    vTriangulated[i] = false;
+                    err2++;
+                    continue;
+                }
+            }
 
             v3DPoints[j] = p3D_1;
             v3DPoints[j+1] = p3D_2;
@@ -376,9 +384,16 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
     size_t idx = min(50,int(vParallax.size()-1));
     float _parallax = vParallax[idx];
 
-    std::cerr << "_parallax: "<< _parallax << std::endl;
+    if (_parallax < 0 || _parallax > 1) {
+        std::cout << "Parallax must be between 0 and 1." << std::endl;
+        return false;
+    }
+    double radians = acos(_parallax);
+    double degrees = radians * (180.0 / M_PI);
 
-    if(nTriangulated >= 8 && _parallax < fMinParallax_) {
+    std::cerr << "_parallax: "<< degrees << std::endl;
+
+    if(nTriangulated >= 25 && degrees > fMinParallax_) {
         return true;
     }
     else{
