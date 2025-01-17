@@ -51,7 +51,7 @@ MonocularMapInitializer::MonocularMapInitializer(const int nFeatures, shared_ptr
 }
 
 bool MonocularMapInitializer::initialize(Frame refFrame, Frame currFrame, const std::vector<int>& vMatches, const int nMatches,
-                                         std::vector<Eigen::Vector3f>& v3DPoints, std::vector<bool>& vTriangulated) {
+                                         std::vector<Eigen::Vector3f>& v3DPoints, std::vector<bool>& vTriangulated, float& parallax) {
     //Set up data
     refKeys_ = refFrame.getKeyPoints();
     currKeys_ = currFrame.getKeyPoints();
@@ -108,7 +108,7 @@ bool MonocularMapInitializer::initialize(Frame refFrame, Frame currFrame, const 
         }
     }
 
-    return reconstructPoints(T1w,T2w,v3DPoints,vTriangulated);
+    return reconstructPoints(T1w,T2w,v3DPoints,vTriangulated, parallax);
 
 }
 
@@ -224,7 +224,7 @@ int MonocularMapInitializer::computeScoreAndInliers(const int nMatched, Eigen::M
 }
 
 bool MonocularMapInitializer::reconstructEnvironment(Eigen::Matrix3f& E, Sophus::SE3f& T1w, Sophus::SE3f& T2w, std::vector<Eigen::Vector3f>& v3DPoints,
-                                                     std::vector<bool>& vTriangulated, int& nInliers) {
+                                                     std::vector<bool>& vTriangulated, int& nInliers, float& parallax) {
     //Compute rays of the inliers points
     Eigen::MatrixXf refRays(nInliers,3), currRays(nInliers,3);
     size_t currMatIdx = 0;
@@ -241,7 +241,7 @@ bool MonocularMapInitializer::reconstructEnvironment(Eigen::Matrix3f& E, Sophus:
     reconstructCameras(E,T2w,refRays,currRays);
 
     //Reconstruct 3D points (try with the 2 possible translations)
-    return reconstructPoints(T1w,T2w,v3DPoints,vTriangulated);
+    return reconstructPoints(T1w,T2w,v3DPoints,vTriangulated, parallax);
 }
 
 void MonocularMapInitializer::reconstructCameras(Eigen::Matrix3f &E, Sophus::SE3f &T2w, Eigen::MatrixXf& rays1, Eigen::MatrixXf& rays2) {
@@ -280,7 +280,7 @@ void MonocularMapInitializer::decomposeE(Eigen::Matrix3f &E, Eigen::Matrix3f &R1
 }
 
 bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const Sophus::SE3f &T2w, std::vector<Eigen::Vector3f> &v3DPoints,
-                                                std::vector<bool>& vTriangulated) {
+                                                std::vector<bool>& vTriangulated, float& parallax) {
     vector<float> vParallax;
     int nTriangulated = 0;
 
@@ -376,7 +376,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
     }
 
     std::cerr << "nTriangulated: "<< nTriangulated << std::endl;
-
+    
     if(nTriangulated == 0)
         return false;
 
@@ -388,9 +388,10 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
         std::cout << "Parallax must be between 0 and 1." << std::endl;
         return false;
     }
-    double radians = acos(_parallax);
-    double degrees = radians * (180.0 / M_PI);
+    float radians = acos(_parallax);
+    float degrees = radians * (180.0 / M_PI);
 
+    parallax = degrees;
     std::cerr << "_parallax: "<< degrees << std::endl;
 
     if(nTriangulated >= 25 && degrees > fMinParallax_) {

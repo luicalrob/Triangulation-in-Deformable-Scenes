@@ -25,58 +25,62 @@
 
 using namespace std;
 
-MapVisualizer::MapVisualizer(shared_ptr<Map> pMap, const PoseData initialPose) : pMap_(pMap){
-    pangolin::CreateWindowAndBind("SLAM",1024,768);
+MapVisualizer::MapVisualizer(shared_ptr<Map> pMap, const PoseData initialPose, const bool showScene) : pMap_(pMap), showScene_(showScene){
+    if (showScene_) {
+        pangolin::CreateWindowAndBind("SLAM",1024,768);
 
-    // 3D Mouse handler requires depth testing to be enabled
-    glEnable(GL_DEPTH_TEST);
+        // 3D Mouse handler requires depth testing to be enabled
+        glEnable(GL_DEPTH_TEST);
 
-    // Issue specific OpenGl we might need
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // Issue specific OpenGl we might need
+        glEnable (GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Define Camera Render Object (for view / scene browsing)
-    if(initialPose.isValid) {
-        Eigen::Vector3f keyframe_position = Eigen::Vector3f(initialPose.tx, initialPose.ty, initialPose.tz);
+        // Define Camera Render Object (for view / scene browsing)
+        if(initialPose.isValid) {
+            Eigen::Vector3f keyframe_position = Eigen::Vector3f(initialPose.tx, initialPose.ty, initialPose.tz);
 
-        Eigen::Quaternionf quaternion(initialPose.qw, initialPose.qx, initialPose.qy, initialPose.qz);
-        Eigen::Matrix3f rotation_matrix = quaternion.toRotationMatrix();
+            Eigen::Quaternionf quaternion(initialPose.qw, initialPose.qx, initialPose.qy, initialPose.qz);
+            Eigen::Matrix3f rotation_matrix = quaternion.toRotationMatrix();
 
-        Eigen::Vector3f camera_offset(0.0f, -0.2f, -0.5f);  // offset behind the keyframe
-        Eigen::Vector3f camera_position = keyframe_position + rotation_matrix * camera_offset;
-        s_cam = pangolin::OpenGlRenderState(
-                pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.1,1000),
-                pangolin::ModelViewLookAt(
-                    camera_position[0], camera_position[1], camera_position[2],
-                    keyframe_position[0], keyframe_position[1], keyframe_position[2],
-                    0.0, 0.0, 1.0));
-    } else {
-        s_cam = pangolin::OpenGlRenderState(
-                pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.1,1000),
-                pangolin::ModelViewLookAt(0,-0.7,-1.8, 0,0,0,0.0,-1.0, 0.0));
+            Eigen::Vector3f camera_offset(0.0f, -0.2f, -0.5f);  // offset behind the keyframe
+            Eigen::Vector3f camera_position = keyframe_position + rotation_matrix * camera_offset;
+            s_cam = pangolin::OpenGlRenderState(
+                    pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.1,1000),
+                    pangolin::ModelViewLookAt(
+                        camera_position[0], camera_position[1], camera_position[2],
+                        keyframe_position[0], keyframe_position[1], keyframe_position[2],
+                        0.0, 0.0, 1.0));
+        } else {
+            s_cam = pangolin::OpenGlRenderState(
+                    pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.1,1000),
+                    pangolin::ModelViewLookAt(0,-0.7,-1.8, 0,0,0,0.0,-1.0, 0.0));
+        }
+
+        // Add named OpenGL viewport to window and provide 3D Handler
+        d_cam = pangolin::CreateDisplay()
+                .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
+                .SetHandler(new pangolin::Handler3D(s_cam));
     }
-
-    // Add named OpenGL viewport to window and provide 3D Handler
-    d_cam = pangolin::CreateDisplay()
-            .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
-            .SetHandler(new pangolin::Handler3D(s_cam));
 
 }
 
 void MapVisualizer::update(bool drawRaysSelection) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (showScene_) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Add named OpenGL viewport to window and provide 3D Handler
-    d_cam.Activate(s_cam);
+        // Add named OpenGL viewport to window and provide 3D Handler
+        d_cam.Activate(s_cam);
 
-    glClearColor(1.0f,1.0f,1.0f,1.0f);
+        glClearColor(1.0f,1.0f,1.0f,1.0f);
 
-    drawMapPoints();
-    drawKeyFrames();
-    if (drawRaysSelection) drawRays();
-    drawCurrentPose();
+        drawMapPoints();
+        drawKeyFrames();
+        if (drawRaysSelection) drawRays();
+        drawCurrentPose();
 
-    pangolin::FinishFrame();
+        pangolin::FinishFrame();
+    }
 }
 
 void MapVisualizer::updateCurrentPose(Sophus::SE3f &currPose) {

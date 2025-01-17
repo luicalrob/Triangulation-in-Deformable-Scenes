@@ -200,8 +200,6 @@ private:
     double NloptGlobalUpperBound_;
     double NloptArapLowerBound_;
     double NloptArapUpperBound_;
-    
-    bool showScene_;
 
     std::ofstream outFile_;
 

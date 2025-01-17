@@ -16,7 +16,7 @@ void stopExecution(const std::shared_ptr<MapVisualizer>& mapVisualizer, Sophus::
 * The function used to stop using configuration parameters
 */
 void stopWithMeasurements(const std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw,
-                        const std::shared_ptr<MapVisualizer> mapVisualizer, const std::string filePath, bool drawRaysSelection, bool stop, bool showScene,
+                        const std::shared_ptr<MapVisualizer> mapVisualizer, const std::string filePath, bool drawRaysSelection, bool stop,
                         const std::vector<Eigen::Vector3f> originalPoints = {}, const std::vector<Eigen::Vector3f> movedPoints ={});
 
 #endif //SLAM_UTILS_H

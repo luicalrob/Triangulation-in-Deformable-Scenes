@@ -14,7 +14,7 @@ void stopExecution(const std::shared_ptr<MapVisualizer>& mapVisualizer, Sophus::
 }
 
 void stopWithMeasurements(const std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw,
-                        const std::shared_ptr<MapVisualizer> mapVisualizer, const std::string filePath, bool drawRaysSelection, bool stop, bool showScene,
+                        const std::shared_ptr<MapVisualizer> mapVisualizer, const std::string filePath, bool drawRaysSelection, bool stop,
                         const std::vector<Eigen::Vector3f> originalPoints, const std::vector<Eigen::Vector3f> movedPoints){
     measureRelativeMapErrors(pMap, filePath);
     if(originalPoints.empty() || movedPoints.empty()) {
@@ -26,9 +26,7 @@ void stopWithMeasurements(const std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw,
     if (stop) {
         stopExecution(mapVisualizer, Tcw, drawRaysSelection);
     } else {
-        if(showScene) {
-            mapVisualizer->update(drawRaysSelection);
-            mapVisualizer->updateCurrentPose(Tcw);
-        }
+        mapVisualizer->update(drawRaysSelection);
+        mapVisualizer->updateCurrentPose(Tcw);
     }
 }

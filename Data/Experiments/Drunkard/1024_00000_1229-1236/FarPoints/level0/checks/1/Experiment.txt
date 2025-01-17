@@ -1,0 +1,88 @@
+Translation norm between cameras (mm): 131,582
+Parallax: 1,95745
+nMatches: 109
+nMapPoints: 214
+INITIAL MEASUREMENTS: 
+C1 standard desv: 0,166389
+C2 standard desv: 0,164452
+Rel. error: 0,00832792
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 2,57748
+Av. error: 38,0664
+RMSE: 59,8946
+
+1 / 15 MEASUREMENTS: 
+C1 standard desv: 0,16489
+C2 standard desv: 0,164437
+Rel. error: 0,00814279
+Global rotation:            1 -0,000100503 -0,000329328
+ 0,000100496            1 -1,97294e-05
+  0,00032933  1,96963e-05            1
+Global translation:  0,000199146
+ 0,000187821
+-0,000104957
+Av. movement: 2,57748
+Av. error: 38,0669
+RMSE: 59,8949
+
+2 / 15 MEASUREMENTS: 
+C1 standard desv: 0,170006
+C2 standard desv: 0,171084
+Rel. error: 0,00815945
+Global rotation:            1 -0,000144077 -0,000432552
+ 0,000144076            1  -3,2369e-06
+ 0,000432552  3,17458e-06            1
+Global translation: 0,000334997
+ 0,00014712
+-4,2524e-05
+Av. movement: 2,57748
+Av. error: 38,0674
+RMSE: 59,8955
+
+3 / 15 MEASUREMENTS: 
+C1 standard desv: 0,174151
+C2 standard desv: 0,176153
+Rel. error: 0,00819058
+Global rotation:            1 -0,000163916 -0,000533017
+ 0,000163921            1  8,78277e-06
+ 0,000533016 -8,87014e-06            1
+Global translation: 0,000483673
+8,52249e-05
+3,89211e-06
+Av. movement: 2,57748
+Av. error: 38,0679
+RMSE: 59,896
+
+4 / 15 MEASUREMENTS: 
+C1 standard desv: 0,177317
+C2 standard desv: 0,179839
+Rel. error: 0,00821448
+Global rotation:            1 -0,000160038 -0,000641224
+ 0,000160064            1   4,0817e-05
+ 0,000641217 -4,09196e-05            1
+Global translation: 0,000651332
+1,29178e-05
+5,05571e-05
+Av. movement: 2,57748
+Av. error: 38,0684
+RMSE: 59,8967
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 0,177317
+C2 standard desv: 0,179839
+Rel. error: 0,00821448
+Global rotation:            1 -0,000160038 -0,000641224
+ 0,000160064            1   4,0817e-05
+ 0,000641217 -4,09196e-05            1
+Global translation: 0,000651332
+1,29178e-05
+5,05571e-05
+Av. movement: 2,57748
+Av. error: 38,0684
+RMSE: 59,8967
+

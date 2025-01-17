@@ -45,9 +45,9 @@ SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
     pMap_ = shared_ptr<Map>(new Map(settings_.getMinCommonObs()));
 
     //Create visualizers
-    showScene_ = settings_.getShowScene();
-    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_, pose));
-    visualizer_ = shared_ptr<FrameVisualizer>(new FrameVisualizer);
+    bool showScene = settings_.getShowScene();
+    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_, pose, showScene));
+    visualizer_ = shared_ptr<FrameVisualizer>(new FrameVisualizer(showScene));
 
     //Initialize mapper
     mapper_ = Mapping(settings_, visualizer_, mapVisualizer_, pMap_);
@@ -224,9 +224,7 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     currFrame_.setPose(T2w);
     Tcw_ = T2w;
 
-    if(showScene_) {
-        mapVisualizer_->updateCurrentPose(T2w);
-    }
+    mapVisualizer_->updateCurrentPose(T2w);
 }
 
 void SLAM::viusualizeSolution() {
@@ -269,10 +267,8 @@ void SLAM::viusualizeSolution() {
     }
 
     // visualize
-    if(showScene_) {
-        mapVisualizer_->update(drawRaysSelection_);
-        mapVisualizer_->updateCurrentPose(Tcw_);
-    }
+    mapVisualizer_->update(drawRaysSelection_);
+    mapVisualizer_->updateCurrentPose(Tcw_);
 }
 
 void SLAM::createKeyPoints() {
@@ -311,10 +307,8 @@ void SLAM::createKeyPoints() {
     pMap_->insertKeyFrame(refKeyFrame_);
     pMap_->insertKeyFrame(currKeyFrame_);
 
-    if(showScene_) {
-        visualizer_->drawFeatures(refFrame_.getKeyPoints(), currIm_, "Previous Frame KeyPoints");
-        visualizer_->drawFeatures(currFrame_.getKeyPoints(), currIm_, "Current Frame KeyPoints");
-    }
+    visualizer_->drawFeatures(refFrame_.getKeyPoints(), currIm_, "Previous Frame KeyPoints");
+    visualizer_->drawFeatures(currFrame_.getKeyPoints(), currIm_, "Current Frame KeyPoints");
 }
 
 void SLAM::getSimulatedDepthMeasurements() {
@@ -359,12 +353,12 @@ Eigen::Vector3f SLAM::getSecondCameraPos(){
 
 void SLAM::stop(){
     stopWithMeasurements(pMap_, Tcw_, mapVisualizer_, filePath_ , drawRaysSelection_, 
-                            stop_, showScene_, originalPoints_, movedPoints_);
+                            stop_, originalPoints_, movedPoints_);
 }
 
 void SLAM::startMeasurementsOnFile(){
     std::cout << "\nINITIAL MEASUREMENTS: \n";
-    outFile_.open(filePath_);
+    outFile_.open(filePath_, std::ios::app);
     if (outFile_.is_open()) {
         outFile_ << "INITIAL MEASUREMENTS: \n";
 

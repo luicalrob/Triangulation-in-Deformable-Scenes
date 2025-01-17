@@ -156,7 +156,8 @@ bool Mapping::monocularMapInitialization() {
     vector<Eigen::Vector3f> v3DPoints;
     v3DPoints.reserve(vMatches_.capacity());
     vector<bool> vTriangulated(vMatches_.capacity(),false);
-    if(!monoInitializer_.initialize(refFrame_, currFrame_, vMatches_, nMatches, v3DPoints, vTriangulated)){
+    float parallax;
+    if(!monoInitializer_.initialize(refFrame_, currFrame_, vMatches_, nMatches, v3DPoints, vTriangulated, parallax)){
         return false;
     }
 
@@ -196,6 +197,25 @@ bool Mapping::monocularMapInitialization() {
     }
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;
+    
+    Sophus::SE3f T1w = refKeyFrame_->getPose();
+    Sophus::SE3f T2w = currKeyFrame_->getPose();
+
+    Eigen::Vector3f t1 = T1w.inverse().translation();
+    Eigen::Vector3f t2 = T2w.inverse().translation();
+    float norm = (t2 - t1).norm();
+
+    outFile_.open(filePath_);
+    if (outFile_.is_open()) {
+        outFile_ << "Translation norm between cameras (mm): " << norm * 1000 << '\n';
+        outFile_ << "Parallax: " << parallax << '\n';
+        outFile_ << "nMatches: " << nMatches << '\n';
+        outFile_ << "nMapPoints: " << nTriangulated << '\n';
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
 
     visualizer_->drawFrameTriangulatedMatches(pMap_, currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
 

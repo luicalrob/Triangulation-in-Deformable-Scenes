@@ -34,7 +34,7 @@
 class MapVisualizer {
 public:
     MapVisualizer() = delete;
-    MapVisualizer(std::shared_ptr<Map> pMap, const PoseData initialPose = PoseData());
+    MapVisualizer(std::shared_ptr<Map> pMap, const PoseData initialPose = PoseData(), const bool showScene = true);
 
     /*
      * Updates the visualization of the map
@@ -60,6 +60,8 @@ private:
     bool createdDisplay = false;
 
     Sophus::SE3f currPose_;
+
+    bool showScene_;
 };
 
 

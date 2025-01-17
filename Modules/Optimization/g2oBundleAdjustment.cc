@@ -471,7 +471,6 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
     double NloptArapUpperBound = settings.getNloptArapUpperBound();
 
     bool drawRaysSelection = settings.getDrawRaysSelection();
-    bool showScene = settings.getShowScene();;
 
     std::ofstream outFile_;
     std::string filePath_ = settings.getExpFilePath();
@@ -571,9 +570,8 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
         std::cout << "\nOptimization COMPLETED... " << i << " / " << nOptimizations << " iterations." << std::endl;
         std::cout << "\nOptimization change: " << optimizationUpdate << std::endl;
         
-        if(showScene) {
-            mapVisualizer->update(drawRaysSelection);
-        }
+        
+        mapVisualizer->update(drawRaysSelection);
 
         if (i != nOptimizations) {
             std::cout << i << " / " << nOptimizations << " MEASUREMENTS: \n";
@@ -604,9 +602,7 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
         std::cerr << "Unable to open file for writing" << std::endl;
     }
 
-    if(showScene) {
-        mapVisualizer->update(drawRaysSelection);
-    }
+    mapVisualizer->update(drawRaysSelection);
 }
 
 void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWeight, double arapBalanceWeight, double alphaWeight, 

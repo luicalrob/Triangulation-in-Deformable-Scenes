@@ -2,36 +2,14 @@
 
 # Camera calibration and distortion parameters
 # 320x320 drunkard
-# Camera.fx: 190.68059285
-# Camera.fy: 190.68059285
-# Camera.cx: 160.0
-# Camera.cy: 160.0
-
-# 1024x1024 drunkard
-Camera.fx: 610.17789714
-Camera.fy: 610.17789714
-Camera.cx: 512.0
-Camera.cy: 512.0
-
-#640x480 freiburg
-# Camera.fx: 517.306408
-# Camera.fy: 516.469215
-# Camera.cx: 318.643040
-# Camera.cy: 255.313989
-
-# Camera.k1: 0.262383
-# Camera.k2: -0.953104
-# Camera.p1: -0.005358
-# Camera.p2: 0.002628
-# Camera.k3: 1.163314
+Camera.fx: 190.68059285
+Camera.fy: 190.68059285
+Camera.cx: 160.0
+Camera.cy: 160.0
 
 # Camera resolution
-# Camera.cols: 320
-# Camera.rows: 320
-Camera.cols: 1024
-Camera.rows: 1024
-# Camera.cols: 640
-# Camera.rows: 480
+Camera.cols: 320
+Camera.rows: 320
 
 # Number of features per image
 FeatureExtractor.nFeatures: 1000
@@ -58,20 +36,19 @@ Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 75
+Matching.initialization.radius: 40
 
 #Covisivility graph
 Map.minObs: 6
 
 #Min cos parallax to triangulate
-#Triangulation.minCos: 0.9962
-Triangulation.minCos: 2
+Triangulation.minCos: 0.6
 
 #Inliers and reprojection checks
-Triangulation.checks: "true"
+Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 6
+Triangulation.depthLimit: 3.5
 
 # LUIS
 #Cameras poses
@@ -91,23 +68,12 @@ Measurements.DepthError: 0.0
 Measurements.DepthScale.C1: 0.0004577706569009
 Measurements.DepthScale.C2: 0.0004577706569009
 Measurements.Depth.Scale: 0.0004577706569009
-#0.0004577706569009
-#0.00012  580-595 000000/level0
-#0.000315 580-596 000000/level1
-#0.00046  580-596 000000/level2
-#0.00061  580-593 000000/level3
-#0.00075
 
-# 100000000: 3 stand
-# 90000: 6.38
-# 1000: 14 stand
-# 1.5: 0 stand
-# 10000000: 3 stand
 #Weights for optimization
 Optimization.rep: 1
-Optimization.global: 100
-Optimization.arap: 10000000
-# Optimization.arap: 0.1
+Optimization.global: 1
+# Optimization.arap: 10000000
+Optimization.arap: 1000000000
 Optimization.alpha:  1
 Optimization.beta: 1
 
@@ -123,14 +89,10 @@ Optimization.nlopt.relTolerance: 1.5e-1
 Optimization.nlopt.absTolerance: 1.5e-1
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
-# Optimization.nlopt.global.lowerBound: 50
-# Optimization.nlopt.global.upperBound: 50
-# Optimization.nlopt.arap.lowerBound: 0.00000001
-# Optimization.nlopt.arap.upperBound: 10000000
-Optimization.nlopt.global.lowerBound: 100
-Optimization.nlopt.global.upperBound: 100
+Optimization.nlopt.global.lowerBound: 1
+Optimization.nlopt.global.upperBound: 1
 Optimization.nlopt.arap.lowerBound: 0.000000001
-Optimization.nlopt.arap.upperBound: 100000000
+Optimization.nlopt.arap.upperBound: 10000000000000
 
 Experiment.Filepath: "./Data/Experiment.txt"
 
@@ -140,14 +102,14 @@ Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM DepthMeasurement
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
 # DepthMeasurement: use depth measurements 
-Triangulation.seed.location: "TwoPoints"
+Triangulation.seed.location: "FarPoints"
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction
 
 
 # Visualization
-MapVisualizer.showScene: "true"
+MapVisualizer.showScene: "false"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "true"
+Execution.stop: "false"

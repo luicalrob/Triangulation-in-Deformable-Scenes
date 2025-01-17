@@ -32,7 +32,7 @@
 
 class FrameVisualizer {
 public:
-    FrameVisualizer();
+    FrameVisualizer(const bool showScene = true);
 
     /*
      * Sets a reference Frame for matchings visualization
@@ -83,6 +83,7 @@ private:
 
     std::vector<cv::KeyPoint> vRefKeys_;
     cv::Mat refIm_;
+    bool showScene_;
 };
 
 
