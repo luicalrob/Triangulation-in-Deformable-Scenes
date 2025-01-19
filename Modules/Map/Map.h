@@ -126,6 +126,16 @@ public:
     int getNumberOfObservations(ID mp);
 
     /*
+     * Insert Global rotation and translation calculated between the mappoints of two keyframes
+     */
+    void insertGlobalKeyFramesTransformation(ID kf1, ID kf2, const Sophus::SE3f& transformation);
+
+    /*
+     * Gets the global rotation and translation calculated between the mappoints of two keyframes
+     */
+    Sophus::SE3f getGlobalKeyFramesTransformation(ID kf1, ID kf2);
+
+    /*
      * Checks that the KeyFrame with the given ID is consistent with the information
      * in the graph. FOR DEBUG PURPOSES ONLY
      */
@@ -156,6 +166,12 @@ public:
         assert(graphIds.size() == 0);*/
     }
 
+    /*
+     * Clones the map and returns a new Map instance
+     */
+    std::shared_ptr<Map> clone() const;
+
+    
 private:
     /*
      * Updates the orientation and most distinctive descriptor of a MapPoint
@@ -192,7 +208,7 @@ private:
 
         ID nKeyFrameId_, nMapPointId_;
         int idxInKf_;
-        std::shared_ptr<GraphNode> pPrevKeyFrame_, pNextKeyFrame_;
+        std::shared_ptr<GraphNode> prefKeyFrame_, pNextKeyFrame_;
         std::shared_ptr<GraphNode> pPrevMapPoint_, pNextMapPoint_;
     };
     typedef std::shared_ptr<GraphNode> GraphNode_;
@@ -200,8 +216,13 @@ private:
     std::unordered_map<ID,GraphNode_> mKeyFrameGraph_;
     std::unordered_map<ID,GraphNode_> mMapPointGraph_;
 
+    std::unordered_map<ID, std::unordered_map<ID, Sophus::SE3f>> mGTransformation_;
+
     float minCommonObs_;
+
+
 };
+
 
 #endif //SLAM_MAP_H
 

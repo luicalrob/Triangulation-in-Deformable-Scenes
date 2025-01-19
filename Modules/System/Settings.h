@@ -66,9 +66,54 @@ public:
     int getMatchingForTriangulationTh();
     int getMatchingFuseTh();
 
+    float getMatchingInitRadius();
+
     int getMinCommonObs();
 
     float getMinCos();
+    bool getCheckingSelection();
+    float getDepthLimit();
+    
+    Eigen::Vector3f getFirstCameraPos();
+    Eigen::Vector3f getSecondCameraPos();
+
+    float getSimulatedRepError();
+    int getDecimalsRepError();
+    float getSimulatedDepthError();
+    float getSimulatedDepthScaleC1();
+    float getSimulatedDepthScaleC2();
+    double getDepthMeasurementsScale();
+
+    double getOptRepWeight();
+    double getOptArapWeight();
+    double getOptGlobalWeight();
+    double getOptAlphaWeight();
+    double getOptBetaWeight();
+
+    std::string getOptSelection();
+    std::string getOptWeightsSelection();
+    std::string getTrianMethod();
+    std::string getTrianLocation();
+
+    int getnOptimizations();
+    int getnOptIterations();
+
+    int getNloptnOptimizations();
+    double getNloptRelTolerance();
+    double getNloptAbsTolerance();
+    double getNloptRepLowerBound();
+    double getNloptRepUpperBound();
+    double getNloptGlobalLowerBound();
+    double getNloptGlobalUpperBound();
+    double getNloptArapLowerBound();
+    double getNloptArapUpperBound();
+
+    std::string getExpFilePath();
+
+    bool getShowScene();
+    bool getDrawRaysSelection();
+    bool getShowSolution();
+    bool getStopExecutionOption();
 
 private:
     //Camera parameters
@@ -92,9 +137,54 @@ private:
     int nMatchingTriangulationTh_;
     int nMatchingFuseTh_;
 
+    float nMatchingInitRadius_;
+
     int nMinCommonObs_;
 
     float fMinCos_;
+    bool checkingSelection_;
+    float fDepthLimit_;
+
+    Eigen::Vector3f C1Pose_;
+    Eigen::Vector3f C2Pose_;
+
+    float SimulatedRepError_;
+    int DecimalsRepError_;
+    float SimulatedDepthError_;
+    float SimulatedDepthScaleC1_;
+    float SimulatedDepthScaleC2_;
+    double DepthMeasurementsScale_;
+
+    double OptRepWeight_;
+    double OptArapWeight_;
+    double OptGlobalWeight_;
+    double OptAlphaWeight_;
+    double OptBetaWeight_;
+
+    std::string OptSelection_;
+    std::string OptWeightsSelection_;
+    std::string TrianMethod_;
+    std::string TrianLocation_;
+
+    int NloptnOptimizations_;
+    double NloptRelTolerance_;
+    double NloptAbsTolerance_;
+    double NloptRepLowerBound_;
+    double NloptRepUpperBound_;
+    double NloptGlobalLowerBound_;
+    double NloptGlobalUpperBound_;
+    double NloptArapLowerBound_;
+    double NloptArapUpperBound_;
+
+    std::string ExpFilePath_;
+
+    int nOptimizations_;
+    int nOptIterations_;
+
+    bool showScene_;
+    bool drawRaysSelection_;
+    bool showSolution_;
+    bool stop_;
 };
 
 

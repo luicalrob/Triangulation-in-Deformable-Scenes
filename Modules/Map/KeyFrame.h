@@ -24,7 +24,7 @@
 #ifndef SLAM_KEYFRAME_H
 #define SLAM_KEYFRAME_H
 
-#include "Tracking/Frame.h"
+#include "Mapping/Frame.h"
 
 class KeyFrame {
 public:
@@ -32,6 +32,16 @@ public:
      * Constructor from a Frame
      */
     KeyFrame(Frame& f);
+ 
+    /*
+     * Copy constructor
+     */
+    KeyFrame(const KeyFrame& other);
+
+    /*
+     * Clone method
+     */
+    KeyFrame* clone() const;
 
     /*
      * Gets the pose of the KeyFrame
@@ -47,6 +57,41 @@ public:
      * Gets the KeyPoint at index idx in the KeyFrame
      */
     cv::KeyPoint getKeyPoint(size_t idx);
+
+    /*
+     * Gets all the KeyPoints of the Frame
+     */
+    std::vector<cv::KeyPoint>& getKeyPoints();
+    
+    /*
+     * Gets the depth image of the frame
+     */
+    cv::Mat getDepthIm();
+
+    /*
+     * Gets the depth measure at index idx in the KeyFrame
+     */
+    float getDepthMeasure(size_t idx);
+
+    /*
+     * Gets the depth measure of the depth image
+     */
+    double getDepthMeasure(float x, float y);
+
+    /*
+     * Gets all the depth measurements of the Frame
+     */
+    std::vector<float>& getDepthMeasurements();
+
+    /*
+     * Set depth scale comparing measurements and mappoints depth if the scale is not previously set
+     */
+    void setInitialDepthScale();
+
+    /*
+     * Gets KF depth scale
+     */
+    float getDepthScale();
 
     /*
      * Gets all the MapPoint matches of the KeyFrame. They are associated with the KeyPoint at the same index
@@ -136,6 +181,9 @@ private:
     std::vector<cv::KeyPoint> vKeys_;
     cv::Mat descriptors_;
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
+    std::vector<float> vDepthMeasurements_;
+    float depthScale_ = 1.0f;
+    cv::Mat depthIm_;
 
     Sophus::SE3f Tcw_;
 
@@ -167,6 +215,5 @@ private:
 
     double timestamp_;
 };
-
 
 #endif //SLAM_KEYFRAME_H

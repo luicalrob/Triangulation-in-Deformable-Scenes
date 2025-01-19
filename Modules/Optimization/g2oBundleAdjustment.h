@@ -25,6 +25,10 @@
 #define SLAM_G2OBUNDLEADJUSTMENT_H
 
 #include "Map/Map.h"
+#include "open3d/Open3D.h"
+#include "System/Settings.h"
+#include "Visualization/FrameVisualizer.h"
+#include "Visualization/MapVisualizer.h"
 
 /*
  * Performs a full Bundle Adjustment (optimizes both camera poses and 3D points)
@@ -43,9 +47,19 @@ int poseOnlyOptimization(Frame& currFrame);
 void localBundleAdjustment(Map* pMap, ID currKeyFrameId);
 
 /*
+ * Performs a As-Rigid-As-Possible optimization using arapOptimization function inside a external loop to optimize the weights
+ */
+void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer,
+                            const std::vector<Eigen::Vector3f> originalPoints = {}, const std::vector<Eigen::Vector3f> movedPoints ={});
+
+/*
  * Performs a As-Rigid-As-Possible optimization joined with a reprojection error minimization (optimizes 3D points positions in the space)
  */
-void arapOptimization(Map* pMap);
+void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWeight, double arapBalanceWeight, double alphaWeight, 
+                        double betaWeight, float DepthError, int nOptIterations, double* optimizationUpdate = nullptr);
+
+
+void arapOpen3DOptimization(Map* pMap);
 
 /*
  * Performs a As-Rigid-As-Possible optimization joined with a bundle adjustment optimization (optimizes 3D poses of the cameras and 3D points positions in the space)
@@ -55,6 +69,9 @@ void arapOptimization(Map* pMap);
 /*
  * Compute the tipical desviation of the distances between two objects given two mappoints to compare
  */
-Eigen::Vector3d getInvUncertainty(int i, std::unordered_set<int> adjacencyList, std::map<size_t, size_t> posIndexes, std::vector<Eigen::Vector3d> v1Positions, std::vector<Eigen::Vector3d> v2Positions);
+double getInvUncertainty(std::shared_ptr<open3d::geometry::TriangleMesh> mesh, 
+                        std::vector<Eigen::Vector3d> v1Positions, 
+                        std::vector<Eigen::Vector3d> v2Positions,
+                        size_t i);
 
 #endif //SLAM_G2OBUNDLEADJUSTMENT_H

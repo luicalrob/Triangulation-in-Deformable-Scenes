@@ -81,8 +81,100 @@ Settings::Settings(const std::string& configFile) {
     nMatchingTriangulationTh_ = fSettings["Matching.searchForTriangulation"];
     nMatchingFuseTh_ = fSettings["Matching.fuse"];
 
+    nMatchingInitRadius_ = fSettings["Matching.initialization.radius"];
+
     nMinCommonObs_ = fSettings["Map.minObs"];
     fMinCos_ = fSettings["Triangulation.minCos"];
+
+    //LUIS
+    std::string checksString;
+    fSettings["Triangulation.checks"] >> checksString;
+
+    if (checksString == "true") {
+        checkingSelection_ = true;
+    } else {
+        checkingSelection_ = false;
+    }
+
+    fDepthLimit_ = fSettings["Triangulation.depthLimit"];
+
+    float C1x = fSettings["Camera.FirstPose.x"];
+    float C1y = fSettings["Camera.FirstPose.y"];
+    float C1z = fSettings["Camera.FirstPose.z"];
+    C1Pose_ << C1x, C1y, C1z;
+    float C2x = fSettings["Camera.SecondPose.x"];
+    float C2y = fSettings["Camera.SecondPose.y"];
+    float C2z = fSettings["Camera.SecondPose.z"];
+    C2Pose_ << C2x, C2y, C2z;
+
+    SimulatedRepError_ = fSettings["Keypoints.RepError"];
+    DecimalsRepError_ = fSettings["Keypoints.decimalsApproximation"];
+    SimulatedDepthError_ = fSettings["Measurements.DepthError"];
+    SimulatedDepthScaleC1_ = fSettings["Measurements.DepthScale.C1"];
+    SimulatedDepthScaleC2_ = fSettings["Measurements.DepthScale.C2"];
+    DepthMeasurementsScale_ = fSettings["Measurements.Depth.Scale"];
+
+    OptRepWeight_ = fSettings["Optimization.rep"];
+    OptArapWeight_ = fSettings["Optimization.arap"];
+    OptGlobalWeight_ = fSettings["Optimization.global"];
+    OptAlphaWeight_ = fSettings["Optimization.alpha"];
+    OptBetaWeight_ = fSettings["Optimization.beta"];
+
+    fSettings["Optimization.selection"] >> OptSelection_;
+    fSettings["Optimization.weightsSelection"] >> OptWeightsSelection_;
+    fSettings["Triangulation.method"] >> TrianMethod_;
+    fSettings["Triangulation.seed.location"] >> TrianLocation_;
+
+    nOptimizations_ = fSettings["Optimization.numberOfOptimizations"];
+    nOptIterations_ = fSettings["Optimization.numberOfIterations"];
+
+    NloptnOptimizations_ = fSettings["Optimization.nlopt.numberOfIterations"];
+    NloptRelTolerance_ = fSettings["Optimization.nlopt.relTolerance"];
+    NloptAbsTolerance_ = fSettings["Optimization.nlopt.absTolerance"];
+    NloptRepLowerBound_ = fSettings["Optimization.nlopt.rep.lowerBound"];
+    NloptRepUpperBound_ = fSettings["Optimization.nlopt.rep.upperBound"];
+    NloptGlobalLowerBound_ = fSettings["Optimization.nlopt.global.lowerBound"];
+    NloptGlobalUpperBound_ = fSettings["Optimization.nlopt.global.upperBound"];
+    NloptArapLowerBound_ = fSettings["Optimization.nlopt.arap.lowerBound"];
+    NloptArapUpperBound_ = fSettings["Optimization.nlopt.arap.upperBound"];
+
+    fSettings["Experiment.Filepath"] >> ExpFilePath_;
+    
+    std::string showSceneString;
+    fSettings["MapVisualizer.showScene"] >> showSceneString;
+
+    if (showSceneString == "true") {
+        showScene_ = true;
+    } else {
+        showScene_ = false;
+    }
+    
+    std::string drawRaysString;
+    fSettings["MapVisualizer.drawRays"] >> drawRaysString;
+
+    if (drawRaysString == "true") {
+        drawRaysSelection_ = true;
+    } else {
+        drawRaysSelection_ = false;
+    }
+
+    std::string showSolutionString;
+    fSettings["Visualizer.showSolution"] >> showSolutionString;
+
+    if (showSolutionString == "true") {
+        showSolution_ = true;
+    } else {
+        showSolution_ = false;
+    }
+
+    std::string stopString;
+    fSettings["Execution.stop"] >> stopString;
+
+    if (stopString == "true") {
+        stop_ = true;
+    } else {
+        stop_ = false;
+    }
 }
 
 ostream &operator<<(std::ostream& output, const Settings& settings){
@@ -177,10 +269,154 @@ int Settings::getMatchingFuseTh(){
     return nMatchingFuseTh_;
 }
 
+float Settings::getMatchingInitRadius(){
+    return nMatchingInitRadius_;
+}
+
 int Settings::getMinCommonObs(){
     return nMinCommonObs_;
 }
 
 float Settings::getMinCos(){
     return fMinCos_;
+}
+
+bool Settings::getCheckingSelection(){
+    return checkingSelection_;
+}
+
+float Settings::getDepthLimit(){
+    return fDepthLimit_;
+}
+
+Eigen::Vector3f Settings::getFirstCameraPos(){
+    return C1Pose_;
+}
+
+Eigen::Vector3f Settings::getSecondCameraPos(){
+    return C2Pose_;
+}
+
+float Settings::getSimulatedRepError(){
+    return SimulatedRepError_;
+}
+
+int Settings::getDecimalsRepError(){
+    return DecimalsRepError_;
+}
+
+float Settings::getSimulatedDepthError(){
+    return SimulatedDepthError_;
+}
+
+float Settings::getSimulatedDepthScaleC1(){
+    return SimulatedDepthScaleC1_;
+}
+
+float Settings::getSimulatedDepthScaleC2(){
+    return SimulatedDepthScaleC2_;
+}
+
+double Settings::getDepthMeasurementsScale(){
+    return DepthMeasurementsScale_;
+}
+
+double Settings::getOptRepWeight(){
+    return OptRepWeight_;
+}
+
+double Settings::getOptArapWeight(){
+    return OptArapWeight_;
+}
+
+double Settings::getOptGlobalWeight(){
+    return OptGlobalWeight_;
+}
+
+double Settings::getOptAlphaWeight(){
+    return OptAlphaWeight_;
+}
+
+double Settings::getOptBetaWeight(){
+    return OptBetaWeight_;
+}
+
+std::string Settings::getOptSelection(){
+    return OptSelection_;
+}
+
+std::string Settings::getOptWeightsSelection(){
+    return OptWeightsSelection_;
+}
+
+std::string Settings::getTrianMethod(){
+    return TrianMethod_;
+}
+
+std::string Settings::getTrianLocation(){
+    return TrianLocation_;
+}
+
+int Settings::getnOptimizations(){
+    return nOptimizations_;
+}
+
+int Settings::getnOptIterations(){
+    return nOptIterations_;
+}
+
+int Settings::getNloptnOptimizations(){
+    return NloptnOptimizations_;
+}
+
+double Settings::getNloptRelTolerance(){
+    return NloptRelTolerance_;
+}
+
+double Settings::getNloptAbsTolerance(){
+    return NloptAbsTolerance_;
+}
+
+double Settings::getNloptRepLowerBound(){
+    return NloptRepLowerBound_;
+}
+
+double Settings::getNloptRepUpperBound(){
+    return NloptRepUpperBound_;
+}
+
+double Settings::getNloptGlobalLowerBound(){
+    return NloptGlobalLowerBound_;
+}
+
+double Settings::getNloptGlobalUpperBound(){
+    return NloptGlobalUpperBound_;
+}
+
+double Settings::getNloptArapLowerBound(){
+    return NloptArapLowerBound_;
+}
+
+double Settings::getNloptArapUpperBound(){
+    return NloptArapUpperBound_;
+}
+
+std::string Settings::getExpFilePath() {
+    return ExpFilePath_;
+}
+
+bool Settings::getDrawRaysSelection(){
+    return drawRaysSelection_;
+}
+
+bool Settings::getShowSolution(){
+    return showSolution_;
+}
+
+bool Settings::getShowScene(){
+    return showScene_;
+}
+
+bool Settings::getStopExecutionOption(){
+    return stop_;
 }

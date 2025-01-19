@@ -17,6 +17,8 @@
 
 #include "KeyFrame.h"
 
+#include <cmath>
+
 using namespace std;
 
 long unsigned int KeyFrame::nNextId_=0;
@@ -25,6 +27,9 @@ KeyFrame::KeyFrame(Frame &f) {
     vKeys_ = f.getKeyPoints();
     descriptors_ = f.getDescriptors().clone();
     vMapPoints_ = f.getMapPoints();
+    vDepthMeasurements_ = f.getDepthMeasurements();
+    depthIm_ = f.getDepthIm();
+    depthScale_ = f.getDepthScale();
 
     Tcw_ = f.getPose();
 
@@ -56,6 +61,39 @@ KeyFrame::KeyFrame(Frame &f) {
     timestamp_ = f.getTimestamp();
 }
 
+KeyFrame::KeyFrame(const KeyFrame& other)
+    : vKeys_(other.vKeys_),
+      vDepthMeasurements_(other.vDepthMeasurements_),
+      depthScale_(other.depthScale_),
+      depthIm_(other.depthIm_),
+      descriptors_(other.descriptors_.clone()),
+      Tcw_(other.Tcw_),
+      calibration_(other.calibration_),
+      grid_(other.grid_),
+      gridElementWidthInv_(other.gridElementWidthInv_),
+      gridElementHeightInv_(other.gridElementHeightInv_),
+      minCol_(other.minCol_),
+      minRow_(other.minRow_),
+      nId_(other.nId_),
+      vScaleFactor_(other.vScaleFactor_),
+      vInvScaleFactor_(other.vInvScaleFactor_),
+      vSigma2_(other.vSigma2_),
+      vInvSigma2_(other.vInvSigma2_),
+      timestamp_(other.timestamp_)
+{
+    for (const auto& pMP : other.vMapPoints_) {
+        if (pMP) {
+            vMapPoints_.emplace_back(std::make_shared<MapPoint>(*pMP->clone())); 
+        } else {
+            vMapPoints_.emplace_back(nullptr);
+        }
+    }
+}
+
+KeyFrame* KeyFrame::clone() const {
+    return new KeyFrame(*this);
+}
+
 Sophus::SE3f KeyFrame::getPose() {
     return Tcw_;
 }
@@ -66,6 +104,66 @@ void KeyFrame::setPose(Sophus::SE3f &Tcw) {
 
 cv::KeyPoint KeyFrame::getKeyPoint(size_t idx) {
     return vKeys_[idx];
+}
+
+std::vector<cv::KeyPoint>& KeyFrame::getKeyPoints() {
+    return vKeys_;
+}
+
+cv::Mat KeyFrame::getDepthIm(){
+    return depthIm_.clone();
+}
+
+float KeyFrame::getDepthMeasure(size_t idx) {
+    return vDepthMeasurements_[idx];
+}
+
+double KeyFrame::getDepthMeasure(float x, float y) {
+    if (depthIm_.empty()) {
+        return -1;
+        //throw std::runtime_error("Depth image is not initialized.");
+    }
+    if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        throw std::out_of_range("Pixel coordinates are out of range.");
+    }
+
+    uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
+
+    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
+
+    return static_cast<double>(rawDepth) * scaleFactor;
+}
+
+std::vector<float>& KeyFrame::getDepthMeasurements() {
+    return vDepthMeasurements_;
+}
+
+void KeyFrame::setInitialDepthScale(){
+    if (vDepthMeasurements_.empty()) std::cout << "Not possible to set KF depth scale, no depth measurements.\n" << std::endl;
+    if (vMapPoints_.empty()) std::cout << "Not possible to set KF depth scale, no map points.\n" << std::endl;
+    if (!depthScale_) {
+        float scale = 0;
+        float n_points = 0;
+        for(size_t i = 0; i < vDepthMeasurements_.size(); ++i) {
+            float d = vDepthMeasurements_[i];
+            shared_ptr<MapPoint> mp = vMapPoints_[i];
+            if (!d) continue;
+            if (!mp) continue;
+
+            Eigen::Vector3f mp_pos = mp->getWorldPosition();
+            Eigen::Vector3f mp_pos_c = Tcw_ * mp_pos;
+            float mp_z = mp_pos_c[2];
+
+            scale += d / mp_z;
+
+            n_points++;
+        }
+        depthScale_ = scale / n_points;
+    }
+}
+
+float KeyFrame::getDepthScale(){
+    return depthScale_;
 }
 
 std::vector<std::shared_ptr<MapPoint> > & KeyFrame::getMapPoints() {
