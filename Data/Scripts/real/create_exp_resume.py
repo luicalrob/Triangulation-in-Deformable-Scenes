@@ -6,11 +6,9 @@ import os
 import csv
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import synthetic_values
+from config import real_values
 
-default_values = synthetic_values
-DATA_DIR = "./Data/Excels"
-output_file = "./Data/Excels/Resumes/Depth not scaled - Experiment 1"
+default_values = real_values
 
 """
 Script to aggregate resume all the experiments generated as CSV files.
@@ -36,15 +34,15 @@ def validate_options(option, available_values, option_name):
             f"Available options are: {available_values}"
         )
 
-def get_csv_filename(model, triangulation, experiment):
-    return f"{model}_{triangulation}_{experiment}.csv"
+def get_csv_filename(triangulation, experiment):
+    return f"{triangulation}_{experiment}.csv"
 
-def process_files(models, triangulations, experiment):
+def process_files(pairs, triangulations, experiment):
     """
-    Process the CSV files for the specified models, triangulations, and experiment.
+    Process the CSV files for the specified pairs, triangulations, and experiment.
 
     Args:
-        models (list): List of model names to process.
+        pairs (list): List of pairs names to process.
         triangulations (list): List of triangulation methods to process.
         experiment (int): Experiment number to process.
 
@@ -54,26 +52,31 @@ def process_files(models, triangulations, experiment):
     # Initialize the results with a metadata structure.
     results = []
     metadata = {
-        "Avg Movement": [],
-        "Shape": [],
-        "Gaussian Mov": [],
-        "Rigid Mov": [],
+        "Level": [],
+        "Checks": [],
     }
 
     # Headers for model and triangulation columns
-    model_columns = {}
-    for model in models:
+    pair_columns = {}
+    for pair in pairs:
         for triangulation in triangulations:
-            col_prefix = f"{model}-{triangulation}"
-            model_columns[f"{col_prefix} Improvement (%)"] = []
-            model_columns[f"{col_prefix} Final Vs Mov (%)"] = []
-            model_columns[f"{col_prefix} Initial VS Mov (%)"] = []
+            col_prefix = f"{pair}-{triangulation}"
+            pair_columns[f"{col_prefix} Improvement (%)"] = []
+            pair_columns[f"{col_prefix} Final Vs Mov (%)"] = []
+            pair_columns[f"{col_prefix} Av. movement"] = []
+            pair_columns[f"{col_prefix} Av. error"] = []
+            pair_columns[f"{col_prefix} RMSE"] = []
+            pair_columns[f"{col_prefix} t C1C2 norm (mm)"] = []
+            pair_columns[f"{col_prefix} parallax"] = []
+            pair_columns[f"{col_prefix} nMatches"] = []
+            pair_columns[f"{col_prefix} nMPs"] = []
 
     # Now process each model and triangulation combination
     firstIteration = True
-    for model in models:
+    for pair in pairs:
+        DATA_DIR = f'./Data/Excels/Drunkard/{pair}'
         for triangulation in triangulations:
-            file_name = f"{model}_{triangulation}_{experiment}.csv"
+            file_name = f"{triangulation}_{experiment}.csv"
             file_path = os.path.join(DATA_DIR, file_name)
 
             if os.path.exists(file_path):
@@ -86,36 +89,34 @@ def process_files(models, triangulations, experiment):
                     for _, final_row in final_rows.iterrows():  # Loop through all "FINAL" rows
                         if (firstIteration):
                             # Extract values for each "FINAL" row
-                            avg_movement = final_row["Av. movement"]
-                            shape = final_row["Shape"]
-                            gaussian_mov = final_row["Gaussian"]
-                            rigid_mov = final_row["Rigid"]
+                            level = final_row["Level"]
+                            checks = final_row["Checks"]
 
                             # Populate the metadata dictionary
-                            metadata["Avg Movement"].append(avg_movement)
-                            metadata["Shape"].append(shape)
-                            metadata["Gaussian Mov"].append(gaussian_mov)
-                            metadata["Rigid Mov"].append(rigid_mov)
+                            metadata["Level"].append(level)
+                            metadata["Checks"].append(checks)
 
+                        avg_movement = final_row["Av. movement"]
+                        avg_error = final_row["Av. error"]
+                        RMSE = final_row["RMSE"]
                         improvement = final_row["Improv. (%)"]
                         final_vs_mov = final_row["Final Vs Mov (%)"]
+                        parallax = final_row["pllx"]
+                        nMatches = final_row["nMchs"]
+                        nMPs = final_row["nMPs"]
+                        t = final_row["t C1C2 norm (mm)"]
 
                         # Add Improvement (%) and Final Vs Mov (%) for the specific model & triangulation
-                        model_columns[f"{model}-{triangulation} Improvement (%)"].append(improvement)
-                        model_columns[f"{model}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
+                        pair_columns[f"{pair}-{triangulation} Improvement (%)"].append(improvement)
+                        pair_columns[f"{pair}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
+                        pair_columns[f"{pair}-{triangulation} Av. movement"].append(avg_movement)  
+                        pair_columns[f"{pair}-{triangulation} Av. error"].append(avg_error)  
+                        pair_columns[f"{pair}-{triangulation} RMSE"].append(RMSE)
+                        pair_columns[f"{pair}-{triangulation} t C1C2 norm (mm)"].append(t)
+                        pair_columns[f"{pair}-{triangulation} parallax"].append(parallax)
+                        pair_columns[f"{pair}-{triangulation} nMatches"].append(nMatches)
+                        pair_columns[f"{pair}-{triangulation} nMPs"].append(nMPs)
                     firstIteration = False
-
-                    for _, initial_row in initial_rows.iterrows():  # Loop through all "INITIAL" rows
-                        initial_error = initial_row["Av. error"]
-                        mov = initial_row["Av. movement"]
-
-                        initial_e_value = float(initial_error.replace(',', '.'))
-                        mov_value = float(mov.replace(',', '.'))
-
-                        initial_vs_mov_percentage = (initial_e_value / mov_value) * 100
-                        initial_vs_mov = "{:.2f}".format(initial_vs_mov_percentage).replace('.', ',')
-
-                        model_columns[f"{model}-{triangulation} Initial VS Mov (%)"].append(initial_vs_mov)  
 
                 else:
                     print(f"No FINAL row found in {file_name}.")
@@ -124,32 +125,38 @@ def process_files(models, triangulations, experiment):
             
 
     # Merge all collected data into a single DataFrame
-    final_data = {**metadata, **model_columns}
+    final_data = {**metadata, **pair_columns}
+
     return pd.DataFrame(final_data)
 
 
 parser = argparse.ArgumentParser(description="Process CSV data for experiments.")
-parser.add_argument("--Models", nargs='+', required=True, help="List of models to include.")
+parser.add_argument("--Pairs", nargs='+', required=True, help="List of pairs to include.")
 parser.add_argument("--Triangulation", nargs='+', required=True, help="Triangulation methods to include.")
 parser.add_argument("--Experiment", type=int, required=True, help="Experiment number (1-6).")
 args = parser.parse_args()
 
+
+output_file = f"./Data/Excels/Drunkard/Resumes/Experiment {args.Experiment}"
+
 # Validate input
-selected_models = args.Models
+selected_pairs = args.Pairs
 selected_triangulations = args.Triangulation
 selected_experiment = args.Experiment
 
-for model in selected_models:
-    validate_options(model, default_values["Model"], "Model")
+for pair in selected_pairs:
+    validate_options(pair, default_values["Pair"], "Pair")
 for triangulation in selected_triangulations:
     validate_options(triangulation, default_values["Triangulation"], "Triangulation")
-validate_options(selected_experiment, default_values["ExperimentType"], "Experiment")
+validate_options(selected_experiment, default_values["Experiment"], "Experiment")
 
 # Collect relevant CSV files
 csv_files = []
-for model in selected_models:
+for pair in selected_pairs:
+
+    DATA_DIR = f"./Data/Excels/Drunkard/{pair}"
     for triangulation in selected_triangulations:
-        filename = get_csv_filename(model, triangulation, selected_experiment)
+        filename = get_csv_filename(triangulation, selected_experiment)
         filepath = os.path.join(DATA_DIR, filename)
         if os.path.exists(filepath):
             csv_files.append(filepath)
@@ -162,7 +169,7 @@ if not csv_files:
 print(f"Collected CSV files: {csv_files}")
 
 # Process the files and create a DataFrame
-results_df = process_files(selected_models, selected_triangulations, selected_experiment)
+results_df = process_files(selected_pairs, selected_triangulations, selected_experiment)
 
 # Save the results to a CSV file
 if not results_df.empty:
