@@ -106,7 +106,6 @@ void triangulateClassic(const Eigen::Vector3f &xn1, const Eigen::Vector3f &xn2,
 void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
                  const Sophus::SE3f& T1w, const Sophus::SE3f& T2w, Eigen::Vector3f& x3D_1, 
                  Eigen::Vector3f& x3D_2, std::string location) {
-    // Data definition using the paper variable naming.
     Eigen::Vector3f f0 = xn1;
     Eigen::Vector3f f1 = xn2;
 
@@ -117,7 +116,6 @@ void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
     Eigen::Vector3f t = T21.translation();
     Eigen::Matrix3f R = T21.rotationMatrix();
 
-    // Depth computation.
     Eigen::Vector3f p = (R * f0_hat).cross(f1_hat);
     Eigen::Vector3f q = (R * f0_hat).cross(t);
     Eigen::Vector3f r = f1_hat.cross(t);
@@ -143,6 +141,11 @@ void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
     if(location == "TwoPoints"){
         p3D1 = x1;
         p3D2 = x1;
+    } else if(location == "FarPoints") {
+        point0 = (t + point0);
+
+        p3D1 = point0 + (point0 - x1);
+        p3D2 = point1 + (point1 - x1);
     } else {
         p3D1 = (t + point0);
         p3D2 = point1;
