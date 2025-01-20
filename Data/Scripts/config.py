@@ -1,10 +1,51 @@
 #!/usr/bin/env python3
 
-default_values = {
+real_values = {
+    "Pair": [
+        "320_00000_1975-1983", 
+        "320_00000_2500-2513",
+        "1024_00000_1229-1236",
+        "1024_00001_110-120"
+    ],
+    "Triangulation": ["InRays", "TwoPoints", "FarPoints"],
+    "Level": ["level0", "level1", "level2", "level3"],
+    "Checks": ["checks", "no_checks"],
+    "Experiment": range(1, 6),
+}
+
+level_types = {
+    "level0": ["checks", "no_checks"],
+    "level1": ["no_checks"],
+    "level2": ["no_checks"],
+    "level3": ["no_checks"]
+}
+
+def setParameters(pair):
+    """
+    Args:
+        pair (string)
+    
+    Returns:
+        dict: parameters for .yalm
+    """
+    # Diccionario de configuración
+    experiment_config = {
+        "1024_00000_1229-1236": {"Hdist": 30, "window": 75, "maxDepth": 6.0, "minParallax": 2},
+        "1024_00001_110-120": {"Hdist": 30, "window": 120, "maxDepth": 6.0, "minParallax": 0.6},
+        "320_00000_2500-2513": {"Hdist": 35, "window": 40, "maxDepth": 3.5, "minParallax": 1.6},
+        "320_00000_1975-1983": {"Hdist": 35, "window": 40, "maxDepth": 3.5, "minParallax": 0.6},
+    }
+    
+    try:
+        return experiment_config[pair]
+    except KeyError:
+        raise ValueError("The pair must be one the determinated previously.")
+
+synthetic_values = {
     "Model": [
         "ARAP", 
         "ARAP_not_scaled_depth",
-        "ARAP_depth",
+        "ARAP_depth_1mm",
         "ARAP_depth_3mm",
         "ARAP_depth_8mm",
         "ARAP_depth_onlyTriang", 
@@ -20,7 +61,7 @@ default_values = {
     "Experiment": range(1, 6),
 }
 
-shape_experiment_types = {
+shape_syn_experiment_types = {
     "Planar": [1, 2, 3, 4, 5, 6],
     "Gradual": [2, 3, 5, 6],
 }
