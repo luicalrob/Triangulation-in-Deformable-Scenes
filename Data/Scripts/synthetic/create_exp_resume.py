@@ -9,8 +9,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import synthetic_values
 
 default_values = synthetic_values
-DATA_DIR = "./Data/Excels"
-output_file = "./Data/Excels/Resumes/Depth not scaled - Experiment 1"
 
 """
 Script to aggregate resume all the experiments generated as CSV files.
@@ -74,6 +72,7 @@ def process_files(models, triangulations, experiment):
     for model in models:
         for triangulation in triangulations:
             file_name = f"{model}_{triangulation}_{experiment}.csv"
+            DATA_DIR = f"./Data/Excels/Synthetic/Compare models/{experiment}"
             file_path = os.path.join(DATA_DIR, file_name)
 
             if os.path.exists(file_path):
@@ -150,6 +149,8 @@ csv_files = []
 for model in selected_models:
     for triangulation in selected_triangulations:
         filename = get_csv_filename(model, triangulation, selected_experiment)
+
+        DATA_DIR = f"./Data/Excels/Synthetic/Compare models/{selected_experiment}"
         filepath = os.path.join(DATA_DIR, filename)
         if os.path.exists(filepath):
             csv_files.append(filepath)
@@ -163,6 +164,8 @@ print(f"Collected CSV files: {csv_files}")
 
 # Process the files and create a DataFrame
 results_df = process_files(selected_models, selected_triangulations, selected_experiment)
+
+output_file = f"./Data/Excels/Synthetic/Resumes/Models test Experiment {args.Experiment}"
 
 # Save the results to a CSV file
 if not results_df.empty:

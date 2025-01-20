@@ -113,7 +113,7 @@ with open('./Data/Experiments/' + Model + '/' + Triangulation + '/' + str(Depth)
     lines = txt_file.readlines()
 
 # Step 2: Initialize variables
-out_file_path = './Data/Excels/'+ Model + "_" + Triangulation + "_" + str(Experiment)
+out_file_path = './Data/Excels/Synthetic/Compare models/'+str(Experiment)+'/'+ Model + "_" + Triangulation + "_" + str(Experiment)
 
 firstMeasure = False
 if not os.path.exists(out_file_path + '.csv') or os.stat(out_file_path + '.csv').st_size == 0:
