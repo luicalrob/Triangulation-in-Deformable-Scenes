@@ -452,7 +452,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
     // Create optimizer
     g2o::SparseOptimizer optimizer;
 
-    std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>();
+    std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver =  g2o::make_unique<g2o::LinearSolverEigen<g2o::BlockSolverX::PoseMatrixType>>();
 
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
             g2o::make_unique<g2o::BlockSolverX>(std::move(linearSolver))

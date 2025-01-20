@@ -1,0 +1,119 @@
+%YAML:1.0
+
+# Camera calibration and distortion parameters
+Camera.fx: 458.654
+Camera.fy: 457.296
+Camera.cx: 367.215
+Camera.cy: 248.375
+
+Camera.k1: -0.28340811
+Camera.k2: 0.07395907
+Camera.p1: 0.00019359
+Camera.p2: 1.76187114e-05
+
+# Camera resolution
+Camera.cols: 752
+Camera.rows: 480
+
+# Number of features per image
+FeatureExtractor.nFeatures: 1000
+
+# Number of levels in the scale pyramid
+FeatureExtractor.nScales: 8
+
+# Scale factor between levels in the scale pyramid
+FeatureExtractor.fScaleFactor: 1.2
+
+# Feature grid dimensions
+FeatureGrid.nGridCols: 64
+FeatureGrid.nGridRows: 48
+
+#Essential Matrix threshold
+Epipolar.th: 0.002
+
+#Feature matching thresholds
+Matching.initialization: 50
+Matching.guidedMatching: 50
+Matching.searchByProjection: 100
+Matching.searchForTriangulation: 50
+Matching.fuse: 50
+
+#Covisivility graph
+Map.minObs: 15
+
+#Min cos parallax to triangulate
+Triangulation.minCos: 0.9998
+
+
+# LUIS
+#Cameras poses
+Camera.FirstPose.x: -0.10
+Camera.FirstPose.y: 0.02
+Camera.FirstPose.z: 0.12
+Camera.SecondPose.x: 0.14
+Camera.SecondPose.y: 0.01
+Camera.SecondPose.z: 0.06
+# Camera.FirstPose.x: 0.0
+# Camera.FirstPose.y: 0.0
+# Camera.FirstPose.z: 0.0
+# Camera.SecondPose.x: 0.14
+# Camera.SecondPose.y: 0.01
+# Camera.SecondPose.z: 0.06
+
+#Simulated typical desviation reprojection error for keypoints
+Keypoints.RepError: 1.0
+Keypoints.decimalsApproximation: 1
+
+#Simulated typical desviation depth measurements error (mm)
+Measurements.DepthError: 0.0
+Measurements.DepthScale.C1: 1
+Measurements.DepthScale.C2: 1
+
+# 100000000: 3 stand
+# 90000: 6.38
+# 1000: 14 stand
+# 1.5: 0 stand
+# 10000000: 3 stand
+#Weights for optimization
+Optimization.rep: 1
+Optimization.global: 50
+Optimization.arap: 200000
+Optimization.alpha:  1
+Optimization.beta: 1
+
+#Optimization values
+Optimization.numberOfOptimizations: 2
+Optimization.numberOfIterations: 25
+
+Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
+Optimization.weightsSelection: "nlopt" # nlopt or eigen
+
+Optimization.nlopt.numberOfIterations: 30
+Optimization.nlopt.relTolerance: 1.5e-1
+Optimization.nlopt.absTolerance: 1.5e-1
+Optimization.nlopt.rep.lowerBound: 1
+Optimization.nlopt.rep.upperBound: 1
+Optimization.nlopt.global.lowerBound: 50
+Optimization.nlopt.global.upperBound: 50
+Optimization.nlopt.arap.lowerBound: 0.00001
+Optimization.nlopt.arap.upperBound: 10000000
+
+Experiment.Filepath: "./Data/Experiment.txt"
+
+#Method selection
+Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM DepthMeasurement
+# Classic: Use standard triangulation calculation
+# NRSLAM: use NRSLAM weighted midpoint method
+# ORBSLAM: use ORBSLAM linear method
+# DepthMeasurement: use depth measurements 
+Triangulation.seed.location: "TwoPoints"
+# inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
+# TwoPoints: SVD triangulation method, choosing both points as the solution
+# FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction
+
+
+# Visualization
+MapVisualizer.showScene: "true"
+MapVisualizer.drawRays: "false"
+Visualizer.showSolution: "false"
+Execution.stop: "true"

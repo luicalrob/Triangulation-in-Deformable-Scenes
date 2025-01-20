@@ -28,7 +28,7 @@
 using namespace std;
 
 int main(){
-    SLAM SLAM("Data/Test.yaml");
+    SLAM SLAM("Data/Simulation.yaml");
 
     Eigen::Vector3f firstCamera = SLAM.getFirstCameraPos();
     Eigen::Vector3f secondCamera = SLAM.getSecondCameraPos();
