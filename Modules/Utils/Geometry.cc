@@ -143,6 +143,11 @@ void triangulateNRSLAM(const Eigen::Vector3f& xn1, const Eigen::Vector3f& xn2,
     if(location == "TwoPoints"){
         p3D1 = x1;
         p3D2 = x1;
+    } else if(location == "FarPoints") {
+        point0 = (t + point0);
+
+        p3D1 = point0 + (point0 - x1);
+        p3D2 = point1 + (point1 - x1);
     } else {
         p3D1 = (t + point0);
         p3D2 = point1;
