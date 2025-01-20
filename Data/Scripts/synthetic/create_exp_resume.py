@@ -121,8 +121,6 @@ def process_files(models, triangulations, experiment):
             else:
                 print(f"File not found: {file_name}")
             
-    print(len(metadata))
-    print(len(model_columns))
     # Merge all collected data into a single DataFrame
     final_data = {**metadata, **model_columns}
     for key, value in final_data.items():
