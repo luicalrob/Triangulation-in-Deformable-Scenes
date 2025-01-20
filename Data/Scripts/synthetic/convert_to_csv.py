@@ -87,8 +87,12 @@ if (args.ExperimentType):
     ExperimentType = args.ExperimentType
 else:
     ExperimentType = 1
+    
 # 1, 2, 3, 4, 5  (Same experiment but different data)         
-Experiment = 1    
+if (args.Experiment):
+    Experiment = args.Experiment
+else:
+    Experiment = 1  
 
 parameters = setExperiment(ExperimentType)
 gaussianMov = parameters["gaussian"]
