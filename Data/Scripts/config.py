@@ -45,7 +45,7 @@ synthetic_values = {
     "Model": [
         "ARAP", 
         "ARAP_not_scaled_depth",
-        "ARAP_depth",
+        "ARAP_depth_1mm",
         "ARAP_depth_3mm",
         "ARAP_depth_8mm",
         "ARAP_depth_onlyTriang", 
