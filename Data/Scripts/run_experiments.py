@@ -29,7 +29,7 @@ def setExperiment(experiment_type):
 
 
 default_values = {
-    "Triangulation": ["InRays", "TwoPoints"],
+    "Triangulation": ["InRays", "TwoPoints", "FarPoints"],
     "Depth": [20, 80, 150],
     "Shape": ["Planar", "Gradual"],
     "ExperimentType": range(1, 7),
