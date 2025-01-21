@@ -55,10 +55,10 @@ synthetic_values = {
         "ARAP_OneSet"
     ],
     "Triangulation": ["InRays", "TwoPoints", "FarPoints"],
-    "Depth": [20, 80, 150],
+    "Depth": [20],
     "Shape": ["Planar", "Gradual"],
     "ExperimentType": range(1, 7),
-    "Experiment": range(1, 6),
+    "Experiment": [2, 3],
 }
 
 shape_syn_experiment_types = {

@@ -72,7 +72,16 @@ def process_files(models, triangulations, experiment):
     for model in models:
         for triangulation in triangulations:
             file_name = f"{model}_{triangulation}_{experiment}.csv"
-            DATA_DIR = f"./Data/Excels/Synthetic/Compare models/{experiment}"
+            if(model == "ARAP_not_scaled_depth"):
+                folder = "Depth without scale"
+            elif(model == "ARAP_depth_onlyTriang"):
+                folder = "Depth methods"
+            elif(model == "ARAP_depth_1mm" or model == "ARAP_depth_3mm" or model == "ARAP_depth_8mm"):
+                folder = "Depth uncertainty"
+            else:
+                folder = "Compare models"
+
+            DATA_DIR = f"./Data/Excels/Synthetic/{folder}/{experiment}"
             file_path = os.path.join(DATA_DIR, file_name)
 
             if os.path.exists(file_path):
@@ -151,7 +160,16 @@ for model in selected_models:
     for triangulation in selected_triangulations:
         filename = get_csv_filename(model, triangulation, selected_experiment)
 
-        DATA_DIR = f"./Data/Excels/Synthetic/Compare models/{selected_experiment}"
+        if(model == "ARAP_not_scaled_depth"):
+            folder = "Depth without scale"
+        elif(model == "ARAP_depth_onlyTriang"):
+            folder = "Depth methods"
+        elif(model == "ARAP_depth_1mm" or model == "ARAP_depth_3mm" or model == "ARAP_depth_8mm"):
+            folder = "Depth uncertainty"
+        else:
+            folder = "Compare models"
+            
+        DATA_DIR = f"./Data/Excels/Synthetic/{folder}/{selected_experiment}"
         filepath = os.path.join(DATA_DIR, filename)
         if os.path.exists(filepath):
             csv_files.append(filepath)
@@ -166,7 +184,7 @@ print(f"Collected CSV files: {csv_files}")
 # Process the files and create a DataFrame
 results_df = process_files(selected_models, selected_triangulations, selected_experiment)
 
-output_file = f"./Data/Excels/Synthetic/Resumes/Models test Experiment {args.Experiment}"
+output_file = f"./Data/Excels/Synthetic/Resumes/Experiment {args.Experiment}"
 
 # Save the results to a CSV file
 if not results_df.empty:

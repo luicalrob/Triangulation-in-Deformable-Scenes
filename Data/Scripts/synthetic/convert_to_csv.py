@@ -87,7 +87,7 @@ if (args.ExperimentType):
     ExperimentType = args.ExperimentType
 else:
     ExperimentType = 1
-    
+
 # 1, 2, 3, 4, 5  (Same experiment but different data)         
 if (args.Experiment):
     Experiment = args.Experiment
@@ -117,7 +117,16 @@ with open('./Data/Experiments/' + Model + '/' + Triangulation + '/' + str(Depth)
     lines = txt_file.readlines()
 
 # Step 2: Initialize variables
-out_file_path = './Data/Excels/Synthetic/Compare models/'+str(Experiment)+'/'+ Model + "_" + Triangulation + "_" + str(Experiment)
+if(Model == "ARAP_not_scaled_depth"):
+    folder = "Depth without scale"
+elif(Model == "ARAP_depth_onlyTriang"):
+    folder = "Depth methods"
+elif(Model == "ARAP_depth_1mm" or Model == "ARAP_depth_3mm" or Model == "ARAP_depth_8mm"):
+    folder = "Depth uncertainty"
+else:
+    folder = "Compare models"
+
+out_file_path = './Data/Excels/Synthetic/'+ folder +'/'+str(Experiment)+'/'+ Model + "_" + Triangulation + "_" + str(Experiment)
 
 firstMeasure = False
 if not os.path.exists(out_file_path + '.csv') or os.stat(out_file_path + '.csv').st_size == 0:

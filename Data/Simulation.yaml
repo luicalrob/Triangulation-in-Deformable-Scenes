@@ -50,14 +50,8 @@ Triangulation.minCos: 0.9998
 Camera.FirstPose.x: -0.10
 Camera.FirstPose.y: 0.02
 Camera.FirstPose.z: 0.12
-Camera.SecondPose.x: 0.34
-Camera.SecondPose.y: 0.08
-Camera.SecondPose.z: 0.06
-# Camera.FirstPose.x: 0.0
-# Camera.FirstPose.y: 0.0
-# Camera.FirstPose.z: 0.0
-Camera.SecondPose.x: 0.34
-Camera.SecondPose.y: 0.08
+Camera.SecondPose.x: 0.14
+Camera.SecondPose.y: 0.01
 Camera.SecondPose.z: 0.06
 
 #Simulated typical desviation reprojection error for keypoints
@@ -65,9 +59,9 @@ Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 0.0
-Measurements.DepthScale.C1: 1
-Measurements.DepthScale.C2: 1
+Measurements.DepthError: 3.0
+Measurements.DepthScale.C1: 0.4
+Measurements.DepthScale.C2: 1.7
 
 # 100000000: 3 stand
 # 90000: 6.38
@@ -82,7 +76,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 2
+Optimization.numberOfOptimizations: 20
 Optimization.numberOfIterations: 25
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
