@@ -9,8 +9,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import synthetic_values
 
 default_values = synthetic_values
-DATA_DIR = "./Data/Excels"
-output_file = "./Data/Excels/Resumes/Depth not scaled - Experiment 1"
 
 """
 Script to aggregate resume all the experiments generated as CSV files.
@@ -65,15 +63,27 @@ def process_files(models, triangulations, experiment):
     for model in models:
         for triangulation in triangulations:
             col_prefix = f"{model}-{triangulation}"
-            model_columns[f"{col_prefix} Improvement (%)"] = []
-            model_columns[f"{col_prefix} Final Vs Mov (%)"] = []
-            model_columns[f"{col_prefix} Initial VS Mov (%)"] = []
+            # model_columns[f"{col_prefix} Improvement (%)"] = []
+            # model_columns[f"{col_prefix} Final Vs Mov (%)"] = []
+            # model_columns[f"{col_prefix} Initial VS Mov (%)"] = []
+            model_columns[f"{col_prefix} Initial (mm)"] = []
+            model_columns[f"{col_prefix} Final (mm)"] = []
 
     # Now process each model and triangulation combination
     firstIteration = True
     for model in models:
         for triangulation in triangulations:
             file_name = f"{model}_{triangulation}_{experiment}.csv"
+            if(model == "ARAP_not_scaled_depth"):
+                folder = "Depth without scale"
+            elif(model == "ARAP_depth_onlyTriang"):
+                folder = "Depth methods"
+            elif(model == "ARAP_depth_1mm" or model == "ARAP_depth_3mm" or model == "ARAP_depth_8mm"):
+                folder = "Depth uncertainty"
+            else:
+                folder = "Compare models"
+
+            DATA_DIR = f"./Data/Excels/Synthetic/{folder}/{experiment}"
             file_path = os.path.join(DATA_DIR, file_name)
 
             if os.path.exists(file_path):
@@ -83,6 +93,19 @@ def process_files(models, triangulations, experiment):
 
                 # Ensure we process the correct rows
                 if not final_rows.empty:
+                    for _, initial_row in initial_rows.iterrows():  # Loop through all "INITIAL" rows
+                        initial_error = initial_row["Av. error"]
+                        mov = initial_row["Av. movement"]
+
+                        initial_e_value = float(initial_error.replace(',', '.'))
+                        mov_value = float(mov.replace(',', '.'))
+
+                        initial_vs_mov_percentage = (initial_e_value / mov_value) * 100
+                        # initial_error = "{:.2f}".format(initial_vs_mov_percentage).replace('.', ',')
+
+                        # model_columns[f"{model}-{triangulation} Initial VS Mov (%)"].append(initial_vs_mov)  
+                        model_columns[f"{model}-{triangulation} Initial (mm)"].append(initial_error)  
+
                     for _, final_row in final_rows.iterrows():  # Loop through all "FINAL" rows
                         if (firstIteration):
                             # Extract values for each "FINAL" row
@@ -99,32 +122,23 @@ def process_files(models, triangulations, experiment):
 
                         improvement = final_row["Improv. (%)"]
                         final_vs_mov = final_row["Final Vs Mov (%)"]
+                        final_error = final_row["Av. error"]
 
                         # Add Improvement (%) and Final Vs Mov (%) for the specific model & triangulation
-                        model_columns[f"{model}-{triangulation} Improvement (%)"].append(improvement)
-                        model_columns[f"{model}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
+                        # model_columns[f"{model}-{triangulation} Improvement (%)"].append(improvement)
+                        # model_columns[f"{model}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
+                        model_columns[f"{model}-{triangulation} Final (mm)"].append(final_error)  
                     firstIteration = False
-
-                    for _, initial_row in initial_rows.iterrows():  # Loop through all "INITIAL" rows
-                        initial_error = initial_row["Av. error"]
-                        mov = initial_row["Av. movement"]
-
-                        initial_e_value = float(initial_error.replace(',', '.'))
-                        mov_value = float(mov.replace(',', '.'))
-
-                        initial_vs_mov_percentage = (initial_e_value / mov_value) * 100
-                        initial_vs_mov = "{:.2f}".format(initial_vs_mov_percentage).replace('.', ',')
-
-                        model_columns[f"{model}-{triangulation} Initial VS Mov (%)"].append(initial_vs_mov)  
 
                 else:
                     print(f"No FINAL row found in {file_name}.")
             else:
                 print(f"File not found: {file_name}")
             
-
     # Merge all collected data into a single DataFrame
     final_data = {**metadata, **model_columns}
+    for key, value in final_data.items():
+        print(f"Key: {key}, Length: {len(value)}")
     return pd.DataFrame(final_data)
 
 
@@ -150,6 +164,17 @@ csv_files = []
 for model in selected_models:
     for triangulation in selected_triangulations:
         filename = get_csv_filename(model, triangulation, selected_experiment)
+
+        if(model == "ARAP_not_scaled_depth"):
+            folder = "Depth without scale"
+        elif(model == "ARAP_depth_onlyTriang"):
+            folder = "Depth methods"
+        elif(model == "ARAP_depth_1mm" or model == "ARAP_depth_3mm" or model == "ARAP_depth_8mm"):
+            folder = "Depth uncertainty"
+        else:
+            folder = "Compare models"
+            
+        DATA_DIR = f"./Data/Excels/Synthetic/{folder}/{selected_experiment}"
         filepath = os.path.join(DATA_DIR, filename)
         if os.path.exists(filepath):
             csv_files.append(filepath)
@@ -163,6 +188,8 @@ print(f"Collected CSV files: {csv_files}")
 
 # Process the files and create a DataFrame
 results_df = process_files(selected_models, selected_triangulations, selected_experiment)
+
+output_file = f"./Data/Excels/Synthetic/Resumes/Errors {args.Experiment}"
 
 # Save the results to a CSV file
 if not results_df.empty:
