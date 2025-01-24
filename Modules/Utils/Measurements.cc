@@ -285,8 +285,8 @@ void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
             std::cout << "Global rotation: " << Rs_global<< "\n";
             std::cout << "Global translation: " << Ts<< "\n";
 
-            float s1 = pKF1->getDepthScale();
-            float s2 = pKF2->getDepthScale();
+            float s1 = pKF1->getEstimatedDepthScale();
+            float s2 = pKF2->getEstimatedDepthScale();
 
             std::cout << "C1 depth scale: " << s1 << std::endl;
             std::cout << "C2 depth scale: " << s2 << std::endl;

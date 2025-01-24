@@ -2,14 +2,14 @@
 
 # Camera calibration and distortion parameters
 # 320x320 drunkard
-Camera.fx: 190.68059285
-Camera.fy: 190.68059285
-Camera.cx: 160.0
-Camera.cy: 160.0
+Camera.fx: 610.17789714
+Camera.fy: 610.17789714
+Camera.cx: 512.0
+Camera.cy: 512.0
 
 # Camera resolution
-Camera.cols: 320
-Camera.rows: 320
+Camera.cols: 1024
+Camera.rows: 1024
 
 # Number of features per image
 FeatureExtractor.nFeatures: 1000
@@ -29,26 +29,26 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 35
+Matching.initialization: 30
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 40
+Matching.initialization.radius: 75
 
 #Covisivility graph
 Map.minObs: 6
 
 #Min cos parallax to triangulate
-Triangulation.minCos: 0.6
+Triangulation.minCos: 1.9
 
 #Inliers and reprojection checks
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 3.5
+Triangulation.depthLimit: 2.5
 
 # LUIS
 #Cameras poses
@@ -64,29 +64,29 @@ Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 0.0
-Measurements.DepthScale.C1: 0.0004577706569009
-Measurements.DepthScale.C2: 0.0004577706569009
+Measurements.DepthError: 100.0
+Measurements.DepthScale.C1: 0.8
+Measurements.DepthScale.C2: 1.1
 Measurements.Depth.Scale: 0.0004577706569009
 
 #Weights for optimization
 Optimization.rep: 1
 Optimization.global: 1
 # Optimization.arap: 10000000
-Optimization.arap: 1000000000
+Optimization.arap: 10000000
 Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 15
+Optimization.numberOfOptimizations: 20
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
 Optimization.weightsSelection: "nlopt" # nlopt or eigen
 
 Optimization.nlopt.numberOfIterations: 30
-Optimization.nlopt.relTolerance: 1.5e-1
-Optimization.nlopt.absTolerance: 1.5e-1
+Optimization.nlopt.relTolerance: 1.0e-3
+Optimization.nlopt.absTolerance: 1.0e-3
 Optimization.nlopt.rep.lowerBound: 1
 Optimization.nlopt.rep.upperBound: 1
 Optimization.nlopt.global.lowerBound: 1
@@ -109,7 +109,7 @@ Triangulation.seed.location: "FarPoints"
 
 
 # Visualization
-MapVisualizer.showScene: "false"
+MapVisualizer.showScene: "true"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "false"
+Execution.stop: "true"

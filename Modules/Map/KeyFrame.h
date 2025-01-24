@@ -69,29 +69,35 @@ public:
     cv::Mat getDepthIm();
 
     /*
-     * Gets the depth measure at index idx in the KeyFrame
+     * Gets the depth measure at index idx in the KeyFrame (simulation images)
      */
     float getDepthMeasure(size_t idx);
 
     /*
-     * Gets the depth measure of the depth image
-     */
-    double getDepthMeasure(float x, float y);
-
-    /*
-     * Gets all the depth measurements of the Frame
+     * Gets all the depth measurements of the Frame (simulation images)
      */
     std::vector<float>& getDepthMeasurements();
 
     /*
-     * Set depth scale comparing measurements and mappoints depth if the scale is not previously set
+     * Set depth scale comparing measurements and mappoints depth if the scale is not previously set (simulation images)
      */
-    void setInitialDepthScale();
+    void setInitialDepthScaleInSimulationImages();
+
 
     /*
-     * Gets KF depth scale
+     * Gets the depth measure of the depth image (real images)
      */
-    float getDepthScale();
+    double getDepthMeasure(float x, float y, bool scaled = true);
+
+    /*
+     * Gets KF estimated depth scale (up to scale depth measurements) (real images)
+     */
+    double getEstimatedDepthScale();
+
+    /*
+     * Set KF estimated depth scale (up to scale depth measurements) (real images)
+     */
+    void setEstimatedDepthScale(double scale);
 
     /*
      * Gets all the MapPoint matches of the KeyFrame. They are associated with the KeyPoint at the same index
@@ -182,7 +188,8 @@ private:
     cv::Mat descriptors_;
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
     std::vector<float> vDepthMeasurements_;
-    float depthScale_ = 1.0f;
+    float imageDepthScale_ = 1.0f; // for simulatng an unknown scale
+    double estimatedDepthScale_ = 1.0f; // scale estimated
     cv::Mat depthIm_;
 
     Sophus::SE3f Tcw_;

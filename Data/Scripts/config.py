@@ -10,7 +10,7 @@ real_values = {
     "Triangulation": ["InRays", "TwoPoints", "FarPoints"],
     "Level": ["level0", "level1", "level2", "level3"],
     "Checks": ["checks", "no_checks"],
-    "Experiment": range(1, 6),
+    "Experiment": range(6, 11),
 }
 
 level_types = {
@@ -30,7 +30,7 @@ def setParameters(pair):
     """
     # Diccionario de configuración
     experiment_config = {
-        "1024_00000_1229-1236": {"Hdist": 30, "window": 75, "maxDepth": 6.0, "minParallax": 2},
+        "1024_00000_1229-1236": {"Hdist": 30, "window": 75, "maxDepth": 2.5, "minParallax": 1.9},
         "1024_00001_110-120": {"Hdist": 30, "window": 120, "maxDepth": 6.0, "minParallax": 0.6},
         "320_00000_2500-2513": {"Hdist": 35, "window": 40, "maxDepth": 3.5, "minParallax": 1.6},
         "320_00000_1975-1983": {"Hdist": 35, "window": 40, "maxDepth": 3.5, "minParallax": 0.6},
