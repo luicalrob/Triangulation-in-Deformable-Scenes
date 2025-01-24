@@ -201,8 +201,8 @@ bool Mapping::monocularMapInitialization() {
             currKeyFrame_->setMapPoint(i, pMP2);
 
             //scale
-            double d1_up_to_scale = refKeyFrame_->getDepthMeasure(x1.x, x1.y, true);
-            double d2_up_to_scale = currKeyFrame_->getDepthMeasure(x2.x, x2.y, true);
+            double d1_up_to_scale = refKeyFrame_->getDepthMeasure(x1.x, x1.y, false);
+            double d2_up_to_scale = currKeyFrame_->getDepthMeasure(x2.x, x2.y, false);
             v3DPoints_c[j] = T1w * v3DPoints_w[j];
             v3DPoints_c[j+1] = T2w * v3DPoints_w[j+1];
 

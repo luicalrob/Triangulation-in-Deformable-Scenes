@@ -10,7 +10,7 @@ real_values = {
     "Triangulation": ["InRays", "TwoPoints", "FarPoints"],
     "Level": ["level0", "level1", "level2", "level3"],
     "Checks": ["checks", "no_checks"],
-    "Experiment": range(6, 11),
+    "Experiment": range(11, 16),
 }
 
 level_types = {

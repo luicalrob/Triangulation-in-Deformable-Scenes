@@ -22,6 +22,8 @@ Is important to fist use automated_loop_to_csv.py
 Output:
 - A single CSV & Excel file containing all the experiments for the specified 
   Model, Triangulation method and Experiment.
+Example:
+./Data/Scripts/real/create_exp_resume.py --Pair 1024_00000_1229-1236 --Triangulation FarPoints TwoPoints --Experiment 1
 
 Author: Luis Calderón Robustillo
 Date: 19/11/24

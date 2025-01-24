@@ -12,7 +12,7 @@ Steps:
 3. Select extra choices if needed (not mandatory).
 4. Run the script.
 Example:
-./Data/Scripts/real/run_real_experiments.py --Pair 1024_00000_1229-1238
+./Data/Scripts/real/run_real_experiments.py --Pair 1024_00000_1229-1236
 
 
 Output:
