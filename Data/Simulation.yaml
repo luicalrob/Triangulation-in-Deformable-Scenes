@@ -90,7 +90,7 @@ Optimization.nlopt.rep.upperBound: 1
 Optimization.nlopt.global.lowerBound: 50
 Optimization.nlopt.global.upperBound: 50
 Optimization.nlopt.arap.lowerBound: 0.00001
-Optimization.nlopt.arap.upperBound: 10000000
+Optimization.nlopt.arap.upperBound: 100000000
 
 Experiment.Filepath: "./Data/Experiment.txt"
 
