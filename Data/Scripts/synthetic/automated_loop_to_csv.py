@@ -36,56 +36,61 @@ shape_experiment_types = shape_syn_experiment_types
 
 parser = argparse.ArgumentParser(description="Run experiments automatically.")
 parser.add_argument('--Model', type=str, choices=default_values["Model"] ,required=True, help="Model name (ARAP_NoGlobal, ARAP_OneSet, ARAP, Elastic or HyperElastic)")
-parser.add_argument('--Triangulation', type=str, choices=default_values["Triangulation"], required=True, help="Triangulation type (InRays or TwoPoints)")
+parser.add_argument('--Triangulation', type=str, choices=default_values["Triangulation"], required=False, help="Triangulation type (InRays or TwoPoints)")
 parser.add_argument('--Depth', type=int, choices=default_values["Depth"], required=False, help="Depth value (20, 80, 150)")
 parser.add_argument('--Shape', type=str, choices=default_values["Shape"], required=False, help="Shape type (Planar or Gradual)")
 parser.add_argument('--ExperimentType', type=int, choices=default_values["ExperimentType"], help="Type of experiment (1 to 6)", required=False)
-parser.add_argument('--Experiment', type=int, choices=default_values["Experiment"], required=True, help="Experiment number (1 to 5)")
+parser.add_argument('--Experiment', type=int, choices=default_values["Experiment"], required=False, help="Experiment number (1 to 5)")
 args = parser.parse_args()
-        
+
+triangulations = [args.Triangulation] if args.Triangulation else default_values["Triangulation"]
+experiments = [args.Experiment] if args.Experiment else default_values["Experiment"]  
 depths = [args.Depth] if args.Depth else default_values["Depth"]
 shapes = [args.Shape] if args.Shape else default_values["Shape"]
 experiment_types = [args.ExperimentType] if args.ExperimentType else default_values["ExperimentType"]
 
-for depth, shape in product(depths, shapes):
-    # Determine experiment types based on shape
-    if shape in shape_experiment_types:
-        experiment_types = [args.ExperimentType] if args.ExperimentType else shape_experiment_types[shape]
-    else:
-        experiment_types = default_values["ExperimentType"]
-
-    for experiment_type in experiment_types:
-        parameters = setExperiment(experiment_type)
-        gaussianMov = parameters["gaussian"]
-        rigidMov = parameters["rigid"]
-
-        if gaussianMov == 2.5 or rigidMov == 2.5:
-            totalMov = "2_5"
+for triangulation, experiment in product(triangulations, experiments):
+    print("Triangulation: " + triangulation)
+    print("Experiment: " + str(experiment))
+    for depth, shape in product(depths, shapes):
+        # Determine experiment types based on shape
+        if shape in shape_experiment_types:
+            experiment_types = [args.ExperimentType] if args.ExperimentType else shape_experiment_types[shape]
         else:
-            totalMov = "10"
+            experiment_types = default_values["ExperimentType"]
 
-        if gaussianMov == 0:
-            typeMov = "rigid"
-        elif rigidMov == 0:
-            typeMov = "gaussian"
-        else:
-            typeMov = "gaussian + rigid"
+        for experiment_type in experiment_types:
+            parameters = setExperiment(experiment_type)
+            gaussianMov = parameters["gaussian"]
+            rigidMov = parameters["rigid"]
 
-        convert_script = './Data/Scripts/synthetic/convert_to_csv.py'
+            if gaussianMov == 2.5 or rigidMov == 2.5:
+                totalMov = "2_5"
+            else:
+                totalMov = "10"
 
-        command = [
-            "python3",
-            convert_script,
-            "--Model", args.Model,
-            "--Triangulation", args.Triangulation,
-            "--Depth", str(depth),
-            "--Shape", shape,
-            "--ExperimentType", str(experiment_type),
-            "--Experiment", str(args.Experiment)
-        ]
+            if gaussianMov == 0:
+                typeMov = "rigid"
+            elif rigidMov == 0:
+                typeMov = "gaussian"
+            else:
+                typeMov = "gaussian + rigid"
 
-        try:
-            result = subprocess.run(command, check=True, text=True, capture_output=True)
-            print(result.stdout)  # Print the script's output
-        except subprocess.CalledProcessError as e:
-            print(f"Error running {convert_script}: {e.stderr}")
+            convert_script = './Data/Scripts/synthetic/convert_to_csv.py'
+
+            command = [
+                "python3",
+                convert_script,
+                "--Model", args.Model,
+                "--Triangulation", triangulation,
+                "--Depth", str(depth),
+                "--Shape", shape,
+                "--ExperimentType", str(experiment_type),
+                "--Experiment", str(experiment)
+            ]
+
+            try:
+                result = subprocess.run(command, check=True, text=True, capture_output=True)
+                print(result.stdout)  # Print the script's output
+            except subprocess.CalledProcessError as e:
+                print(f"Error running {convert_script}: {e.stderr}")

@@ -63,11 +63,9 @@ def process_files(models, triangulations, experiment):
     for model in models:
         for triangulation in triangulations:
             col_prefix = f"{model}-{triangulation}"
-            # model_columns[f"{col_prefix} Improvement (%)"] = []
-            # model_columns[f"{col_prefix} Final Vs Mov (%)"] = []
-            # model_columns[f"{col_prefix} Initial VS Mov (%)"] = []
-            model_columns[f"{col_prefix} Initial (mm)"] = []
-            model_columns[f"{col_prefix} Final (mm)"] = []
+            model_columns[f"{col_prefix} Improvement (%)"] = []
+            model_columns[f"{col_prefix} Final Vs Mov (%)"] = []
+            model_columns[f"{col_prefix} Initial VS Mov (%)"] = []
 
     # Now process each model and triangulation combination
     firstIteration = True
@@ -93,19 +91,6 @@ def process_files(models, triangulations, experiment):
 
                 # Ensure we process the correct rows
                 if not final_rows.empty:
-                    for _, initial_row in initial_rows.iterrows():  # Loop through all "INITIAL" rows
-                        initial_error = initial_row["Av. error"]
-                        mov = initial_row["Av. movement"]
-
-                        initial_e_value = float(initial_error.replace(',', '.'))
-                        mov_value = float(mov.replace(',', '.'))
-
-                        initial_vs_mov_percentage = (initial_e_value / mov_value) * 100
-                        # initial_error = "{:.2f}".format(initial_vs_mov_percentage).replace('.', ',')
-
-                        # model_columns[f"{model}-{triangulation} Initial VS Mov (%)"].append(initial_vs_mov)  
-                        model_columns[f"{model}-{triangulation} Initial (mm)"].append(initial_error)  
-
                     for _, final_row in final_rows.iterrows():  # Loop through all "FINAL" rows
                         if (firstIteration):
                             # Extract values for each "FINAL" row
@@ -122,13 +107,23 @@ def process_files(models, triangulations, experiment):
 
                         improvement = final_row["Improv. (%)"]
                         final_vs_mov = final_row["Final Vs Mov (%)"]
-                        final_error = final_row["Av. error"]
 
                         # Add Improvement (%) and Final Vs Mov (%) for the specific model & triangulation
-                        # model_columns[f"{model}-{triangulation} Improvement (%)"].append(improvement)
-                        # model_columns[f"{model}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
-                        model_columns[f"{model}-{triangulation} Final (mm)"].append(final_error)  
+                        model_columns[f"{model}-{triangulation} Improvement (%)"].append(improvement)
+                        model_columns[f"{model}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
                     firstIteration = False
+
+                    for _, initial_row in initial_rows.iterrows():  # Loop through all "INITIAL" rows
+                        initial_error = initial_row["Av. error"]
+                        mov = initial_row["Av. movement"]
+
+                        initial_e_value = float(initial_error.replace(',', '.'))
+                        mov_value = float(mov.replace(',', '.'))
+
+                        initial_vs_mov_percentage = (initial_e_value / mov_value) * 100
+                        initial_vs_mov = "{:.2f}".format(initial_vs_mov_percentage).replace('.', ',')
+
+                        model_columns[f"{model}-{triangulation} Initial VS Mov (%)"].append(initial_vs_mov)  
 
                 else:
                     print(f"No FINAL row found in {file_name}.")
@@ -189,7 +184,7 @@ print(f"Collected CSV files: {csv_files}")
 # Process the files and create a DataFrame
 results_df = process_files(selected_models, selected_triangulations, selected_experiment)
 
-output_file = f"./Data/Excels/Synthetic/Resumes/Errors {args.Experiment}"
+output_file = f"./Data/Excels/Synthetic/Resumes/Experiment {args.Experiment}"
 
 # Save the results to a CSV file
 if not results_df.empty:
