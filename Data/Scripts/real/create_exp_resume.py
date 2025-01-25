@@ -128,7 +128,8 @@ def process_files(pairs, triangulations, experiment):
 
     # Merge all collected data into a single DataFrame
     final_data = {**metadata, **pair_columns}
-
+    for key, value in final_data.items():
+        print(f"Key: {key}, Length: {len(value)}")
     return pd.DataFrame(final_data)
 
 

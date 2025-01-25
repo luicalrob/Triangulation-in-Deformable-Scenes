@@ -2,14 +2,14 @@
 
 # Camera calibration and distortion parameters
 # 320x320 drunkard
-Camera.fx: 190.68059285
-Camera.fy: 190.68059285
-Camera.cx: 160.0
-Camera.cy: 160.0
+Camera.fx: 610.17789714
+Camera.fy: 610.17789714
+Camera.cx: 512.0
+Camera.cy: 512.0
 
 # Camera resolution
-Camera.cols: 320
-Camera.rows: 320
+Camera.cols: 1024
+Camera.rows: 1024
 
 # Number of features per image
 FeatureExtractor.nFeatures: 1000
@@ -29,14 +29,14 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 35
+Matching.initialization: 30
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 40
+Matching.initialization.radius: 120
 
 #Covisivility graph
 Map.minObs: 6
@@ -45,10 +45,10 @@ Map.minObs: 6
 Triangulation.minCos: 0.6
 
 #Inliers and reprojection checks
-Triangulation.checks: "true"
+Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 3.5
+Triangulation.depthLimit: 6.0
 
 # LUIS
 #Cameras poses
@@ -112,4 +112,4 @@ Triangulation.seed.location: "FarPoints"
 MapVisualizer.showScene: "false"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "true"
+Execution.stop: "false"

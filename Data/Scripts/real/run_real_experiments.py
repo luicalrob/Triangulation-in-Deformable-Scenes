@@ -121,7 +121,7 @@ for triangulation, level, experiment in product(triangulations, levels, experime
 
 
                 elif "Execution.stop:" in line:
-                    file.write(f'Execution.stop: "true"\n')
+                    file.write(f'Execution.stop: "false"\n')
                 elif "Triangulation.seed.location:" in line:
                     file.write(f'Triangulation.seed.location: "{triangulation}"\n')
                 else:
