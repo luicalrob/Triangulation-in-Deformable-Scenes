@@ -140,6 +140,10 @@ float KeyFrame::getDepthScale(){
     return depthScale_;
 }
 
+void KeyFrame::setDepthScale(float depth){
+    depthScale_ = depth;
+}
+
 std::vector<std::shared_ptr<MapPoint> > & KeyFrame::getMapPoints() {
     return vMapPoints_;
 }

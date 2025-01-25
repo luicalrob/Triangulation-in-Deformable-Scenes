@@ -397,13 +397,27 @@ public:
         double obs(_measurement);      //Observed depth of the point
         Eigen::Vector3d p3Dw = v1->estimate();
         double scale = vDepthScale->estimate();
+        g2o::SE3Quat Tcw = cameraPose; 
 
-        // Compute the depth error
-        _error[0] = obs - p3Dw[2] * scale;
+        Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
+        if (scale <= 0) {
+            _error[0] = 500 * (obs - p3Dc[2] * scale);
+            return;
+        } else if (scale >= 8) {
+            _error[0] = 500 * (obs - p3Dc[2] * scale);
+            return;
+        } else {
+            // Compute the depth error
+            _error[0] = obs - p3Dc[2] * scale;
+        }
+
     }
+
+    g2o::SE3Quat cameraPose;
 
     //virtual void linearizeOplus();
 };
+
 
 
 

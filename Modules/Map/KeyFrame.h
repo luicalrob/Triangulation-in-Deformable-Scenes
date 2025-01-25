@@ -84,6 +84,11 @@ public:
     float getDepthScale();
 
     /*
+     * Set KF depth scale
+     */
+    void setDepthScale(float depth);
+
+    /*
      * Gets all the MapPoint matches of the KeyFrame. They are associated with the KeyPoint at the same index
      */
     std::vector<std::shared_ptr<MapPoint>>& getMapPoints();

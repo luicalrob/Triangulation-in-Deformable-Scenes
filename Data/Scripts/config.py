@@ -58,7 +58,7 @@ synthetic_values = {
     "Depth": [20, 150],
     "Shape": ["Planar", "Gradual"],
     "ExperimentType": range(1, 7),
-    "Experiment": [2, 3],
+    "Experiment": [1, 2, 3],
 }
 
 shape_syn_experiment_types = {
