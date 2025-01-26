@@ -539,24 +539,24 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
             mTGlobalId[T] = currId;
             currId++;
 
-            double ds_1 = static_cast<double>(pKF1->getDepthScale());
-            double ds_2 = static_cast<double>(pKF2->getDepthScale());
-            DepthScale_ dscale1 = std::make_shared<double>(ds_1);
-            DepthScale_ dscale2 = std::make_shared<double>(ds_2);
+            // double ds_1 = static_cast<double>(pKF1->getDepthScale());
+            // double ds_2 = static_cast<double>(pKF2->getDepthScale());
+            // DepthScale_ dscale1 = std::make_shared<double>(ds_1);
+            // DepthScale_ dscale2 = std::make_shared<double>(ds_2);
 
-            VertexDepthScale* vScale1 = new VertexDepthScale();
-            vScale1->setEstimate(ds_1);
-            vScale1->setId(currId);
-            optimizer.addVertex(vScale1);
-            mKeyFrameId[pKF1] = currId;
-            currId++;
+            // VertexDepthScale* vScale1 = new VertexDepthScale();
+            // vScale1->setEstimate(ds_1);
+            // vScale1->setId(currId);
+            // optimizer.addVertex(vScale1);
+            // mKeyFrameId[pKF1] = currId;
+            // currId++;
 
-            VertexDepthScale* vScale2 = new VertexDepthScale();
-            vScale2->setEstimate(ds_2);
-            vScale2->setId(currId);
-            optimizer.addVertex(vScale2);
-            mKeyFrameId[pKF2] = currId;
-            currId++;
+            // VertexDepthScale* vScale2 = new VertexDepthScale();
+            // vScale2->setEstimate(ds_2);
+            // vScale2->setId(currId);
+            // optimizer.addVertex(vScale2);
+            // mKeyFrameId[pKF2] = currId;
+            // currId++;
 
             for (size_t mpIndex = 0; mpIndex < v1MPs.size(); mpIndex++) {
                 MapPoint_ pMPi1 = v1MPs[mpIndex];
@@ -646,7 +646,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 EdgeDepthCorrection* eD1 = new EdgeDepthCorrection();
 
                 eD1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                eD1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
+                // eD1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
 
                 eD1->setMeasurement(depth);
                 Eigen::Matrix<double, 1, 1> informationMatrixDepth;
@@ -663,7 +663,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 EdgeDepthCorrection* eD2 = new EdgeDepthCorrection();
 
                 eD2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
-                eD2->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF2])));
+                // eD2->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF2])));
                 eD2->setMeasurement(depth);
                 eD2->setInformation(informationMatrixDepth);
                 kfPose = pKF2->getPose();
@@ -761,12 +761,12 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
 
     std::cout << "Optimized \n";
 
-    for(pair<KeyFrame_,ID> pairKeyFrameId : mKeyFrameId){
-        KeyFrame_ pKF = pairKeyFrameId.first;
-        VertexDepthScale* vertex = static_cast<VertexDepthScale*>(optimizer.vertex(pairKeyFrameId.second));
-        double dScale(vertex->estimate());
-        pKF->setDepthScale(static_cast<float>(dScale));
-    }
+    // for(pair<KeyFrame_,ID> pairKeyFrameId : mKeyFrameId){
+    //     KeyFrame_ pKF = pairKeyFrameId.first;
+    //     VertexDepthScale* vertex = static_cast<VertexDepthScale*>(optimizer.vertex(pairKeyFrameId.second));
+    //     double dScale(vertex->estimate());
+    //     pKF->setDepthScale(static_cast<float>(dScale));
+    // }
 
     if (optimizationUpdate) {
         *optimizationUpdate = 0;

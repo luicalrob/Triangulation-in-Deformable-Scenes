@@ -381,7 +381,7 @@ public:
 };
 
 
-class EdgeDepthCorrection: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexDepthScale>{
+class EdgeDepthCorrection: public  g2o::BaseUnaryEdge<1, double, VertexSBAPointXYZ>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -393,24 +393,25 @@ public:
 
     void computeError()  {
         const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexDepthScale* vDepthScale = static_cast<const VertexDepthScale*>(_vertices[1]);
+        // const VertexDepthScale* vDepthScale = static_cast<const VertexDepthScale*>(_vertices[1]);
         double obs(_measurement);      //Observed depth of the point
         Eigen::Vector3d p3Dw = v1->estimate();
-        double scale = vDepthScale->estimate();
+        // double scale = vDepthScale->estimate();
         g2o::SE3Quat Tcw = cameraPose; 
 
         Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
-        if (scale <= 0) {
-            _error[0] = 500 * (obs - p3Dc[2] * scale);
-            return;
-        } else if (scale >= 8) {
-            _error[0] = 500 * (obs - p3Dc[2] * scale);
-            return;
-        } else {
-            // Compute the depth error
-            _error[0] = obs - p3Dc[2] * scale;
-        }
 
+        _error[0] = obs - p3Dc[2];
+        // if (scale <= 0) {
+        //     _error[0] = 500 * (obs - p3Dc[2]) * scale);
+        //     return;
+        // } else if (scale >= 8) {
+        //     _error[0] = 500 * (obs - p3Dc[2]) * scale);
+        //     return;
+        // } else {
+        //     // Compute the depth error
+        //     _error[0] = obs - p3Dc[2] * scale;
+        // }
     }
 
     g2o::SE3Quat cameraPose;
