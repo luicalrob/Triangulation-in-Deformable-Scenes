@@ -59,9 +59,9 @@ Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 3.0
-Measurements.DepthScale.C1: 0.8
-Measurements.DepthScale.C2: 1.3
+Measurements.DepthError: 8.0
+Measurements.DepthScale.C1: 1.0
+Measurements.DepthScale.C2: 1.0
 
 # 100000000: 3 stand
 # 90000: 6.38
@@ -76,7 +76,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 10
+Optimization.numberOfOptimizations: 20
 Optimization.numberOfIterations: 25
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
