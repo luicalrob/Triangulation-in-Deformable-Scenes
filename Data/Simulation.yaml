@@ -53,21 +53,15 @@ Camera.FirstPose.z: 0.12
 Camera.SecondPose.x: 0.14
 Camera.SecondPose.y: 0.01
 Camera.SecondPose.z: 0.06
-# Camera.FirstPose.x: 0.0
-# Camera.FirstPose.y: 0.0
-# Camera.FirstPose.z: 0.0
-# Camera.SecondPose.x: 0.14
-# Camera.SecondPose.y: 0.01
-# Camera.SecondPose.z: 0.06
 
 #Simulated typical desviation reprojection error for keypoints
 Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 0.0
-Measurements.DepthScale.C1: 1
-Measurements.DepthScale.C2: 1
+Measurements.DepthError: 3.0
+Measurements.DepthScale.C1: 0.4
+Measurements.DepthScale.C2: 1.7
 
 # 100000000: 3 stand
 # 90000: 6.38
@@ -82,7 +76,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 2
+Optimization.numberOfOptimizations: 20
 Optimization.numberOfIterations: 25
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
@@ -106,14 +100,14 @@ Triangulation.method: "NRSLAM" # Classic NRSLAM ORBSLAM DepthMeasurement
 # NRSLAM: use NRSLAM weighted midpoint method
 # ORBSLAM: use ORBSLAM linear method
 # DepthMeasurement: use depth measurements 
-Triangulation.seed.location: "TwoPoints"
+Triangulation.seed.location: "FarPoints"
 # inRays: SVD triangulation method, choosing the points nearest to the solution in both rays
 # TwoPoints: SVD triangulation method, choosing both points as the solution
 # FarPoints: Use points far from the rays, with the same distance to the triangulated point but in the other direction
 
 
 # Visualization
-MapVisualizer.showScene: "true"
+MapVisualizer.showScene: "false"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "true"
+Execution.stop: "false"

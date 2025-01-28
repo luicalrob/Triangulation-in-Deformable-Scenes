@@ -34,35 +34,43 @@ from config import real_values, level_types, setParameters
 default_values = real_values
 
 parser = argparse.ArgumentParser(description="Run experiments automatically.")
-parser.add_argument('--Pair', type=str, choices=default_values["Pair"] ,required=True, help="Pair of frames")
-parser.add_argument('--Triangulation', type=str, choices=default_values["Triangulation"], required=True, help="Triangulation type (FarPoints, InRays or TwoPoints)")
+parser.add_argument('--Pair',nargs='+', type=str, choices=default_values["Pair"] ,required=False, help="Pair of frames")
+parser.add_argument('--Triangulation', type=str, choices=default_values["Triangulation"], required=False, help="Triangulation type (FarPoints, InRays or TwoPoints)")
 parser.add_argument('--Level',nargs='+', type=str, choices=default_values["Level"], help="Level of deformation (level0 to level3)", required=False)
 parser.add_argument('--Checks', type=str, choices=default_values["Checks"], required=False, help="Check Essential matrix and rep. error or not")
-parser.add_argument('--Experiment', type=int, choices=default_values["Experiment"], required=True, help="Experiment number (1 to 5)")
+parser.add_argument('--Experiment', type=int, choices=default_values["Experiment"], required=False, help="Experiment number (1 to 5)")
 args = parser.parse_args()
         
 levels = args.Level if args.Level else default_values["Level"]
 checks = [args.Checks] if args.Checks else default_values["Checks"]
 
+pairs = args.Pair if args.Pair else default_values["Pair"]
+triangulations = [args.Triangulation] if args.Triangulation else default_values["Triangulation"]
+experiments = [args.Experiment] if args.Experiment else default_values["Experiment"]
+
 convert_script = './Data/Scripts/real/convert_to_csv.py'
 
-for level in product(levels):
-    if (level[0] in level_types) and not args.Checks:
-        checks = level_types[level[0]] 
-    
-    for check_election in checks:
-        command = [
-            "python3",
-            convert_script,
-            "--Pair", args.Pair,
-            "--Triangulation", args.Triangulation,
-            "--Level", level[0],
-            "--Checks", check_election,
-            "--Experiment", str(args.Experiment)
-        ]
+for pair, triangulation, experiment in product(pairs, triangulations, experiments):
+    print("Pair: " + pair)
+    print("Triangulation method: " + triangulation)
+    print("Experiment: " + str(experiment))
+    for level in product(levels):
+        if (level[0] in level_types) and not args.Checks:
+            checks = level_types[level[0]] 
+        
+        for check_election in checks:
+            command = [
+                "python3",
+                convert_script,
+                "--Pair", pair,
+                "--Triangulation", triangulation,
+                "--Level", level[0],
+                "--Checks", check_election,
+                "--Experiment", str(experiment)
+            ]
 
-        try:
-            result = subprocess.run(command, check=True, text=True, capture_output=True)
-            print(result.stdout)  # Print the script's output
-        except subprocess.CalledProcessError as e:
-            print(f"Error running {convert_script}: {e.stderr}")
+            try:
+                result = subprocess.run(command, check=True, text=True, capture_output=True)
+                print(result.stdout)  # Print the script's output
+            except subprocess.CalledProcessError as e:
+                print(f"Error running {convert_script}: {e.stderr}")
