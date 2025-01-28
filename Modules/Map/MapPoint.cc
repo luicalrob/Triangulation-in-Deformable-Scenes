@@ -27,6 +27,19 @@ MapPoint::MapPoint(Eigen::Vector3f &p3d) {
     nId_ = nNextId_++;
 }
 
+MapPoint::MapPoint(const MapPoint& other)
+    : position3D_(other.position3D_),
+      normalOrientation_(other.normalOrientation_),
+      mDescriptor_(other.mDescriptor_.clone()),
+      fMinDistance_(other.fMinDistance_),
+      fMaxDistance_(other.fMaxDistance_),
+      nId_(other.nId_)
+{}
+
+MapPoint* MapPoint::clone() const {
+    return new MapPoint(*this);
+}
+
 Eigen::Vector3f MapPoint::getWorldPosition() {
     return position3D_;
 }

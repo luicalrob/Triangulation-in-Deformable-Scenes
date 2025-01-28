@@ -36,7 +36,7 @@ int HammingDistance(const cv::Mat &a, const cv::Mat &b){
 }
 
 
-int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, vector<int>& vMatches, std::vector<cv::Point2f>& vPrevMatched){
+int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, float windowSizeFactor, vector<int>& vMatches){
     fill(vMatches.begin(),vMatches.end(),-1);
 
     vector<size_t> vIndicesToCheck(100);
@@ -57,10 +57,6 @@ int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, vector<int
             continue;
         }
 
-        /*
-         * Your code for Lab 3 - Task 1 here!
-         */
-
         cv::Point2f uv = vRefKeys[i].pt;
 
         //Clear previous matches
@@ -70,7 +66,7 @@ int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, vector<int
         int nLastOctave = refFrame.getKeyPoint(i).octave;
 
         //Search radius depends on the size of the point in the image: use 15 pixels
-        float radius = 15 * 1 * currFrame.getScaleFactor(nLastOctave);
+        float radius = windowSizeFactor * 1 * currFrame.getScaleFactor(nLastOctave);
 
         //Get candidates whose coordinates are close to the current point
         currFrame.getFeaturesInArea(uv.x,uv.y,radius,nLastOctave-1,nLastOctave+1,vIndicesToCheck);
@@ -99,12 +95,6 @@ int searchForInitializaion(Frame& refFrame, Frame& currFrame, int th, vector<int
         }
     }
 
-    for(size_t i = 0; i < vMatches.size(); i++){
-        if(vMatches[i] != -1){
-            vPrevMatched[i]=currFrame.getKeyPoint(vMatches[i]).pt;
-        }
-    }
-
     return nMatches;
 }
 
@@ -117,7 +107,6 @@ int guidedMatching(Frame& refFrame, Frame& currFrame, int th, std::vector<int>& 
 
     shared_ptr<CameraModel> currCamera = currFrame.getCalibration();
     Sophus::SE3f Tcw = currFrame.getPose();
-
     int nMatches = 0;
     for(size_t i = 0; i < vRefMapPoints.size(); i++){
         if(!vRefMapPoints[i]){
@@ -161,6 +150,7 @@ int guidedMatching(Frame& refFrame, Frame& currFrame, int th, std::vector<int>& 
                 secondBestDist = dist;
             }
         }
+
         if(bestDist <= th && (float)bestDist < (float(secondBestDist)*0.9)){
             vMatches[i] = bestIdx;
             currFrame.setMapPoint(bestIdx,vRefMapPoints[i]);

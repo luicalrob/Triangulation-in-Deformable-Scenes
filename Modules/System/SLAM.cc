@@ -21,11 +21,21 @@
 #include "Map/MapPoint.h"
 #include "Optimization/g2oBundleAdjustment.h"
 #include "Utils/Geometry.h"
+#include "Utils/Conversions.h"
+#include "Utils/Measurements.h"
+#include "Utils/Utils.h"
+#include "Optimization/nloptOptimization.h"
+#include "Optimization/EigenOptimization.h"
 
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <unsupported/Eigen/NumericalDiff>
 
-using namespace std;
+#include <nlopt.hpp>
+#include <memory>
+#include <iomanip>
+#include <locale>
 
-SLAM::SLAM(const std::string &settingsFile) {
+SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
     //Load settings from file
     cout << "Loading system settings from: " << settingsFile << endl;
     settings_ = Settings(settingsFile);
@@ -35,9 +45,14 @@ SLAM::SLAM(const std::string &settingsFile) {
     pMap_ = shared_ptr<Map>(new Map(settings_.getMinCommonObs()));
 
     //Create visualizers
-    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_));
+    bool showScene = settings_.getShowScene();
+    mapVisualizer_ = shared_ptr<MapVisualizer>(new MapVisualizer(pMap_, pose, showScene));
+    visualizer_ = shared_ptr<FrameVisualizer>(new FrameVisualizer(showScene));
 
-    prevFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
+    //Initialize mapper
+    mapper_ = Mapping(settings_, visualizer_, mapVisualizer_, pMap_);
+
+    refFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
                        settings_.getCalibration(),settings_.getDistortionParameters());
 
@@ -45,10 +60,107 @@ SLAM::SLAM(const std::string &settingsFile) {
                        settings_.getImCols(),settings_.getImRows(), settings_.getNumberOfScales(), settings_.getScaleFactor(),
                        settings_.getCalibration(),settings_.getDistortionParameters());
 
-    prevCalibration_ = prevFrame_.getCalibration();
+    prevCalibration_ = refFrame_.getCalibration();
     currCalibration_ = currFrame_.getCalibration();
+
+    currIm_ = cv::Mat::zeros(settings_.getImRows(), settings_.getImCols(), CV_8UC3);
+    currIm_.setTo(cv::Scalar(255, 255, 255));
+
+    C1Pose_ = settings_.getFirstCameraPos();
+    C2Pose_ = settings_.getSecondCameraPos();
+
+    simulatedRepErrorStanDesv_ = settings_.getSimulatedRepError();
+    decimalsRepError_ = settings_.getDecimalsRepError();
+    SimulatedDepthErrorStanDesv_ = settings_.getSimulatedDepthError();
+    SimulatedDepthScaleC1_ = settings_.getSimulatedDepthScaleC1();
+    SimulatedDepthScaleC2_ = settings_.getSimulatedDepthScaleC2();
+
+    repBalanceWeight_ = settings_.getOptRepWeight();
+    arapBalanceWeight_ = settings_.getOptArapWeight();
+    globalBalanceWeight_ = settings_.getOptGlobalWeight();
+    alphaWeight_ = settings_.getOptAlphaWeight();
+    betaWeight_ = settings_.getOptBetaWeight();
+
+    OptSelection_ = settings_.getOptSelection();
+    OptWeightsSelection_ = settings_.getOptWeightsSelection();
+
+    nOptimizations_ = settings_.getnOptimizations();
+    nOptIterations_ = settings_.getnOptIterations();
+
+    NloptnOptimizations_ = settings_.getNloptnOptimizations();
+    NloptRelTolerance_ = settings_.getNloptRelTolerance();
+    NloptAbsTolerance_ = settings_.getNloptAbsTolerance();
+    NloptRepLowerBound_ = settings_.getNloptRepLowerBound();
+    NloptRepUpperBound_ = settings_.getNloptRepUpperBound();
+    NloptGlobalLowerBound_ = settings_.getNloptGlobalLowerBound();
+    NloptGlobalUpperBound_ = settings_.getNloptGlobalUpperBound();
+    NloptArapLowerBound_ = settings_.getNloptArapLowerBound();
+    NloptArapUpperBound_ = settings_.getNloptArapUpperBound();
+
+    drawRaysSelection_ = settings_.getDrawRaysSelection();
+    showSolution_ = settings_.getShowSolution();
+    stop_ = settings_.getStopExecutionOption();
+
+    filePath_ = settings_.getExpFilePath();
+    outFile_.imbue(std::locale("es_ES.UTF-8"));
 }
 
+bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f& Twc, int &nKF, int &nMPs, clock_t &timer) {
+    if(stop_) {
+        cv::namedWindow("Test Window");
+    }
+
+    Tcw_ = Twc.inverse();
+    
+    cv::Mat grayIm = convertImageToGrayScale(im);
+
+    std::cerr << "Let's do Mapping! " << std::endl;
+
+    // Do mapping
+    bool goodMapped = mapper_.doMapping(grayIm, depthIm, Tcw_, nKF, nMPs, timer);
+    
+    if (goodMapped) {
+        startMeasurementsOnFile();
+        stop();
+
+        //Run deformation optimization
+        deformationOptimization(pMap_, settings_, mapVisualizer_);
+    }
+
+    return goodMapped;
+}
+
+bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
+    if(stop_) {
+        cv::namedWindow("Test Window");
+    }
+
+    // Do mapping
+    mapper_.doSimulatedMapping(currKeyFrame_, refKeyFrame_, nMPs);
+
+    startMeasurementsOnFile();
+    stop();
+
+    //Run deformation optimization
+    deformationOptimization(pMap_, settings_, mapVisualizer_, originalPoints_ , movedPoints_);
+
+    return true;
+}
+
+cv::Mat SLAM::convertImageToGrayScale(const cv::Mat &im) {
+    cv::Mat grayScaled;
+
+    if(im.type() == CV_8U)
+        grayScaled = im;
+    else if(im.channels()==3){
+        cvtColor(im,grayScaled,cv::COLOR_RGB2GRAY);
+    }
+    else if(im.channels()==4){
+        cvtColor(im,grayScaled,cv::COLOR_BGRA2GRAY);
+    }
+
+    return grayScaled;
+}
 
 void SLAM::loadPoints(const std::string &originalFile, const std::string &movedFile) {
     std::ifstream originalFileStream(originalFile);
@@ -63,8 +175,8 @@ void SLAM::loadPoints(const std::string &originalFile, const std::string &movedF
         return;
     }
 
-    originalPoints_.clear();  // Clear previous points if any
-    movedPoints_.clear();     // Clear previous points if any
+    originalPoints_.clear();
+    movedPoints_.clear();
 
     std::string line;
     while (std::getline(originalFileStream, line)) {
@@ -96,6 +208,8 @@ void SLAM::loadPoints(const std::string &originalFile, const std::string &movedF
     originalFileStream.close();
     movedFileStream.close();
 
+    mapper_.originalPoints_ = originalPoints_;
+    mapper_.movedPoints_ = movedPoints_;
     std::cout << "Loaded " << originalPoints_.size() << " MapPoints from files." << std::endl;
 }
 
@@ -103,7 +217,7 @@ void SLAM::setCameraPoses(const Eigen::Vector3f firstCamera, const Eigen::Vector
     // set camera poses and orientation
     Eigen::Matrix3f R = Eigen::Matrix3f::Identity();
     Sophus::SE3f T1w(R, firstCamera);
-    prevFrame_.setPose(T1w);
+    refFrame_.setPose(T1w);
 
     R = lookAt(secondCamera, movedPoints_[0]);
     Sophus::SE3f T2w(R, secondCamera);
@@ -119,7 +233,7 @@ void SLAM::viusualizeSolution() {
 
     std::cout << "Number of matches: " << nMatches << std::endl;
 
-    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T1w = refFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
 
     for(size_t i = 0; i < nMatches; i++){
@@ -134,10 +248,10 @@ void SLAM::viusualizeSolution() {
 
         insertedIndexes_.push_back(i);
 
-        pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
+        pMap_->addObservation(refKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
         pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
 
-        prevKeyFrame_->setMapPoint(i, map_point_1); // vMatches[i]?
+        refKeyFrame_->setMapPoint(i, map_point_1);
         currKeyFrame_->setMapPoint(i, map_point_2);
 
         nTriangulated++;
@@ -148,21 +262,20 @@ void SLAM::viusualizeSolution() {
 
     // stop
     //Uncomment for step by step execution (pressing esc key)
-    cv::namedWindow("Test Window");
+    if(stop_) {
+        cv::namedWindow("Test Window");
+    }
 
     // visualize
-    // visualizer_->drawCurrentFrame(currFrame_);
-    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    mapVisualizer_->update();
+    mapVisualizer_->update(drawRaysSelection_);
     mapVisualizer_->updateCurrentPose(Tcw_);
 }
 
-void SLAM::createKeyPoints(float reprojErrorDesv) {
+void SLAM::createKeyPoints() {
     std::default_random_engine generator;
-    std::normal_distribution<float> distribution(0.0f, reprojErrorDesv);
+    std::normal_distribution<float> distribution(0.0f, simulatedRepErrorStanDesv_);
 
-    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T1w = refFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
 
     for(size_t i = 0; i < movedPoints_.size(); ++i) {
@@ -176,308 +289,46 @@ void SLAM::createKeyPoints(float reprojErrorDesv) {
         moved_p2D = currCalibration_->project(p3Dcam2);
 
         // Add Gaussian reprojection noise in units of pixels
-        original_p2D.x = std::round(original_p2D.x + distribution(generator));
-        original_p2D.y = std::round(original_p2D.y + distribution(generator));
-        moved_p2D.x = std::round(moved_p2D.x + distribution(generator));
-        moved_p2D.y = std::round(moved_p2D.y + distribution(generator));
+        original_p2D.x = roundToDecimals(original_p2D.x + distribution(generator), decimalsRepError_);
+        original_p2D.y = roundToDecimals(original_p2D.y + distribution(generator), decimalsRepError_);
+        moved_p2D.x = roundToDecimals(moved_p2D.x + distribution(generator), decimalsRepError_);
+        moved_p2D.y = roundToDecimals(moved_p2D.y + distribution(generator), decimalsRepError_);
 
         cv::KeyPoint original_keypoint(original_p2D, 1.0f); // 1.0f is the size of the keypoint
         cv::KeyPoint moved_keypoint(moved_p2D, 1.0f);
 
-        prevFrame_.setKeyPoint(original_keypoint, i);
+        refFrame_.setKeyPoint(original_keypoint, i);
         currFrame_.setKeyPoint(moved_keypoint, i);
     }
 
     // Promote to keyframes for visualization
-    prevKeyFrame_ = std::make_shared<KeyFrame>(prevFrame_);
+    refKeyFrame_ = std::make_shared<KeyFrame>(refFrame_);
     currKeyFrame_ = std::make_shared<KeyFrame>(currFrame_);
-    pMap_->insertKeyFrame(prevKeyFrame_);
+    pMap_->insertKeyFrame(refKeyFrame_);
     pMap_->insertKeyFrame(currKeyFrame_);
+
+    visualizer_->drawFeatures(refFrame_.getKeyPoints(), currIm_, "Previous Frame KeyPoints");
+    visualizer_->drawFeatures(currFrame_.getKeyPoints(), currIm_, "Current Frame KeyPoints");
 }
 
-void SLAM::mapping() {
-    int nTriangulated = 0;
+void SLAM::getSimulatedDepthMeasurements() {
+    std::default_random_engine generator;
+    std::normal_distribution<float> distribution(0.0f, SimulatedDepthErrorStanDesv_/1000);
 
-    // Each moved point correspond with the point in the same index in the original vector
-    vector<int> vMatches(currKeyFrame_->getMapPoints().size()); // if we had to search for matches
-    int nMatches = movedPoints_.size();
-
-    std::cout << "Number of matches: " << nMatches << std::endl;
-
-    Sophus::SE3f T1w = prevFrame_.getPose();
+    Sophus::SE3f T1w = refFrame_.getPose();
     Sophus::SE3f T2w = currFrame_.getPose();
 
-    //Try to triangulate a new MapPoint with each match
-    for(size_t i = 0; i < nMatches; i++){ //vMatches.size()
-        // if(vMatches[i] != -1){
-        auto x1 = prevKeyFrame_->getKeyPoint(i).pt; // vMatches[i] si las parejas no fuesen ordenadas
-        auto x2 = currKeyFrame_->getKeyPoint(i).pt;
+    for(size_t i = 0; i < movedPoints_.size(); ++i) {
+        Eigen::Vector3f p3Dcam1 = T1w * originalPoints_[i];
+        Eigen::Vector3f p3Dcam2 = T2w * movedPoints_[i];
 
-        Eigen::Vector3f xn1 = prevCalibration_->unproject(x1).normalized();
-        Eigen::Vector3f xn2 = currCalibration_->unproject(x2).normalized();
-        // Eigen::Vector3f x3D;
-        Eigen::Vector3f x3D_1;
-        Eigen::Vector3f x3D_2;
+        float d1 = p3Dcam1[2] * SimulatedDepthScaleC1_ + distribution(generator);
+        float d2 = p3Dcam2[2] * SimulatedDepthScaleC2_ + distribution(generator);
 
-        triangulateInRays(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-        // triangulateTwoPoints(xn1, xn2, T1w, T2w, x3D_1, x3D_2);
-        // triangulate(xn1, xn2, T1w, T2w, x3D);
-
-        //Check positive depth
-        // auto x_1 = T1w * x3D;
-        // auto x_2 = T2w * x3D;
-        auto x_1 = T1w * x3D_1;
-        auto x_2 = T2w * x3D_2;
-        if(x_1[2] < 0.0 || x_2[2] < 0.0) continue;
-
-        //Check parallax
-        auto ray1 = (T1w.inverse().rotationMatrix() * xn1).normalized();
-        auto ray2 = (T2w.inverse().rotationMatrix() * xn2).normalized();
-        auto parallax = cosRayParallax(ray1, ray2);
-
-        if(parallax > settings_.getMinCos()) continue;
-
-        //Check reprojection error
-
-        Eigen::Vector2f p_p1;
-        Eigen::Vector2f p_p2;
-        // prevCalibration_->project(T1w*x3D, p_p1);
-        // currCalibration_->project(T2w*x3D, p_p2);
-        prevCalibration_->project(T1w*x3D_1, p_p1);
-        currCalibration_->project(T2w*x3D_2, p_p2);
-
-        cv::Point2f cv_p1(p_p1[0], p_p1[1]);
-        cv::Point2f cv_p2(p_p2[0], p_p2[1]);
-
-        // std::cout << "x1 x:" << x1.x << " y: " << x1.y << "\n";
-        // std::cout << "cv_p1 x:" << cv_p1.x << " y: " << cv_p1.y << "\n";
-
-        auto e1 = squaredReprojectionError(x1, cv_p1);
-        auto e2 = squaredReprojectionError(x2, cv_p2);
-        // std::cout << "e1: " << e1 << " e2: " << e2 << "\n";
-
-        //if(e1 > 5.991 || e2 > 5.991) continue;
-
-        // std::shared_ptr<MapPoint> map_point(new MapPoint(x3D));
-        std::shared_ptr<MapPoint> map_point_1(new MapPoint(x3D_1));
-        std::shared_ptr<MapPoint> map_point_2(new MapPoint(x3D_2));
-
-        // pMap_->insertMapPoint(map_point);
-        pMap_->insertMapPoint(map_point_1);
-        pMap_->insertMapPoint(map_point_2);
-        // Save the index "i" of the original/moved match
-        insertedIndexes_.push_back(i);
-
-        // pMap_->addObservation(prevKeyFrame_->getId(), map_point->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
-        // pMap_->addObservation(currKeyFrame_->getId(), map_point->getId(), i);
-        pMap_->addObservation(prevKeyFrame_->getId(), map_point_1->getId(), i);  // vMatches[i] si las parejas no fuesen ordenadas
-        pMap_->addObservation(currKeyFrame_->getId(), map_point_2->getId(), i);
-
-        // prevKeyFrame_->setMapPoint(i, map_point);
-        prevKeyFrame_->setMapPoint(i, map_point_1); // vMatches[i]?
-        currKeyFrame_->setMapPoint(i, map_point_2);
-
-        nTriangulated++;
-        nTriangulated++;
-
-        // }
-    }
-
-    std::cout << "Triangulated " << nTriangulated << " MapPoints." << std::endl;
-
-    // visualize
-    // visualizer_->drawCurrentFrame(currFrame_);
-    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    // mapVisualizer_->update();
-    // mapVisualizer_->updateCurrentPose(Tcw_);
-
-    // stop
-    //Uncomment for step by step execution (pressing esc key)
-    cv::namedWindow("Test Window");
-    std::cout << "Press esc to continue... " << std::endl;
-    while((cv::waitKey(10) & 0xEFFFFF) != 27){
-        mapVisualizer_->update();
-    }
-
-    measureErrors();
-
-    // correct error
-    arapOptimization(pMap_.get());
-    //arapBundleAdjustment(pMap_.get());
-    std::cout << "Bundle adjustment completed... fisrt 15 iterations " << std::endl;
-
-    // visualize
-    // visualizer_->drawCurrentFrame(currFrame_);
-    // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    mapVisualizer_->update();
-    mapVisualizer_->updateCurrentPose(Tcw_);
-
-    // measureErrors();
-
-    // arapOptimization(pMap_.get());
-    // std::cout << "Bundle adjustment completed... second 15 iterations " << std::endl;
-
-    // // visualize
-    // // visualizer_->drawCurrentFrame(currFrame_);
-    // // visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
-    // // visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
-    // mapVisualizer_->update();
-    // mapVisualizer_->updateCurrentPose(Tcw_);
-}
-
-
-void SLAM::measureErrors() {
-
-    Sophus::SE3f T1w = prevFrame_.getPose();
-    Sophus::SE3f T2w = currFrame_.getPose();
-
-    Sophus::SE3f T1w_corrected = pMap_->getKeyFrame(0)->getPose();
-    Sophus::SE3f T2w_corrected = pMap_->getKeyFrame(1)->getPose();
-
-    // Show position and orientation errors in pose 1
-    Eigen::Vector3f position_error1 = T1w_corrected.translation() - T1w.translation();
-    Eigen::Vector3f orientation_error1 = (T1w_corrected.so3().inverse() * T1w.so3()).log();
-
-    std::cout << "\nError in position 1:\n";
-    std::cout << "x: " << position_error1.x() << " y: " << position_error1.y() << " z: " << position_error1.z() << std::endl;
-    std::cout << "Error in orientation 1:\n";
-    std::cout << "x: " << orientation_error1.x() << " y: " << orientation_error1.y() << " z: " << orientation_error1.z() << std::endl;
-
-    // Show position and orientation errors in pose 2
-    Eigen::Vector3f position_error2 = T2w_corrected.translation() - T2w.translation();
-    Eigen::Vector3f orientation_error2 = (T2w_corrected.so3().inverse() * T2w.so3()).log();
-
-    std::cout << "\nError in position 2:\n";
-    std::cout << "x: " << position_error2.x() << " y: " << position_error2.y() << " z: " << position_error2.z() << std::endl;
-    std::cout << "Error in orientation 2:\n";
-    std::cout << "x: " << orientation_error2.x() << " y: " << orientation_error2.y() << " z: " << orientation_error2.z() << std::endl;
-
-    // 3D Error measurement in map points
-    std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
-
-    float total_movement = 0.0f;
-    float total_error_original = 0.0f;
-    float total_error_moved = 0.0f;
-    float total_error = 0.0f;
-    int point_count = insertedIndexes_.size()*2;
-
-    for(size_t i = 0, j = 0; j < insertedIndexes_.size(); i += 2, j++) {
-        std::shared_ptr<MapPoint> mapPoint1 = pMap_->getMapPoint(i);
-        std::shared_ptr<MapPoint> mapPoint2 = pMap_->getMapPoint(i+1);
-        Eigen::Vector3f opt_original_position = mapPoint1->getWorldPosition();
-        Eigen::Vector3f opt_moved_position = mapPoint2->getWorldPosition();
-
-        Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[j]];
-        Eigen::Vector3f moved_position = movedPoints_[insertedIndexes_[j]];
-
-        Eigen::Vector3f movement = original_position - moved_position;
-        Eigen::Vector3f original_error = opt_original_position - original_position;
-        Eigen::Vector3f moved_error = opt_moved_position - moved_position;
-        float error_magnitude_movement = movement.norm();
-        float error_magnitude_original = original_error.norm();
-        float error_magnitude_moved = moved_error.norm();
-        total_movement += error_magnitude_movement;
-        total_error_original += error_magnitude_original;
-        total_error_moved += error_magnitude_moved;
-        total_error += error_magnitude_moved + error_magnitude_original;
-
-        // std::cout << "\nError for point: " << mapPoint->getId() << "\n";
-        // std::cout << "Position " << insertedIndexes_[i] << "\n";
-        // std::cout << "point x: " << original_position.x() << " y: " << original_position.y() << " z: " << original_position.z() << std::endl;
-        // std::cout << "Mappoint x: " << corrected_position.x() << " y: " << corrected_position.y() << " z: " << corrected_position.z() << std::endl;
-        // std::cout << "x: " << point_error.x() << " y: " << point_error.y() << " z: " << point_error.z() << std::endl;
-    }
-
-    if (point_count > 0) {
-        float average_movement = total_movement / insertedIndexes_.size();
-        std::cout << "\nTotal movement: " << total_movement << std::endl;
-        std::cout << "Average movement: " << average_movement << std::endl;
-        float average_error_original = total_error_original / insertedIndexes_.size();
-        std::cout << "\nTotal error in ORIGINAL 3D: " << total_error_original << std::endl;
-        std::cout << "Average error in ORIGINAL 3D: " << average_error_original << std::endl;
-        float average_error_moved = total_error_moved / insertedIndexes_.size();
-        std::cout << "\nTotal error in MOVED 3D: " << total_error_moved << std::endl;
-        std::cout << "Average error in MOVED 3D: " << average_error_moved << std::endl;
-        float average_error = total_error / point_count;
-        std::cout << "\nTotal error in 3D: " << total_error << std::endl;
-        std::cout << "Average error in 3D: " << average_error << std::endl;
-    } else {
-        std::cout << "No points to compare." << std::endl;
-    }
-
-    // stop
-    // Uncomment for step by step execution (pressing esc key)
-    std::cout << "Press esc to continue... " << std::endl;
-    while((cv::waitKey(10) & 0xEFFFFF) != 27){
-        mapVisualizer_->update();
+        refFrame_.setDepthMeasure(d1, i);
+        currFrame_.setDepthMeasure(d2, i);
     }
 }
-
-// void SLAM::measureErrors() {
-
-//     Sophus::SE3f T1w = prevFrame_.getPose();
-//     Sophus::SE3f T2w = currFrame_.getPose();
-
-//     Sophus::SE3f T1w_corrected = pMap_->getKeyFrame(0)->getPose();
-//     Sophus::SE3f T2w_corrected = pMap_->getKeyFrame(1)->getPose();
-
-//     // Show position and orientation errors in pose 1
-//     Eigen::Vector3f position_error1 = T1w_corrected.translation() - T1w.translation();
-//     Eigen::Vector3f orientation_error1 = (T1w_corrected.so3().inverse() * T1w.so3()).log();
-
-//     std::cout << "\nError in position 1:\n";
-//     std::cout << "x: " << position_error1.x() << " y: " << position_error1.y() << " z: " << position_error1.z() << std::endl;
-//     std::cout << "Error in orientation 1:\n";
-//     std::cout << "x: " << orientation_error1.x() << " y: " << orientation_error1.y() << " z: " << orientation_error1.z() << std::endl;
-
-//     // Show position and orientation errors in pose 2
-//     Eigen::Vector3f position_error2 = T2w_corrected.translation() - T2w.translation();
-//     Eigen::Vector3f orientation_error2 = (T2w_corrected.so3().inverse() * T2w.so3()).log();
-
-//     std::cout << "\nError in position 2:\n";
-//     std::cout << "x: " << position_error2.x() << " y: " << position_error2.y() << " z: " << position_error2.z() << std::endl;
-//     std::cout << "Error in orientation 2:\n";
-//     std::cout << "x: " << orientation_error2.x() << " y: " << orientation_error2.y() << " z: " << orientation_error2.z() << std::endl;
-
-//     // 3D Error measurement in map points
-//     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap_->getMapPoints();
-
-//     float total_error = 0.0f;
-//     int point_count = insertedIndexes_.size();
-//     for(size_t i = 0; i < insertedIndexes_.size(); i++){
-//         std::shared_ptr<MapPoint> mapPoint = pMap_->getMapPoint(i);
-//         Eigen::Vector3f corrected_position = mapPoint->getWorldPosition();
-//         Eigen::Vector3f original_position = originalPoints_[insertedIndexes_[i]];
-
-//         Eigen::Vector3f point_error = corrected_position - original_position;
-//         float error_magnitude = point_error.norm();
-//         total_error += error_magnitude;
-
-//         // std::cout << "\nError for point: " << mapPoint->getId() << "\n";
-//         // std::cout << "Position " << insertedIndexes_[i] << "\n";
-//         // std::cout << "point x: " << original_position.x() << " y: " << original_position.y() << " z: " << original_position.z() << std::endl;
-//         // std::cout << "Mappoint x: " << corrected_position.x() << " y: " << corrected_position.y() << " z: " << corrected_position.z() << std::endl;
-//         // std::cout << "x: " << point_error.x() << " y: " << point_error.y() << " z: " << point_error.z() << std::endl;
-//     }
-
-//     if (point_count > 0) {
-//         float average_error = total_error / point_count;
-//         std::cout << "\nTotal error in 3D: " << total_error << std::endl;
-//         std::cout << "Average error in 3D: " << average_error << std::endl;
-//     } else {
-//         std::cout << "No points to compare." << std::endl;
-//     }
-
-//     // stop
-//     //Uncomment for step by step execution (pressing esc key)
-//     std::cout << "Press esc to continue... " << std::endl;
-//     while((cv::waitKey(10) & 0xEFFFFF) != 27){
-//         mapVisualizer_->update();
-//     }
-// }
-
 
 Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector) {
     Eigen::Vector3f forward = (target_pos - camera_pos).normalized();
@@ -490,4 +341,29 @@ Eigen::Matrix3f SLAM::lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vec
     rotation.col(2) = forward;
 
     return rotation;
+}
+
+Eigen::Vector3f SLAM::getFirstCameraPos(){
+    return C1Pose_;
+}
+
+Eigen::Vector3f SLAM::getSecondCameraPos(){
+    return C2Pose_;
+}
+
+void SLAM::stop(){
+    stopWithMeasurements(pMap_, Tcw_, mapVisualizer_, filePath_ , drawRaysSelection_, 
+                            stop_, originalPoints_, movedPoints_);
+}
+
+void SLAM::startMeasurementsOnFile(){
+    std::cout << "\nINITIAL MEASUREMENTS: \n";
+    outFile_.open(filePath_, std::ios::app);
+    if (outFile_.is_open()) {
+        outFile_ << "INITIAL MEASUREMENTS: \n";
+
+        outFile_.close();
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
+    }
 }

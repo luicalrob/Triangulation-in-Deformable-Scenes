@@ -25,6 +25,7 @@
 #define SLAM_G2OTYPES_H
 
 #include "Calibration/CameraModel.h"
+#include "Utils/CommonTypes.h"
 
 #include <g2o/core/base_unary_edge.h>
 #include <g2o/core/base_multi_edge.h>
@@ -58,6 +59,7 @@ class VertexRotationMatrix : public g2o::BaseVertex<3, Eigen::Matrix3d> {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     VertexRotationMatrix();
+
     virtual bool read(std::istream& is);
     virtual bool write(std::ostream& os) const;
 
@@ -68,9 +70,78 @@ public:
     virtual void oplusImpl(const double* update) {
         Eigen::Vector3d updateVec(update);
         Eigen::AngleAxisd angleAxis(updateVec.norm(), updateVec.normalized());
-        _estimate = angleAxis.toRotationMatrix() * _estimate;
+        Eigen::Matrix3d updateMatrix = angleAxis.toRotationMatrix();
+        _estimate = updateMatrix * _estimate;
     }
 };
+
+class VertexDepthScale : public g2o::BaseVertex<1, double> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+    VertexDepthScale();
+
+    virtual bool read(std::istream& is);
+    virtual bool write(std::ostream& os) const;
+
+    virtual void setToOriginImpl() {
+        _estimate = 0.0f;
+    }
+
+    virtual void oplusImpl(const double* update) {
+        _estimate += static_cast<double>(update[0]);
+    }
+};
+
+class VertexSO3 : public g2o::BaseVertex<3, Sophus::SO3d> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    VertexSO3() {}
+
+    virtual void setToOriginImpl() override {
+        _estimate = Sophus::SO3d();  // Set to identity rotation
+    }
+
+    virtual void oplusImpl(const double *update) override {
+        Eigen::Map<const Eigen::Matrix<double, 3, 1>> updateVec(update);
+        _estimate = Sophus::SO3d::exp(updateVec) * _estimate;  // Apply update in SO(3)
+    }
+
+    virtual bool read(std::istream &is) override {
+        double x, y, z;
+        is >> x >> y >> z;
+        Eigen::Vector3d v(x, y, z);
+        _estimate = Sophus::SO3d::exp(v);  // Load rotation from file
+        return true;
+    }
+
+    virtual bool write(std::ostream &os) const override {
+        Eigen::Vector3d v = _estimate.log();  // Write the Lie algebra parameters
+        os << v.x() << " " << v.y() << " " << v.z();
+        return true;
+    }
+};
+
+class VertexTranslationVector : public g2o::BaseVertex<3, Eigen::Vector3d> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    
+    VertexTranslationVector();
+    
+    virtual bool read(std::istream& is);
+    virtual bool write(std::ostream& os) const;
+
+    virtual void setToOriginImpl() {
+        _estimate.setZero();
+    }
+
+    virtual void oplusImpl(const double* update) {
+        Eigen::Map<const Eigen::Vector3d> updateVec(update);
+        _estimate += updateVec;
+    }
+};
+
 
 /*
  * Error function for geometric (reprojection error) Bundle Adjustment with analytic derivatives. Both
@@ -216,16 +287,17 @@ public:
 
         // Compute the reprojection error
         _error = (obs - projected.cast<double>());
-        std::cout << "Obsevations error: (" << _error[0] << ", " << _error[1] << ")\n" << std::endl;
+        // std::cout << "Obsevations error: (" << _error[0] << ", " << _error[1] << ")\n" << std::endl;
     }
 
     virtual void linearizeOplus();
 
     std::shared_ptr<CameraModel> pCamera;
     g2o::SE3Quat cameraPose;
+    //float balance;
 };
 
-class EdgeARAP : public g2o::BaseMultiEdge<1, double> {
+class EdgeARAP: public  g2o::BaseMultiEdge<1, double>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -236,30 +308,116 @@ public:
     bool write(std::ostream& os) const;
 
     void computeError() {
-        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
-        const VertexRotationMatrix* vR = static_cast<const VertexRotationMatrix*>(_vertices[2]);
-        // Eigen::Vector3d obs(_measurement);
+        const VertexSBAPointXYZ* v1i = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2i = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        const VertexSBAPointXYZ* v1j = static_cast<const VertexSBAPointXYZ*>(_vertices[2]);
+        const VertexSBAPointXYZ* v2j = static_cast<const VertexSBAPointXYZ*>(_vertices[3]);
+        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[4]);
+
+        g2o::SE3Quat T_global =  vT->estimate();
+        Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
+        Eigen::Vector3d t = T_global.translation();
+
+        Eigen::Vector3d diffGlobalT = ((Rg * v2i->estimate() - t) - v1i->estimate()) + ((Rg * v2j->estimate() - t) - v1j->estimate());
+        double energyGlobalT = diffGlobalT.squaredNorm();
+
         double obs(_measurement);
-        Eigen::Vector3d diff;
+        Eigen::Vector3d firstDiffArap;
+        Eigen::Vector3d secondDiffArap;
 
-        Eigen::Matrix3d R = vR->estimate();
-        diff = (v2->estimate() - Xj2world) - R * (v1->estimate() - Xj1world); // [DUDA] should i use other two vertex instead of _measurement?
-        // Eigen::Vector3d squaredNormComponents = diff.array().square();
-        double energy = diff.squaredNorm();
+        firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
+        secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
 
-        // _error = weight * squaredNormComponents;
-        // std::cout << "ARAP error: (" << _error[0] << ", " << _error[1] << ", " << _error[2] << ")\n" << std::endl;
-
-        _error[0] = weight * energy;
-        // std::cout << "ARAP error: " << _error[0] << "\n" << std::endl;        
+        double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm()) + energyGlobalT;
+        
+        _error[0] = energyArap - obs;   
     }
 
     // virtual void linearizeOplus();
 
-    Eigen::Vector3d Xj1world;
-    Eigen::Vector3d Xj2world;
+    Sophus::SO3d Ri;
+    Sophus::SO3d Rj;
+    double weight;
+    double alpha;   // Bulk deformation parameter
+    double beta;    // Shear deformation parameter
+};
+
+class EdgeTransformation: public  g2o::BaseMultiEdge<1, double>{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    EdgeTransformation();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError() {
+        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[1]);
+        const g2o::VertexSE3Expmap* vT = static_cast<const g2o::VertexSE3Expmap*>(_vertices[2]);
+
+        double obs(_measurement);
+        Eigen::Vector3d diffGlobalT;
+
+        // Eigen::Matrix3d Rg = T.rotationMatrix().cast<double>();
+        // Eigen::Vector3d t = T.translation().cast<double>();
+
+        g2o::SE3Quat T_global =  vT->estimate();
+        Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
+        Eigen::Vector3d t = T_global.translation();
+
+        diffGlobalT = (Rg * v2->estimate() - t) - v1->estimate();
+
+        double energyGlobalT = diffGlobalT.squaredNorm();
+
+        _error[0] = energyGlobalT - obs;   
+    }
+
+    // virtual void linearizeOplus();
+
+    // Sophus::SE3f T;
     double weight;
 };
+
+
+class EdgeDepthCorrection: public  g2o::BaseBinaryEdge<1, double, VertexSBAPointXYZ, VertexDepthScale>{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    EdgeDepthCorrection();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError()  {
+        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        const VertexDepthScale* vDepthScale = static_cast<const VertexDepthScale*>(_vertices[1]);
+        double obs(_measurement);      //Observed depth of the point
+        Eigen::Vector3d p3Dw = v1->estimate();
+        double scale = vDepthScale->estimate();
+        g2o::SE3Quat Tcw = cameraPose; 
+
+        Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
+        if (scale <= 0) {
+            _error[0] = 500 * (obs - p3Dc[2] * scale);
+            return;
+        } else if (scale >= 8) {
+            _error[0] = 500 * (obs - p3Dc[2] * scale);
+            return;
+        } else {
+            // Compute the depth error
+            _error[0] = obs - p3Dc[2] * scale;
+        }
+
+    }
+
+    g2o::SE3Quat cameraPose;
+
+    //virtual void linearizeOplus();
+};
+
+
 
 #endif //SLAM_G2OTYPES_H

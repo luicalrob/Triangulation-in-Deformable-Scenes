@@ -1,0 +1,88 @@
+Translation norm between cameras (mm): 74,8394
+Parallax: 0,740193
+nMatches: 93
+nMapPoints: 186
+INITIAL MEASUREMENTS: 
+C1 standard desv: 0,000423553
+C2 standard desv: 0,000273696
+Rel. error: 0,0707244
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 15,526
+Av. error: 215,345
+RMSE: 400,418
+
+1 / 10 MEASUREMENTS: 
+C1 standard desv: 0,060043
+C2 standard desv: 0,0291762
+Rel. error: 0,36716
+Global rotation:            1  0,000123779 -0,000417191
+-0,000123896            1 -0,000281476
+ 0,000417156  0,000281527            1
+Global translation: -0,000300708
+ 0,000235322
+-9,37841e-05
+Av. movement: 15,526
+Av. error: 201,991
+RMSE: 376,398
+
+2 / 10 MEASUREMENTS: 
+C1 standard desv: 0,0613012
+C2 standard desv: 0,0325347
+Rel. error: 0,367397
+Global rotation:            1   4,3102e-05 -0,000588505
+-4,34084e-05            1 -0,000520783
+ 0,000588482  0,000520808            1
+Global translation: -0,000280149
+ 0,000200682
+-0,000112297
+Av. movement: 15,526
+Av. error: 201,991
+RMSE: 376,397
+
+3 / 10 MEASUREMENTS: 
+C1 standard desv: 0,0648219
+C2 standard desv: 0,0406166
+Rel. error: 0,367673
+Global rotation:            1  7,82597e-06 -0,000714268
+-8,27987e-06            1 -0,000635468
+ 0,000714263  0,000635474            1
+Global translation:  -0,00022106
+ 0,000116739
+-0,000115123
+Av. movement: 15,526
+Av. error: 201,991
+RMSE: 376,397
+
+4 / 10 MEASUREMENTS: 
+C1 standard desv: 0,0676926
+C2 standard desv: 0,0464073
+Rel. error: 0,367835
+Global rotation:            1 -1,13405e-05 -0,000731217
+ 1,08463e-05            1 -0,000675936
+ 0,000731225  0,000675927            1
+Global translation: -0,000184586
+ 6,50701e-05
+-0,000116142
+Av. movement: 15,526
+Av. error: 201,991
+RMSE: 376,397
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 0,0676926
+C2 standard desv: 0,0464073
+Rel. error: 0,367835
+Global rotation:            1 -1,13405e-05 -0,000731217
+ 1,08463e-05            1 -0,000675936
+ 0,000731225  0,000675927            1
+Global translation: -0,000184586
+ 6,50701e-05
+-0,000116142
+Av. movement: 15,526
+Av. error: 201,991
+RMSE: 376,397
+

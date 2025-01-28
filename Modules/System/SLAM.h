@@ -26,17 +26,20 @@
 #define SLAM_SLAM_H
 
 #include "System/Settings.h"
+#include "Mapping/Mapping.h"
+#include "Utils/CommonTypes.h"
 
 #include "Visualization/FrameVisualizer.h"
 #include "Visualization/MapVisualizer.h"
 
-#include "Tracking/Frame.h"
+#include "Mapping/Frame.h"
 #include "Map/KeyFrame.h"
 #include "Map/Map.h"
 
 #include "sophus/se3.hpp"
-
 #include <opencv2/opencv.hpp>
+
+#include <fstream>
 
 class SLAM {
 public:
@@ -45,7 +48,17 @@ public:
     /*
      * Constructor with the path to the settings file
      */
-    SLAM(const std::string& settingsFile);
+    SLAM(const std::string& settingsFile, const PoseData& pose = PoseData());
+
+    /*
+     * Process an image. Computes in Tcw the camera pose of the image
+     */
+    bool processImage(const cv::Mat& im, const cv::Mat &depthIm, Sophus::SE3f& Twc, int &nKF, int &nMPs, clock_t &timer);
+
+    /*
+     * Process simulated images.
+     */
+    bool processSimulatedImage( int &nMPs, clock_t &timer);
 
     /*
      * Load simulation 3D points
@@ -65,39 +78,82 @@ public:
     /*
      * Project 3D points with a gaussian error
      */
-    void createKeyPoints(float reprojErrorDesv);
+    void createKeyPoints();
 
     /*
-     * Mapping of the simulation matches
+     * Get solutions depth and create depth measurements with gaussian error
      */
-    void mapping();
+    void getSimulatedDepthMeasurements();
 
     /*
-     * Measure the pos & or errors of the poses and the 3D error of the mapPoints
+     * Get real depth measurements from depth images
      */
-    void measureErrors();
+    void getDepthMeasurements();
 
     /*
      * Create camera orientation matrix from two points
      */
     Eigen::Matrix3f lookAt(const Eigen::Vector3f& camera_pos, const Eigen::Vector3f& target_pos, const Eigen::Vector3f& up_vector = Eigen::Vector3f::UnitY());
 
+    /*
+     * Get camera positions
+     */
+    Eigen::Vector3f getFirstCameraPos();
+    Eigen::Vector3f getSecondCameraPos();
+
+    std::vector<Eigen::Vector3f> getOriginalPoints();
+
+    std::vector<Eigen::Vector3f> getMovedPoints();
+
+    std::vector<int> getInsertedIndexes();
+
+    void stop();
+
+
+    /*
+     * Map of the SLAM system
+     */
+    std::shared_ptr<Map> pMap_;    
+    
+    /*
+     * Simulation Points
+     */
+    std::vector<Eigen::Vector3f> originalPoints_;
+    std::vector<Eigen::Vector3f> movedPoints_;
+    
+    std::string filePath_;
+
+    bool drawRaysSelection_;
+    bool showSolution_;
+    bool stop_;
 
 private:
+
+    /*
+     * Converts if needed the image to grayscale
+     */
+    cv::Mat convertImageToGrayScale(const cv::Mat& im);
+
+    /*
+     * Open experiments file and start measurements
+     */
+    void startMeasurementsOnFile();
+
+    /*
+     * Tracker and mapper
+     */
+    Mapping mapper_;
 
     /*
      * Settings of the system. Loaded from a file
      */
     Settings settings_;
 
-    /*
-     * Map of the SLAM system
-     */
-    std::shared_ptr<Map> pMap_;
     cv::Mat currIm_;
+    cv::Mat currDepthIm_;
 
-    Frame prevFrame_, currFrame_;
-    std::shared_ptr<KeyFrame> prevKeyFrame_, currKeyFrame_;
+    Frame refFrame_, currFrame_;
+    std::shared_ptr<KeyFrame> refKeyFrame_, currKeyFrame_;
 
     Sophus::SE3f Tcw_;
 
@@ -111,12 +167,44 @@ private:
     std::shared_ptr<FrameVisualizer> visualizer_;
     std::shared_ptr<MapVisualizer> mapVisualizer_;
 
-    /*
-     * Simulation Points
-     */
-    std::vector<Eigen::Vector3f> originalPoints_;
-    std::vector<Eigen::Vector3f> movedPoints_;
+    Eigen::Vector3f C1Pose_;
+    Eigen::Vector3f C2Pose_;
 
+    float simulatedRepErrorStanDesv_;
+    int decimalsRepError_;
+    float SimulatedDepthErrorStanDesv_;
+    float SimulatedDepthScaleC1_;
+    float SimulatedDepthScaleC2_;
+
+    double repBalanceWeight_;
+    double arapBalanceWeight_;
+    double globalBalanceWeight_;
+    double alphaWeight_;
+    double betaWeight_;
+
+    std::string OptSelection_;
+    std::string OptWeightsSelection_;
+    std::string TrianSelection_;
+    std::string TrianMethod_;
+    std::string TrianLocation_;
+
+    int nOptimizations_;
+    int nOptIterations_;
+
+    int NloptnOptimizations_;
+    double NloptRelTolerance_;
+    double NloptAbsTolerance_;
+    double NloptRepLowerBound_;
+    double NloptRepUpperBound_;
+    double NloptGlobalLowerBound_;
+    double NloptGlobalUpperBound_;
+    double NloptArapLowerBound_;
+    double NloptArapUpperBound_;
+
+    std::ofstream outFile_;
+
+    bool bFirstTriang_;         //Flag to check if we have already received the first optimization
+    bool firstCall_;
 };
 
 

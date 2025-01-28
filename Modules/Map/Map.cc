@@ -27,6 +27,36 @@ Map::Map(float minCommonObs){
     minCommonObs_ = minCommonObs;
 }
 
+std::shared_ptr<Map> Map::clone() const {
+    std::shared_ptr<Map> newMap = std::make_shared<Map>(minCommonObs_);
+
+    for (const auto& [id, pMP] : mMapPoints_) {
+        if (pMP) {
+            newMap->insertMapPoint(std::shared_ptr<MapPoint>(pMP->clone()));
+        }
+    }
+
+    for (const auto& [id, pKF] : mKeyFrames_) {
+        if (pKF) {
+            newMap->insertKeyFrame(std::shared_ptr<KeyFrame>(pKF->clone()));
+        }
+    }
+
+    for (const auto& [kfId, observations] : mKeyFrameObs_) {
+        for (const auto& [mpId, index] : observations) {
+            newMap->addObservation(kfId, mpId, index);
+        }
+    }
+
+    for (const auto& [kfId, covisible] : mCovisibilityGraph_) {
+        for (const auto& [covKfId, count] : covisible) {
+            newMap->mCovisibilityGraph_[kfId][covKfId] = count;
+        }
+    }
+
+    return newMap;
+}
+
 void Map::insertMapPoint(std::shared_ptr<MapPoint> pMP) {
     mMapPoints_[pMP->getId()] = pMP;
     mMapPointObs_[pMP->getId()].clear();
@@ -246,6 +276,7 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
     vector<ID> vKfIds(nObservations);
 
     int i = 0;
+
     for(pair<ID,size_t> pair : mMapPointObs_[mpId]){
         ID kfId = pair.first;
         size_t idxInKf = pair.second;
@@ -259,7 +290,6 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
 
         i++;
     }
-
     normal = (normal/i).normalized();
     pMP->setNormalOrientation(normal);
 
@@ -276,7 +306,6 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
             obsIdx = i;
         }
     }
-
     shared_ptr<KeyFrame> pRefKf = mKeyFrames_[vKfIds[obsIdx]];
 
     float dist = (pMP->getWorldPosition() - pRefKf->getPose().inverse().translation()).norm();
@@ -289,4 +318,26 @@ void Map::updateOrientationAndDescriptor(ID mpId) {
 
     cv::Mat bestDesc = mAllDescriptors.row(obsIdx);
     mMapPoints_[mpId]->setDescriptor(bestDesc);
+}
+
+void Map::insertGlobalKeyFramesTransformation(ID kf1, ID kf2, const Sophus::SE3f& transformation) {
+    assert(mKeyFrames_.count(kf1) != 0);
+    assert(mKeyFrames_.count(kf2) != 0);
+    
+    mGTransformation_[kf1][kf2] = transformation;
+
+    mGTransformation_[kf2][kf1] = transformation.inverse();
+}
+
+Sophus::SE3f Map::getGlobalKeyFramesTransformation(ID kf1, ID kf2) {
+    assert(mKeyFrames_.count(kf1) != 0);
+    assert(mKeyFrames_.count(kf2) != 0);
+
+    Sophus::SE3f globalT;
+    
+    if (mGTransformation_.count(kf1) && mGTransformation_[kf1].count(kf2)) {
+        globalT = mGTransformation_[kf1][kf2];
+    }
+
+    return globalT;
 }

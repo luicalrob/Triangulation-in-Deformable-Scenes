@@ -56,6 +56,11 @@ public:
     void unproject(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D);
 
     /*
+     * Implementation of the pinhole unprojection function but using z measurements
+     */
+    void unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, double z);
+
+    /*
      * Implementation of the jacobian matrix of the pinhole projection function
      */
     void projectJac(const Eigen::Vector3f& p3D, Eigen::Matrix<float,2,3>& Jac);
@@ -64,6 +69,9 @@ public:
      * Implementation of the jacobian matrix of the pinhole unprojection function
      */
     void unprojectJac(const Eigen::Vector2f& p2D, Eigen::Matrix<float,3,2>& Jac);
+
+
+    Eigen::Matrix3f getCalibrationMatrix() const;
 };
 
 

@@ -25,13 +25,14 @@
 #ifndef SLAM_FRAMEVISUALIZER_H
 #define SLAM_FRAMEVISUALIZER_H
 
-#include "Tracking/Frame.h"
+#include "Mapping/Frame.h"
+#include "Map/Map.h"
 
 #include <opencv2/opencv.hpp>
 
 class FrameVisualizer {
 public:
-    FrameVisualizer();
+    FrameVisualizer(const bool showScene = true);
 
     /*
      * Sets a reference Frame for matchings visualization
@@ -44,20 +45,35 @@ public:
     void drawFrameMatches(std::vector<cv::KeyPoint>& vKeys, cv::Mat& im, std::vector<int>& vMatches);
 
     /*
+     * Draw matches triangulated between the reference keyframe and the next keyframe
+     */
+    void drawFrameTriangulatedMatches(const std::shared_ptr<Map> pMap, std::vector<cv::KeyPoint> &vKeys, cv::Mat &im, std::vector<int>& vMatches);
+
+    /*
      * Draws matches between 2 vectors of KeyPoints
      */
     void drawMatches(std::vector<cv::KeyPoint>& vKeys1, cv::Mat& im1,
                      std::vector<cv::KeyPoint>& vKeys2, cv::Mat& im2, std::vector<int>& vMatches);
 
     /*
-     * Draws the extracd features in an image
+     * Draws the extracd features in current image
      */
     void drawCurrentFeatures(std::vector<cv::KeyPoint>& vKeys, cv::Mat& im);
 
     /*
+     * Draws the extracd features in an image selected
+     */
+    void drawFeatures(const std::vector<cv::KeyPoint> &vKeys, cv::Mat &im, const std::string &windowName);
+
+    /*
      * Draws the current matched MapPoints of a frame
      */
-    void drawCurrentFrame(Frame& f);
+    void drawCurrentFrame(Frame& f, std::string text = "");
+
+    /*
+     * Show the depth image of a frame
+     */
+    void drawFrameDepthImage(Frame &f, std::string text = "");
 
     /*
      * Updates the windows (so they show the last drawn image)
@@ -67,6 +83,7 @@ private:
 
     std::vector<cv::KeyPoint> vRefKeys_;
     cv::Mat refIm_;
+    bool showScene_;
 };
 
 
