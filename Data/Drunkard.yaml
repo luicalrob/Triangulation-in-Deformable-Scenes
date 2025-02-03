@@ -2,14 +2,14 @@
 
 # Camera calibration and distortion parameters
 # 320x320 drunkard
-Camera.fx: 610.17789714
-Camera.fy: 610.17789714
-Camera.cx: 512.0
-Camera.cy: 512.0
+Camera.fx: 190.68059285
+Camera.fy: 190.68059285
+Camera.cx: 160.0
+Camera.cy: 160.0
 
 # Camera resolution
-Camera.cols: 1024
-Camera.rows: 1024
+Camera.cols: 320
+Camera.rows: 320
 
 # Number of features per image
 FeatureExtractor.nFeatures: 1000
@@ -29,14 +29,14 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 30
+Matching.initialization: 35
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 120
+Matching.initialization.radius: 40
 
 #Covisivility graph
 Map.minObs: 6
@@ -48,7 +48,7 @@ Triangulation.minCos: 0.6
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 6.0
+Triangulation.depthLimit: 3.5
 
 # LUIS
 #Cameras poses
@@ -78,7 +78,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 10
+Optimization.numberOfOptimizations: 9
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations

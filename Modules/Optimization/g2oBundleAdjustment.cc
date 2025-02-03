@@ -705,24 +705,24 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
             mTGlobalId[T] = currId;
             currId++;
 
-            // double ds_1 = static_cast<double>(pKF1->getEstimatedDepthScale());
-            // double ds_2 = static_cast<double>(pKF2->getEstimatedDepthScale());
-            // DepthScale_ dscale1 = std::make_shared<double>(ds_1);
-            // DepthScale_ dscale2 = std::make_shared<double>(ds_2);
+            double ds_1 = static_cast<double>(pKF1->getEstimatedDepthScale());
+            double ds_2 = static_cast<double>(pKF2->getEstimatedDepthScale());
+            DepthScale_ dscale1 = std::make_shared<double>(ds_1);
+            DepthScale_ dscale2 = std::make_shared<double>(ds_2);
 
-            // VertexDepthScale* vScale1 = new VertexDepthScale();
-            // vScale1->setEstimate(ds_1);
-            // vScale1->setId(currId);
-            // optimizer.addVertex(vScale1);
-            // mKeyFrameId[pKF1] = currId;
-            // currId++;
+            VertexDepthScale* vScale1 = new VertexDepthScale();
+            vScale1->setEstimate(ds_1);
+            vScale1->setId(currId);
+            optimizer.addVertex(vScale1);
+            mKeyFrameId[pKF1] = currId;
+            currId++;
 
-            // VertexDepthScale* vScale2 = new VertexDepthScale();
-            // vScale2->setEstimate(ds_2);
-            // vScale2->setId(currId);
-            // optimizer.addVertex(vScale2);
-            // mKeyFrameId[pKF2] = currId;
-            // currId++;
+            VertexDepthScale* vScale2 = new VertexDepthScale();
+            vScale2->setEstimate(ds_2);
+            vScale2->setId(currId);
+            optimizer.addVertex(vScale2);
+            mKeyFrameId[pKF2] = currId;
+            currId++;
 
             for (size_t mpIndex = 0; mpIndex < v1MPs.size(); mpIndex++) {
                 MapPoint_ pMPi1 = v1MPs[mpIndex];
