@@ -64,7 +64,8 @@ Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 0.1
+Measurements.DepthError: 3.0
+Measurements.DepthWeight: 300
 Measurements.DepthScale.C1: 1.3
 Measurements.DepthScale.C2: 0.8
 Measurements.Depth.Scale: 0.0004577706569009
@@ -78,7 +79,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 9
+Optimization.numberOfOptimizations: 15
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
@@ -109,7 +110,7 @@ Triangulation.seed.location: "FarPoints"
 
 
 # Visualization
-MapVisualizer.showScene: "false"
+MapVisualizer.showScene: "true"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "false"
+Execution.stop: "true"

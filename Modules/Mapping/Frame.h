@@ -47,7 +47,8 @@ public:
           const int nImCols, const int nImRows, int nScales, float fScaleFactor,
           const std::shared_ptr<CameraModel> calibration,
           const std::vector<float>& vDistortion = {},
-          const double dScale = 0.0);
+          const double dScale = 0.0,
+          const float depthError = 0.0);
 
     /*
      * Sets the pose of the Frame
@@ -225,6 +226,11 @@ public:
     double getDepthScale();
 
     /*
+     * Gets the depth error introduced to the real depth measurements
+     */
+    float getDepthError();
+
+    /*
      * Checks that all MapPoints matched are good i.e. their error is low. ONLY USED FOR DEBUG PURPOSES
      */
     void checkAllMapPointsAreGood();
@@ -281,6 +287,7 @@ private:
     cv::Mat depthIm_;
     double timestamp_;
     double depthScale_;
+    float depthError_;
 };
 
 

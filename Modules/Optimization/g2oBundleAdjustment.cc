@@ -446,7 +446,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
 void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer,
                             const std::vector<Eigen::Vector3f> originalPoints, const std::vector<Eigen::Vector3f> movedPoints) {
     float simulatedRepErrorStanDesv = settings.getSimulatedRepError();
-    float SimulatedDepthErrorStanDesv = settings.getSimulatedDepthError();
+    float SimulatedDepthErrorStanDesv = settings.getSimulatedDepthWeight()/1000;
 
     double repBalanceWeight = settings.getOptRepWeight();
     double arapBalanceWeight = settings.getOptArapWeight();

@@ -191,6 +191,7 @@ private:
     float imageDepthScale_ = 1.0f; // for simulatng an unknown scale
     double estimatedDepthScale_ = 1.0f; // scale estimated
     cv::Mat depthIm_;
+    float depthError_;
 
     Sophus::SE3f Tcw_;
 

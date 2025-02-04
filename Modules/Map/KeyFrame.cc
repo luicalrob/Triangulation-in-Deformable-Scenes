@@ -30,6 +30,7 @@ KeyFrame::KeyFrame(Frame &f) {
     vDepthMeasurements_ = f.getDepthMeasurements();
     depthIm_ = f.getDepthIm();
     imageDepthScale_ = f.getDepthScale();
+    depthError_ = f.getDepthError();
 
     Tcw_ = f.getPose();
 
@@ -64,6 +65,7 @@ KeyFrame::KeyFrame(Frame &f) {
 KeyFrame::KeyFrame(const KeyFrame& other)
     : vKeys_(other.vKeys_),
       vDepthMeasurements_(other.vDepthMeasurements_),
+      depthError_(other.depthError_),
       imageDepthScale_(other.imageDepthScale_),
       estimatedDepthScale_(other.estimatedDepthScale_),
       depthIm_(other.depthIm_),
@@ -158,11 +160,14 @@ double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0, depthError_/1000);
+    
     uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
 
     double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
 
-    double depth = static_cast<double>(rawDepth) * scaleFactor;
+    double depth = ((static_cast<double>(rawDepth) * scaleFactor) + distribution(generator));
 
     if(scaled)
         return depth;

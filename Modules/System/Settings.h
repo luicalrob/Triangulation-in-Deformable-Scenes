@@ -80,6 +80,7 @@ public:
     float getSimulatedRepError();
     int getDecimalsRepError();
     float getSimulatedDepthError();
+    float getSimulatedDepthWeight();
     float getSimulatedDepthScaleC1();
     float getSimulatedDepthScaleC2();
     double getDepthMeasurementsScale();
@@ -151,6 +152,7 @@ private:
     float SimulatedRepError_;
     int DecimalsRepError_;
     float SimulatedDepthError_;
+    float SimulatedDepthWeight_;
     float SimulatedDepthScaleC1_;
     float SimulatedDepthScaleC2_;
     double DepthMeasurementsScale_;

@@ -28,7 +28,8 @@ Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
              const int nImCols, const int nImRows, int nScales, float fScaleFactor,
              const std::shared_ptr<CameraModel> calibration,
              const vector<float>& vDistortion,
-             const double dScale){
+             const double dScale,
+             const float depthError){
     vKeys_ = vector<cv::KeyPoint>(nFeatures);
     vKeysDis_ = vector<cv::KeyPoint>(nFeatures);
     vDepthMeasurements_ = vector<float>(nFeatures);
@@ -37,6 +38,7 @@ Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
 
     calibration_ = calibration;
     depthScale_ = dScale;
+    depthError_ = depthError;
 
     //Compute image boundaries as distortion can change typical values
     computeImageBoundaries(vDistortion,nImCols,nImRows);
@@ -103,11 +105,14 @@ double Frame::getDepthMeasure(float x, float y) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0, depthError_/1000);
+
     uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
 
     double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
 
-    return static_cast<double>(rawDepth) * scaleFactor;
+    return ((static_cast<double>(rawDepth) * scaleFactor) + distribution(generator));
 }
 
 Grid Frame::getGrid() {
@@ -168,6 +173,7 @@ void Frame::assign(Frame &F) {
 
     Tcw_ = F.Tcw_;
     // depthScale_ = F.depthScale_;
+    depthError_ = F.depthError_;
 
     im_ = F.im_.clone();
     depthIm_ = F.depthIm_.clone();
@@ -358,6 +364,10 @@ cv::Mat Frame::getIm(){
 
 double Frame::getDepthScale(){
     return depthScale_;
+}
+
+float Frame::getDepthError(){
+    return depthError_;
 }
 
 cv::Mat Frame::getDepthIm(){
