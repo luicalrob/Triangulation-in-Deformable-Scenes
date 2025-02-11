@@ -108,11 +108,11 @@ double Frame::getDepthMeasure(float x, float y) {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0.0, depthError_/1000);
 
-    uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
+    float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
 
-    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
+    //double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
 
-    return ((static_cast<double>(rawDepth) * scaleFactor) + distribution(generator));
+    return ((static_cast<double>(rawDepth)) + distribution(generator));
 }
 
 Grid Frame::getGrid() {

@@ -146,7 +146,7 @@ bool Mapping::monocularMapInitialization() {
     visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
 
     //If not enough matches found, updtate reference frame
-    if(nMatches < 45){
+    if(nMatches < 30){
         refFrame_.assign(currFrame_);
         visualizer_->setReferenceFrame(refFrame_.getKeyPointsDistorted(),currIm_);
 

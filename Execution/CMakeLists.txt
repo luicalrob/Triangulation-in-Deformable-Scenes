@@ -20,3 +20,7 @@ target_link_libraries(${PROGRAM_NAME} ${OpenCV_LIBS} slam)
 set(PROGRAM_NAME drunkard)
 add_executable(${PROGRAM_NAME} drunkard.cc)
 target_link_libraries(${PROGRAM_NAME} ${OpenCV_LIBS} slam)
+
+set(PROGRAM_NAME syncolon)
+add_executable(${PROGRAM_NAME} syncolon.cc)
+target_link_libraries(${PROGRAM_NAME} ${OpenCV_LIBS} slam)
