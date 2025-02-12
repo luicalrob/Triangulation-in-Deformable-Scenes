@@ -21,8 +21,8 @@
  * Implementation of the PinHole camera model with 4 parameters
  */
 
-#ifndef JJSLAM_PINHOLE_H
-#define JJSLAM_PINHOLE_H
+#ifndef SLAM_PINHOLE_H
+#define SLAM_PINHOLE_H
 
 #include "CameraModel.h"
 

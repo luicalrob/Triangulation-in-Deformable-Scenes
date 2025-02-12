@@ -25,6 +25,7 @@ set(root ${CMAKE_CURRENT_SOURCE_DIR})
 set(HEADER_FILES
         ${root}/Calibration/CameraModel.h
         ${root}/Calibration/PinHole.h
+        ${root}/Calibration/KannalaBrandt8.h
         ${root}/DatasetLoader/DrunkardLoader.h
         ${root}/DatasetLoader/SyncolonLoader.h
         ${root}/Features/Descriptor.h
@@ -54,6 +55,7 @@ set(HEADER_FILES
 
 set(SOURCE_FILES
         ${root}/Calibration/PinHole.cc
+        ${root}/Calibration/KannalaBrandt8.cc
         ${root}/DatasetLoader/DrunkardLoader.cc
         ${root}/DatasetLoader/SyncolonLoader.cc
         ${root}/Features/FAST.cc
