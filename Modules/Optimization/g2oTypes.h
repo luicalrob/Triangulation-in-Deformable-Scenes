@@ -418,6 +418,42 @@ public:
     //virtual void linearizeOplus();
 };
 
+class EdgeDepthWithoutScaleCorrection: public  g2o::BaseUnaryEdge<1, double, VertexSBAPointXYZ>{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    EdgeDepthWithoutScaleCorrection();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError()  {
+        const VertexSBAPointXYZ* v1 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
+        double obs(_measurement);      //Observed depth of the point
+        Eigen::Vector3d p3Dw = v1->estimate();
+        g2o::SE3Quat Tcw = cameraPose; 
+
+        Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
+        if (scale <= 0) {
+            _error[0] = 500 * (obs - p3Dc[2] * scale);
+            return;
+        } else if (scale >= 8) {
+            _error[0] = 500 * (obs - p3Dc[2] * scale);
+            return;
+        } else {
+            // Compute the depth error
+            _error[0] = obs - p3Dc[2] * scale;
+        }
+
+    }
+
+    g2o::SE3Quat cameraPose;
+    double scale;
+
+    //virtual void linearizeOplus();
+};
+
 
 
 #endif //SLAM_G2OTYPES_H

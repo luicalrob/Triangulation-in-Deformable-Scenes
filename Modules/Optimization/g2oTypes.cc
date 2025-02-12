@@ -385,3 +385,23 @@ bool EdgeDepthCorrection::write(std::ostream& os) const {
     os << information()(0, 0);
     return os.good();
 }
+
+EdgeDepthWithoutScaleCorrection::EdgeDepthWithoutScaleCorrection(){
+}
+
+bool EdgeDepthWithoutScaleCorrection::read(std::istream& is) {
+    is >> _measurement;
+
+    double info;
+    is >> info;
+    information()(0, 0) = info;
+
+    return true;
+}
+
+bool EdgeDepthWithoutScaleCorrection::write(std::ostream& os) const {
+    os << _measurement << " ";
+
+    os << information()(0, 0);
+    return os.good();
+}

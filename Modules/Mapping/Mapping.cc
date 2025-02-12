@@ -188,7 +188,7 @@ bool Mapping::monocularMapInitialization() {
             double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
             double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
 
-            if(d1 > depthLimit_ || d2 > depthLimit_ || pow((d1-d2), 2) > 0.3)
+            if(d1 > depthLimit_ || d2 > depthLimit_ || pow((d1-d2), 2) > 0.5)
             continue;
             
             pMap_->insertMapPoint(pMP1);
@@ -217,7 +217,7 @@ bool Mapping::monocularMapInitialization() {
     scale1 = scale1 / n_points;
     scale2 = scale2 / n_points;
 
-    refKeyFrame_->setEstimatedDepthScale(scale1);
+    refKeyFrame_->setEstimatedDepthScale(1.0);
     currKeyFrame_->setEstimatedDepthScale(scale2);
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;

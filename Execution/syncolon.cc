@@ -73,7 +73,7 @@ int main(int argc, char **argv){
         sequence.getPoseData(i,currPose);
 
         Sophus::SE3f Twc;
-        Eigen::Vector3f translation(currPose.tx / 1000, currPose.ty / 1000, currPose.tz / 1000);
+        Eigen::Vector3f translation(currPose.tx, currPose.ty, currPose.tz);
         Eigen::Quaternionf quaternion(currPose.qw, currPose.qx, currPose.qy, currPose.qz);
         //quaternion.normalize();
         Twc = Sophus::SE3f(quaternion, translation);

@@ -707,8 +707,6 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
 
             double ds_1 = static_cast<double>(pKF1->getEstimatedDepthScale());
             double ds_2 = static_cast<double>(pKF2->getEstimatedDepthScale());
-            DepthScale_ dscale1 = std::make_shared<double>(ds_1);
-            DepthScale_ dscale2 = std::make_shared<double>(ds_2);
 
             VertexDepthScale* vScale1 = new VertexDepthScale();
             vScale1->setEstimate(ds_1);
@@ -815,7 +813,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
 
                 // DEPTH ERROR //
                 //Set fisrt depth edge
-                double depth = static_cast<double>(pKF1->getDepthMeasure(mpIndex));
+                // double depth = static_cast<double>(pKF1->getDepthMeasure(mpIndex));
                 double d1 = pKF1->getDepthMeasure(uv1.x, uv1.y, false);
                 EdgeDepthCorrection* eD1 = new EdgeDepthCorrection();
 
@@ -828,6 +826,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 eD1->setInformation(informationMatrixDepth);
                 kfPose = pKF1->getPose();
                 eD1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
+                //eD1->scale = ds_1;
                 optimizer.addEdge(eD1);
 
                 //Set second depth edge

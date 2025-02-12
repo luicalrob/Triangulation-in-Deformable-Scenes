@@ -153,10 +153,13 @@ cv::Mat KeyFrame::getDepthIm(){
 
 double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
     if (depthIm_.empty()) {
-        return -1;
-        //throw std::runtime_error("Depth image is not initialized.");
+        throw std::runtime_error("Depth image is not initialized.");
     }
-    if (x >= depthIm_.cols || y >= depthIm_.rows) {
+    // std::cout << "x: " << x << std::endl;
+    // std::cout << "y: " << y << std::endl;
+    // std::cout << "depthIm_.cols: " << depthIm_.cols << std::endl;
+    // std::cout << "depthIm_.rows: " << depthIm_.rows << std::endl;
+    if (x > depthIm_.cols || y > depthIm_.rows) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
@@ -168,7 +171,7 @@ double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
 
     //std::cout << "depth measurement: " << rawDepth << std::endl;
 
-    //double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
+    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
 
     double depth = ((static_cast<double>(rawDepth)) + distribution(generator));
 
