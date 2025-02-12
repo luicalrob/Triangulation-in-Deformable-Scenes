@@ -75,10 +75,8 @@ bool Mapping::doMapping(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f 
     currIm_ = im.clone();
     cv::Mat dIm = depthIm.clone();
 
-    currFrame_.setPose(Tcw);
     currFrame_.setIm(currIm_);
     currFrame_.setDepthIm(dIm);
-    Tcw_ = Tcw;
 
     //Extract features in the current image
     extractFeatures(im);
@@ -89,6 +87,7 @@ bool Mapping::doMapping(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f 
     if(status_ == NOT_INITIALIZED){
         if(monocularMapInitialization()){
             status_ = GOOD;
+            Tcw = currFrame_.getPose();
         
             return true;
         }
@@ -154,15 +153,20 @@ bool Mapping::monocularMapInitialization() {
     }
 
     //Try to initialize by finding an Essential matrix
+    Sophus::SE3f Tcw;
     vector<Eigen::Vector3f> v3DPoints_w;
     vector<Eigen::Vector3f> v3DPoints_c;
     v3DPoints_w.reserve(vMatches_.capacity());
     v3DPoints_c.reserve(vMatches_.capacity());
     vector<bool> vTriangulated(vMatches_.capacity(),false);
     float parallax;
-    if(!monoInitializer_.initialize(refFrame_, currFrame_, vMatches_, nMatches, v3DPoints_w, vTriangulated, parallax)){
+    if(!monoInitializer_.initialize(refFrame_, currFrame_, vMatches_, nMatches, Tcw, v3DPoints_w, vTriangulated, parallax)){
         return false;
     }
+    
+    Sophus::SE3f Tw = Sophus::SE3f();
+    refFrame_.setPose(Tw);
+    currFrame_.setPose(Tcw);
 
     refKeyFrame_ = std::make_shared<KeyFrame>(refFrame_);
     currKeyFrame_ = std::make_shared<KeyFrame>(currFrame_);

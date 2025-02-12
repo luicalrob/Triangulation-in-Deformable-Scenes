@@ -5,8 +5,8 @@ import imageio
 import os
 
 # Folder paths
-exr_folder = '/home/luis/datasets/SynColon/level1/depth exr/'
-png_folder = '/home/luis/datasets/SynColon/level1/depth/'
+exr_folder = '/home/luis/datasets/Realcolon/level1/depth exr/'
+png_folder = '/home/luis/datasets/Realcolon/level1/depth/'
 
 # Create the output folder if it doesn't exist
 if not os.path.exists(png_folder):

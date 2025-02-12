@@ -43,7 +43,7 @@ public:
      * and the estimated camera pose
      */
     bool initialize(Frame refFrame, Frame currFrame, const std::vector<int>& vMatches, const int nMatches,
-                     std::vector<Eigen::Vector3f>& v3DPoints, std::vector<bool>& vTriangulated, float& parallax);
+                    Sophus::SE3f& Tcw, std::vector<Eigen::Vector3f>& v3DPoints, std::vector<bool>& vTriangulated, float& parallax);
 
 private:
     //Essential matrix computation with ransac
@@ -56,14 +56,14 @@ private:
     int computeScoreAndInliers(const int nMatched, Eigen::Matrix<float,3,3>& E, std::vector<bool>& vInliers);
 
     //Environment reconstruction from a given Essential Matrix
-    bool reconstructEnvironment(Eigen::Matrix3f& E, Sophus::SE3f& Tpw, Sophus::SE3f& Tcw, std::vector<Eigen::Vector3f>& v3DPoints,
+    bool reconstructEnvironment(Eigen::Matrix3f& E, Sophus::SE3f& Tcw, std::vector<Eigen::Vector3f>& v3DPoints,
                                 std::vector<bool>& vTriangulated, int& nInliers, float& parallax);
 
     //Reconstructs the camera pose from the Essential Matrix. Automatically sellects the correct rotaiton and translation
     void reconstructCameras(Eigen::Matrix3f& E ,Sophus::SE3f& Tcw, Eigen::MatrixXf& rays1, Eigen::MatrixXf& rays2);
 
     //Reconstructs the environment with te predicted camera pose
-    bool reconstructPoints(const Sophus::SE3f &Tpw, const Sophus::SE3f &Tcw, std::vector<Eigen::Vector3f> &v3DPoints,
+    bool reconstructPoints(const Sophus::SE3f &Tcw, std::vector<Eigen::Vector3f> &v3DPoints,
                                                 std::vector<bool>& vTriangulated, float& parallax);
 
     //Decompose an Essential matrix into the 2 possible rotations and translations

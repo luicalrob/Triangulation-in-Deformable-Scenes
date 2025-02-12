@@ -27,7 +27,7 @@ set(HEADER_FILES
         ${root}/Calibration/PinHole.h
         ${root}/Calibration/KannalaBrandt8.h
         ${root}/DatasetLoader/DrunkardLoader.h
-        ${root}/DatasetLoader/SyncolonLoader.h
+        ${root}/DatasetLoader/RealcolonLoader.h
         ${root}/Features/Descriptor.h
         ${root}/Features/Feature.h
         ${root}/Features/FAST.h
@@ -57,7 +57,7 @@ set(SOURCE_FILES
         ${root}/Calibration/PinHole.cc
         ${root}/Calibration/KannalaBrandt8.cc
         ${root}/DatasetLoader/DrunkardLoader.cc
-        ${root}/DatasetLoader/SyncolonLoader.cc
+        ${root}/DatasetLoader/RealcolonLoader.cc
         ${root}/Features/FAST.cc
         ${root}/Features/ORB.cc
         ${root}/Map/KeyFrame.cc

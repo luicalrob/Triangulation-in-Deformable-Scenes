@@ -105,19 +105,19 @@ SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
     outFile_.imbue(std::locale("es_ES.UTF-8"));
 }
 
-bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f& Twc, int &nKF, int &nMPs, clock_t &timer) {
+bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer) {
     if(stop_) {
         cv::namedWindow("Test Window");
     }
 
-    Tcw_ = Twc.inverse();
+    //Tcw_ = Twc.inverse();
     
     cv::Mat grayIm = convertImageToGrayScale(im);
 
     std::cerr << "Let's do Mapping! " << std::endl;
 
     // Do mapping
-    bool goodMapped = mapper_.doMapping(grayIm, depthIm, Tcw_, nKF, nMPs, timer);
+    bool goodMapped = mapper_.doMapping(grayIm, depthIm, Tcw, nKF, nMPs, timer);
     
     if (goodMapped) {
         startMeasurementsOnFile();
