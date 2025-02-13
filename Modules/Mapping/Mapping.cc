@@ -79,6 +79,7 @@ bool Mapping::doMapping(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f 
     currFrame_.setDepthIm(dIm);
 
     //Extract features in the current image
+
     extractFeatures(im);
 
     visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
@@ -189,11 +190,11 @@ bool Mapping::monocularMapInitialization() {
             cv::Point2f x1 = refKeyFrame_->getKeyPoint(i).pt;
             cv::Point2f x2 = currKeyFrame_->getKeyPoint(vMatches_[i]).pt;
 
-            double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
-            double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
+            // double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
+            // double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
 
-            if(d1 > depthLimit_ || d2 > depthLimit_ || pow((d1-d2), 2) > 0.5)
-            continue;
+            // if(d1 > depthLimit_ || d2 > depthLimit_ || pow((d1-d2), 2) > 0.5)
+            // continue;
             
             pMap_->insertMapPoint(pMP1);
             pMap_->insertMapPoint(pMP2);
@@ -221,7 +222,7 @@ bool Mapping::monocularMapInitialization() {
     scale1 = scale1 / n_points;
     scale2 = scale2 / n_points;
 
-    refKeyFrame_->setEstimatedDepthScale(1.0);
+    refKeyFrame_->setEstimatedDepthScale(scale1);
     currKeyFrame_->setEstimatedDepthScale(scale2);
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;

@@ -69,7 +69,7 @@ public:
     virtual void unprojectJac(const Eigen::Vector2f& p2D, Eigen::Matrix<float,3,2>& Jac) = 0;
 
     
-    virtual Eigen::Matrix3f getCalibrationMatrix() const = 0;
+    // virtual Eigen::Matrix3f getCalibrationMatrix() const = 0;
 
     /*
      * Gets the i calibration parameter

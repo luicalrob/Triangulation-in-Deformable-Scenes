@@ -82,7 +82,7 @@ void KannalaBrandt8::unproject(const Eigen::Vector2f& pixel_position,
     projecting_ray[2] = cos(th);
 }
 
-void KannalaBrandt8::projectionJacobian(const Eigen::Vector3f& landmark_position,
+void KannalaBrandt8::projectJac(const Eigen::Vector3f& landmark_position,
                                         Eigen::Matrix<float,2,3>& projection_jacobian) {
     float x2 = landmark_position[0] * landmark_position[0];
     float y2 = landmark_position[1] * landmark_position[1];
@@ -113,7 +113,7 @@ void KannalaBrandt8::projectionJacobian(const Eigen::Vector3f& landmark_position
     projection_jacobian(1,2) = -fy * fd * landmark_position[1] / (r2 + z2);
 }
 
-void KannalaBrandt8::unprojectionJacobian(const Eigen::Vector2f& pixel_position,
+void KannalaBrandt8::unprojectJac(const Eigen::Vector2f& pixel_position,
                                           Eigen::Matrix<float,3,2>& unprojection_jacobian) {
 }
 

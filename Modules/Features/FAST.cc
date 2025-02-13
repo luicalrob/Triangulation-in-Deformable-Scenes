@@ -79,15 +79,18 @@ void ExtractorNode::DivideNode(ExtractorNode &n1, ExtractorNode &n2, ExtractorNo
 }
 
 void FAST::extract(const cv::Mat &im, std::vector<cv::KeyPoint> &vKeys) {
+
     if(im.empty())
         return;
 
     assert(im.type() == CV_8UC1);
 
     // Pre-compute the scale pyramid
+
     computePyramid(im);
 
     vector<vector<cv::KeyPoint>> allKeypoints;
+
     computeKeyPointsOctTree(allKeypoints);
 
     int nExtracted = 0;

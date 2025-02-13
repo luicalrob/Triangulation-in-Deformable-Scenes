@@ -21,7 +21,7 @@ int main(int argc, char **argv){
     
     //Load dataset sequence
     string datasetPath = argv[1];
-    RealcolonLoader sequence(datasetPath, datasetPath + "/trajectory.txt");
+    RealcolonLoader sequence(datasetPath, datasetPath + "/images.txt");
 
     int startingFrame, framesStep, endingFrame;
     if (argc >= 3) {
@@ -59,7 +59,7 @@ int main(int argc, char **argv){
 
     cv::Mat currIm;
     cv::Mat currDepthIm;
-    double currTs;
+    // double currTs;
     PoseData currPose;
     currPose.tx = 0.0;
     currPose.ty = 0.0;
@@ -76,11 +76,17 @@ int main(int argc, char **argv){
     for(int i = startingFrame; i <= endingFrame; i+=framesStep){
         sequence.getRGBImage(i,currIm);
         sequence.getDepthImage(i,currDepthIm);
-        sequence.getTimeStamp(i,currTs);
+        // sequence.getTimeStamp(i,currTs);
 
+        if (currIm.empty()) {
+            std::cerr << "Error: Could not load image!" << std::endl;
+            return -1;
+        }
+    
+        cv::imshow("Image Window", currIm);
         Sophus::SE3f Tcw;
 
-        cout << "[" << i <<"] TimeStamp: " << currTs << endl;
+        cout << "[" << i <<"] TimeStamp " << endl;
         bool triangulated = SLAM.processImage(currIm, currDepthIm, Tcw, nKF, nMPs, timer);
         if(triangulated) break;
     }

@@ -308,7 +308,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tcw, std::ve
             float cosParallaxPoint = cosRayParallax(ray1, ray2);
 
             //Check that the point has been triangulated in front of the first camera (possitive depth)
-            if(p3D_c1(2) < 0.0f || p3D_c1(2) > depthLimit_){
+            if(p3D_c1(2) < 0.0f){
                 vTriangulated[i] = false;
                 depth1++;
                 continue;
@@ -325,7 +325,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tcw, std::ve
                 }
             }
 
-            if(p3D_c2(2) < 0.0f || p3D_c2(2) > depthLimit_){
+            if(p3D_c2(2) < 0.0f){
                 vTriangulated[i] = false;
                 depth2++;
                 continue;
