@@ -1,17 +1,17 @@
 %YAML:1.0
 # Camera calibration and distortion parameters
-# syncolon
-Camera.fx: 536.2891                                                  
-Camera.fy: 643.5469
-Camera.cx: 625
-Camera.cy: 500
+# syncolon jj
+Camera.fx: 472.64955100886374                                                 
+Camera.fy: 472.64955100886374
+Camera.cx: 479.5
+Camera.cy: 359.5
 
 # Camera resolution
-Camera.cols: 625
-Camera.rows: 500
+Camera.cols: 960
+Camera.rows: 720
 
 # Number of features per image
-FeatureExtractor.nFeatures: 1000
+FeatureExtractor.nFeatures: 2000
 
 # Number of levels in the scale pyramid
 FeatureExtractor.nScales: 8
