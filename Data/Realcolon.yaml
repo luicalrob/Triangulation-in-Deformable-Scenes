@@ -20,8 +20,10 @@ Camera.d3: -8.190911e-05
 Camera.cols: 1440
 Camera.rows: 1080
 
+FeatureExtractor.imageBoderMask: "mask_border_c3vd_ori.jpg"
+
 # Number of features per image
-FeatureExtractor.nFeatures: 8192
+FeatureExtractor.nFeatures: 4096
 
 # Number of levels in the scale pyramid
 FeatureExtractor.nScales: 4

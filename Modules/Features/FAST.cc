@@ -90,7 +90,8 @@ void FAST::extract(const cv::Mat &im, std::vector<cv::KeyPoint> &vKeys) {
     computePyramid(im);
 
     vector<vector<cv::KeyPoint>> allKeypoints;
-    std::vector<cv::Mat> reflectionMasks = GenerateMasks(im, cv::Mat(), nScales_, false, true);
+    cv::Mat bMask_= cv::imread(borderMask_, cv::IMREAD_UNCHANGED);
+    std::vector<cv::Mat> reflectionMasks = GenerateMasks(im, bMask_, nScales_, true, true);
 
     computeKeyPointsOctTree(allKeypoints, reflectionMasks);
 
@@ -196,19 +197,6 @@ void FAST::computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKe
                         vToDistributeKeys.push_back(*vit);
                     }
                 }
-
-                vKeysCell.erase(
-                remove_if(vKeysCell.begin(), vKeysCell.end(),
-                            [&](const cv::KeyPoint& kp) {
-                                int x = cvRound(kp.pt.x);
-                                int y = cvRound(kp.pt.y);
-            
-                                int mask_value = mask.at<uchar>(y, x);
-                                std::cout << "Checking KeyPoint at (" << x << ", " << y << "): mask value = " << mask_value << std::endl;
-            
-                                return mask_value == 255; // Keep only keypoints where mask is NOT 255
-                            }),
-                vKeysCell.end());
             }
         }
 
@@ -229,6 +217,20 @@ void FAST::computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKe
             keypoints[i].octave=level;
             keypoints[i].size = scaledPatchSize;
         }
+
+        keypoints.erase(
+        remove_if(keypoints.begin(), keypoints.end(),
+                    [&](const cv::KeyPoint& kp) {
+                        int x = cvRound(kp.pt.x);
+                        int y = cvRound(kp.pt.y);
+    
+                        int mask_value = mask.at<uchar>(y, x);
+                        std::cout << "Checking KeyPoint at (" << x << ", " << y << "): mask value = " << mask_value << std::endl;
+    
+                        return mask_value != 0;
+                    }),
+        keypoints.end());
+        
     }
 
     // compute orientations

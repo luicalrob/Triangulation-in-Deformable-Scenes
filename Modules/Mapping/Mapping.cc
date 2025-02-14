@@ -43,7 +43,7 @@ Mapping::Mapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualize
                        settings.getImCols(),settings.getImRows(), settings.getNumberOfScales(), settings.getScaleFactor(),
                        settings.getCalibration(),settings.getDistortionParameters(), settings.getSimulatedDepthScaleC2());
 
-    featExtractor_ = shared_ptr<Feature>(new FAST(settings.getNumberOfScales(),settings.getScaleFactor(),settings.getFeaturesPerImage()*2,20,7));
+    featExtractor_ = shared_ptr<Feature>(new FAST(settings.getNumberOfScales(),settings.getScaleFactor(),settings.getFeaturesPerImage()*2,20,7, settings.getBorderMask()));
     descExtractor_ = shared_ptr<Descriptor>(new ORB(settings.getNumberOfScales(),settings.getScaleFactor()));
 
     vMatches_ = vector<int>(settings.getFeaturesPerImage());
