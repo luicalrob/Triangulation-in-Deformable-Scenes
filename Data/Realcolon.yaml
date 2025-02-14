@@ -17,17 +17,17 @@ Camera.d3: -8.190911e-05
 # Camera.p2: -8.190911e-05
 
 # Camera resolution
-Camera.cols: 1344
-Camera.rows: 992
+Camera.cols: 1440
+Camera.rows: 1080
 
 # Number of features per image
-FeatureExtractor.nFeatures: 2000
+FeatureExtractor.nFeatures: 8192
 
 # Number of levels in the scale pyramid
-FeatureExtractor.nScales: 8
+FeatureExtractor.nScales: 4
 
 # Scale factor between levels in the scale pyramid
-FeatureExtractor.fScaleFactor: 1.2
+FeatureExtractor.fScaleFactor: 1.666666666
 
 # Feature grid dimensions
 FeatureGrid.nGridCols: 64
@@ -38,14 +38,14 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 45
+Matching.initialization: 35
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 30
+Matching.initialization.radius: 12
 
 #Covisivility graph
 Map.minObs: 6

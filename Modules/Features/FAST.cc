@@ -90,8 +90,9 @@ void FAST::extract(const cv::Mat &im, std::vector<cv::KeyPoint> &vKeys) {
     computePyramid(im);
 
     vector<vector<cv::KeyPoint>> allKeypoints;
+    std::vector<cv::Mat> reflectionMasks = GenerateMasks(im, cv::Mat(), nScales_, false, true);
 
-    computeKeyPointsOctTree(allKeypoints);
+    computeKeyPointsOctTree(allKeypoints, reflectionMasks);
 
     int nExtracted = 0;
     for(auto vExtracedLevel : allKeypoints){
@@ -134,13 +135,17 @@ void FAST::computePyramid(const cv::Mat& im){
     }
 }
 
-void FAST::computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKeypoints)
+void FAST::computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKeypoints, const std::vector<cv::Mat>& reflectionMasks)
 {
     allKeypoints.resize(nScales_);
 
     const float W = 30;
 
     for (int level = 0; level < nScales_; ++level){
+        const cv::Mat& mask = reflectionMasks[level];
+        cv::imshow("Máscara", mask);
+        cv::waitKey(0); // Espera una tecla para cerrar
+
         const int minBorderX = EDGE_THRESHOLD-3;
         const int minBorderY = minBorderX;
         const int maxBorderX = vImagePyramid_[level].cols-EDGE_THRESHOLD+3;
@@ -191,6 +196,19 @@ void FAST::computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKe
                         vToDistributeKeys.push_back(*vit);
                     }
                 }
+
+                vKeysCell.erase(
+                remove_if(vKeysCell.begin(), vKeysCell.end(),
+                            [&](const cv::KeyPoint& kp) {
+                                int x = cvRound(kp.pt.x);
+                                int y = cvRound(kp.pt.y);
+            
+                                int mask_value = mask.at<uchar>(y, x);
+                                std::cout << "Checking KeyPoint at (" << x << ", " << y << "): mask value = " << mask_value << std::endl;
+            
+                                return mask_value == 255; // Keep only keypoints where mask is NOT 255
+                            }),
+                vKeysCell.end());
             }
         }
 
@@ -442,4 +460,65 @@ float FAST::IC_Angle(const cv::Mat& image, cv::Point2f pt,  const vector<int> & 
     }
 
     return cv::fastAtan2((float)m_01, (float)m_10);
+}
+
+
+std::vector<cv::Mat> FAST::GenerateMasks(const cv::Mat &image, const cv::Mat &borderMask, int numOctaves, bool bBorder, bool bReflexion)
+{
+    vector<cv::Mat> vMasks;
+
+    cv::Mat baseMask = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
+    std::cout << "image: " << image.size << "; type: " << image.type() << std::endl;
+    //std::cout << "borderMask: " << borderMask.size << "; type: " << borderMask.type() << std::endl;
+    //std::cout << "baseMask before border: " << baseMask.size << "; type: " << baseMask.type() << std::endl;
+    if(bBorder)
+    {
+        baseMask = borderMask.clone();
+    }
+    //std::cout << "baseMask after border: " << baseMask.size << "; type: " << baseMask.type() << std::endl;
+    if(bReflexion)
+    {
+        double nColorThreshold = 240;
+        cv::Mat mask_reflexion;
+        cv::threshold(image, mask_reflexion, nColorThreshold, 255, cv::THRESH_BINARY);
+        std::cout << "mask_reflexion: " << mask_reflexion.size << "; type: " << mask_reflexion.type() << std::endl;
+
+        if(baseMask.empty())
+        {
+            baseMask = mask_reflexion.clone();
+        }
+        else
+        {
+            cv::bitwise_or(mask_reflexion, baseMask, baseMask);
+        }
+    }
+    std::cout << "baseMask after reflexion: " << baseMask.size << "; type: " << baseMask.type() << std::endl;
+    double minVal, maxVal;
+    cv::minMaxLoc(baseMask, &minVal, &maxVal);
+    std::cout << "baseMask values: min=" << minVal << ", max=" << maxVal << std::endl;
+
+    if(baseMask.empty())
+    {
+        return vMasks;
+    }
+
+    vMasks.reserve(numOctaves);
+    float factor = 2.5/1.5; // factor es 1.66666666
+    int max_scale = 1;
+    for (int i = 0; i < numOctaves; ++i)
+    {
+        max_scale *= 2;
+        int side = ceil(max_scale * factor) * 2 + 5;
+        //std::cout << "MaskByOct --> octave: " << i << "; side: " << side << std::endl;
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(side, side));
+        cv::Mat mask_i;
+        cv::dilate(baseMask, mask_i, kernel);
+
+        vMasks.push_back(mask_i);
+
+    }
+
+    //std::cout << "There are " << vMasks.size() << " masks generated" << std::endl;
+
+    return vMasks;
 }

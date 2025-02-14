@@ -79,7 +79,6 @@ bool Mapping::doMapping(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f 
     currFrame_.setDepthIm(dIm);
 
     //Extract features in the current image
-
     extractFeatures(im);
 
     visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
@@ -190,11 +189,11 @@ bool Mapping::monocularMapInitialization() {
             cv::Point2f x1 = refKeyFrame_->getKeyPoint(i).pt;
             cv::Point2f x2 = currKeyFrame_->getKeyPoint(vMatches_[i]).pt;
 
-            // double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
-            // double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
+            double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
+            double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
 
-            // if(d1 > depthLimit_ || d2 > depthLimit_ || pow((d1-d2), 2) > 0.5)
-            // continue;
+            if(d1 == 0.0 || d2 == 0.0)
+            continue;
             
             pMap_->insertMapPoint(pMP1);
             pMap_->insertMapPoint(pMP2);
@@ -333,3 +332,4 @@ bool Mapping::isValidParallax(const Eigen::Vector3f& xn1, const Eigen::Vector3f&
 
     return parallax <= settings_.getMinCos();
 }
+

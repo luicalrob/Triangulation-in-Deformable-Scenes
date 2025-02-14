@@ -107,7 +107,7 @@ private:
     /*
      * Computes KeyPoints and distribute them with an oct tree
      */
-    void computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKeypoints);
+    void computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKeypoints, const std::vector<cv::Mat>& reflectionMasks);
 
     /*
      * Distributes a given set of KeyPoints with an octree
@@ -124,6 +124,9 @@ private:
      * Computes the orientation of a single KEYPOINT
      */
     float IC_Angle(const cv::Mat& image, cv::Point2f pt,  const std::vector<int> & u_max);
+
+    std::vector<cv::Mat> GenerateMasks(const cv::Mat &image, const cv::Mat &borderMask, int numOctaves, bool bBorder, bool bReflexion);
+
 
     int nScales_;               //Number of pyramid levels
     float fScaleFactor_;        //Scale factor for the downsampling in the image pyramid
