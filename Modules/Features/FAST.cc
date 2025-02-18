@@ -144,8 +144,8 @@ void FAST::computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKe
 
     for (int level = 0; level < nScales_; ++level){
         const cv::Mat& mask = reflectionMasks[level];
-        cv::imshow("Máscara", mask);
-        cv::waitKey(0); // Espera una tecla para cerrar
+        // cv::imshow("Máscara", mask);
+        // cv::waitKey(0); // Espera una tecla para cerrar
 
         const int minBorderX = EDGE_THRESHOLD-3;
         const int minBorderY = minBorderX;
@@ -225,9 +225,9 @@ void FAST::computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKe
                         int y = cvRound(kp.pt.y);
     
                         int mask_value = mask.at<uchar>(y, x);
-                        std::cout << "Checking KeyPoint at (" << x << ", " << y << "): mask value = " << mask_value << std::endl;
+                        //std::cout << "Checking KeyPoint at (" << x << ", " << y << "): mask value = " << mask_value << std::endl;
     
-                        return mask_value != 0;
+                        return mask_value != 0; // Keep only keypoints where mask_value == 0
                     }),
         keypoints.end());
         
