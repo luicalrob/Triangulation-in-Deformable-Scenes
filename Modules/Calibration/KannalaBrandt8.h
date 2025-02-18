@@ -38,13 +38,16 @@ public:
     void project(const Eigen::Vector3f& landmark_position,
                  Eigen::Vector2f& pixel_position);
 
-    void unproject(const Eigen::Vector2f& p2D,
+    void unproject(const Eigen::Vector2f& pixel_position,
                    Eigen::Vector3f& projecting_ray);
+    
+    void unprojectWithZ(const Eigen::Vector2f& pixel_position,
+                    Eigen::Vector3f& projecting_ray, double z);
 
-    void projectionJacobian(const Eigen::Vector3f& landmark_position,
+    void projectJac(const Eigen::Vector3f& landmark_position,
                             Eigen::Matrix<float,2,3>& projection_jacobian);
 
-    void unprojectionJacobian(const Eigen::Vector2f& pixel_position,
+    void unprojectJac(const Eigen::Vector2f& pixel_position,
                               Eigen::Matrix<float,3,2>& unprojection_jacobian);
 
     Eigen::Matrix3f toIntrinsicsMatrix();

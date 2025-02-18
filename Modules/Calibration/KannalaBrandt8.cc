@@ -82,7 +82,41 @@ void KannalaBrandt8::unproject(const Eigen::Vector2f& pixel_position,
     projecting_ray[2] = cos(th);
 }
 
-void KannalaBrandt8::projectionJacobian(const Eigen::Vector3f& landmark_position,
+void KannalaBrandt8::unprojectWithZ(const Eigen::Vector2f& pixel_position,
+    Eigen::Vector3f& projecting_ray, double z) {
+    // Use Newthon method to solve for theta with good precision (err ~ e-6).
+    cv::Point2f pw((pixel_position[0] - vParameters_[2]) / vParameters_[0],
+    (pixel_position[1] - vParameters_[3]) / vParameters_[1]);
+    float scale = 1.f;
+    const float theta_d = sqrtf(pw.x * pw.x + pw.y * pw.y);
+
+    float th;
+    if (theta_d > 1e-8) {
+        // Compensate distortion iteratively.
+        float theta = theta_d;
+
+    for (int j = 0; j < 10; j++) {
+        float theta2 = theta * theta, theta4 = theta2 * theta2, theta6 = theta4 * theta2, theta8 =
+            theta4 * theta4;
+        float k0_theta2 = k0 * theta2, k1_theta4 = k1 * theta4;
+        float k2_theta6 = k2 * theta6, k3_theta8 = k3 * theta8;
+        float theta_fix = (theta * (1 + k0_theta2 + k1_theta4 + k2_theta6 + k3_theta8) - theta_d) /
+                            (1 + 3 * k0_theta2 + 5 * k1_theta4 + 7 * k2_theta6 + 9 * k3_theta8);
+        theta = theta - theta_fix;
+        if (fabsf(theta_fix) < precision_)
+            break;
+        }
+        scale = std::tan(theta) / theta_d;
+
+        th = theta;
+    }
+
+    projecting_ray[0] = z * (sin(th) * pw.x/ theta_d);
+    projecting_ray[1] = z * (sin(th) * pw.y/ theta_d);
+    projecting_ray[2] = z * (cos(th));
+}
+
+void KannalaBrandt8::projectJac(const Eigen::Vector3f& landmark_position,
                                         Eigen::Matrix<float,2,3>& projection_jacobian) {
     float x2 = landmark_position[0] * landmark_position[0];
     float y2 = landmark_position[1] * landmark_position[1];
@@ -113,7 +147,7 @@ void KannalaBrandt8::projectionJacobian(const Eigen::Vector3f& landmark_position
     projection_jacobian(1,2) = -fy * fd * landmark_position[1] / (r2 + z2);
 }
 
-void KannalaBrandt8::unprojectionJacobian(const Eigen::Vector2f& pixel_position,
+void KannalaBrandt8::unprojectJac(const Eigen::Vector2f& pixel_position,
                                           Eigen::Matrix<float,3,2>& unprojection_jacobian) {
 }
 
