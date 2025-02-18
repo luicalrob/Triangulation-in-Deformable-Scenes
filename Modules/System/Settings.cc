@@ -63,6 +63,8 @@ Settings::Settings(const std::string& configFile) {
     imRows_ = fSettings["Camera.rows"];
 
     //Read Feature extractor parameters
+
+    fSettings["FeatureExtractor.imageBoderMask"] >> borderMask_;
     nFeatures_ = fSettings["FeatureExtractor.nFeatures"];
     nScales_ = fSettings["FeatureExtractor.nScales"];
     fScaleFactor_ = fSettings["FeatureExtractor.fScaleFactor"];
@@ -224,6 +226,10 @@ int Settings::getImCols() {
 
 int Settings::getImRows() {
     return imRows_;
+}
+
+std::string Settings::getBorderMask() {
+    return borderMask_;
 }
 
 int Settings::getFeaturesPerImage() {

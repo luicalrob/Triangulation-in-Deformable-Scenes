@@ -51,6 +51,7 @@ public:
     int getImCols();
     int getImRows();
 
+    std::string getBorderMask();
     int getFeaturesPerImage();
     int getNumberOfScales();
     float getScaleFactor();
@@ -123,6 +124,7 @@ private:
     int imCols_, imRows_;                           //Image size
 
     //Feature extractor parameters
+    std::string borderMask_;
     int nFeatures_;                                 //Number of features to extract per image
     int nScales_;                                   //Number of scales in the image pyramid representation
     float fScaleFactor_;                            //Scale factor

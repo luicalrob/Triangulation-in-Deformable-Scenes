@@ -43,7 +43,7 @@ Mapping::Mapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualize
                        settings.getImCols(),settings.getImRows(), settings.getNumberOfScales(), settings.getScaleFactor(),
                        settings.getCalibration(),settings.getDistortionParameters(), settings.getSimulatedDepthScaleC2());
 
-    featExtractor_ = shared_ptr<Feature>(new FAST(settings.getNumberOfScales(),settings.getScaleFactor(),settings.getFeaturesPerImage()*2,20,7));
+    featExtractor_ = shared_ptr<Feature>(new FAST(settings.getNumberOfScales(),settings.getScaleFactor(),settings.getFeaturesPerImage()*2,20,7, settings.getBorderMask()));
     descExtractor_ = shared_ptr<Descriptor>(new ORB(settings.getNumberOfScales(),settings.getScaleFactor()));
 
     vMatches_ = vector<int>(settings.getFeaturesPerImage());
@@ -217,7 +217,7 @@ bool Mapping::monocularMapInitialization() {
     scale1 = scale1 / n_points;
     scale2 = scale2 / n_points;
 
-    refKeyFrame_->setEstimatedDepthScale(1.0);
+    refKeyFrame_->setEstimatedDepthScale(scale1);
     currKeyFrame_->setEstimatedDepthScale(scale2);
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;

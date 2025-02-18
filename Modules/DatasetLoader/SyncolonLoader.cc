@@ -23,7 +23,7 @@ SyncolonLoader::SyncolonLoader(std::string folderPath, std::string timesPath) {
     //Skip first 2 lines
     string s;
     getline(fTimes,s);
-    getline(fTimes,s);
+    //getline(fTimes,s);
 
     size_t i = 0;    
     while (!fTimes.eof()) {
@@ -60,10 +60,10 @@ SyncolonLoader::SyncolonLoader(std::string folderPath, std::string timesPath) {
                 std::ostringstream rgbName, depthName;
 
                 rgbName << std::setw(4) << std::setfill('0') << i << ".png";
-                depthName << std::setw(4) << std::setfill('0') << i << ".exr";
-
+                depthName << std::setw(4) << std::setfill('0') << i << ".png";
+                
                 vRGBPaths.push_back(folderPath + "/rgb/" + rgbName.str());
-                vDepthPaths.push_back(folderPath + "/depth exr/" + depthName.str());
+                vDepthPaths.push_back(folderPath + "/depth/" + depthName.str());
 
                 i++;
             } else {

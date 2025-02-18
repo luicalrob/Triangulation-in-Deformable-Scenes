@@ -166,14 +166,17 @@ double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0.0, depthError_/1000);
     
-    //uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
-    float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
+    uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
+    //float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
 
-    //std::cout << "depth measurement: " << rawDepth << std::endl;
+    // std::cout << "depth measurement: " << rawDepth << std::endl;
 
-    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
+    //double scaleFactor = 30.0f / ((pow(2, 16)-1)); // (2^16 - 1) * 30
+    double scaleFactor = 0.2 / (pow(2, 16) - 1);
 
-    double depth = ((static_cast<double>(rawDepth)) + distribution(generator));
+    //std::cout << "depth measurement: " << rawDepth * scaleFactor << std::endl;
+
+    double depth = ((static_cast<double>(rawDepth)*scaleFactor/200) + distribution(generator));
 
     if(scaled)
         return depth;
