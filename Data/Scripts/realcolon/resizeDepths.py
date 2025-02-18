@@ -12,7 +12,7 @@ output_folder = "/home/luis/datasets/RealColon/58/depth"
 os.makedirs(output_folder, exist_ok=True)
 
 # Constants
-SCALE_FACTOR = 30.0 / (pow(2, 16) - 1)
+SCALE_FACTOR = 3.0 / (pow(2, 16) - 1)
 FINAL_HEIGHT = 1080
 FINAL_WIDTH = 1440
 DEPTH_HEIGHT = 992
@@ -50,8 +50,8 @@ for filename in os.listdir(input_folder):
         final_image = np.ones((FINAL_HEIGHT, FINAL_WIDTH), dtype=np.uint16)
 
         # Ensure depth is in uint16 format before inserting
-        scale_factor = 30.0 / (pow(2, 16) - 1) 
-        depth_uint16 = np.clip(depth / scale_factor, 0, 65535).astype(np.uint16)
+        # scale_factor = 3.0 / (pow(2, 16) - 1) 
+        depth_uint16 = np.clip(depth / SCALE_FACTOR, 0, 65535).astype(np.uint16)
 
         # Now assign the properly formatted depth image
         final_image[top:top + DEPTH_HEIGHT, left:left + DEPTH_WIDTH] = depth_uint16
