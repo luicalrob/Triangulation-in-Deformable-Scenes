@@ -38,11 +38,11 @@ void PinHole::unproject(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D) {
     p3D[2] = 1.0;
 }
 
-// void PinHole::unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, double z) {
-//     p3D[0] = z * (p2D[0] - cx) / fx;
-//     p3D[1] = z * (p2D[1] - cy) / fy;
-//     p3D[2] = z;
-// }
+void PinHole::unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, double z) {
+    p3D[0] = z * (p2D[0] - cx) / fx;
+    p3D[1] = z * (p2D[1] - cy) / fy;
+    p3D[2] = z;
+}
 
 void PinHole::projectJac(const Eigen::Vector3f& p3D, Eigen::Matrix<float,2,3>& Jac) {
     /*

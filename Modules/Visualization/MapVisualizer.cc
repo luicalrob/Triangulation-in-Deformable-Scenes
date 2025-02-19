@@ -107,36 +107,48 @@ void MapVisualizer::drawMapPoints() {
             std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
             Sophus::SE3f T1w = pKF1->getPose();
             Sophus::SE3f T2w = pKF2->getPose();
-            // for (size_t col = 1; col <= 960; col++) {
-            //     for (size_t row = 1; row <= 720; row++) {
-            //         double d1 = pKF1->getDepthMeasure(col, row, true);
-            //         double d2 = pKF2->getDepthMeasure(col, row, true);
+            for (size_t col = 1; col <= 960; col++) {
+                for (size_t row = 1; row <= 720; row++) {
+                    double d1 = pKF1->getDepthMeasure(col, row, true);
+                    double d2 = pKF2->getDepthMeasure(col, row, true);
 
-            //         cv::Point2f x1(col, row);
-            //         cv::Point2f x2(col, row);
+                    cv::Point2f x1(col, row);
+                    cv::Point2f x2(col, row);
 
-            //         if(d1 != -1 && d1 < 0.2 && d2 != -1 && d2 < 0.2) {
-            //             Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
-            //             Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
+                    if(d1 != -1 && d1 < 1.0 && d2 != -1 && d2 < 1.0 ) {
+                        Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
+                        m_pos_c1_aux /= m_pos_c1_aux.z();
+                        // std::cout << "m_pos_c1_aux: " << m_pos_c1_aux << std::endl;
+                        // std::cout << "depth measurement: " << d1 << std::endl;
 
-            //             Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
-            //             m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
-            //             m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
+                        Eigen::Vector3f m_pos_c1 = m_pos_c1_aux * d1;
+                        // std::cout << "m_pos_c1: " << m_pos_c1 << std::endl;
+
+                        Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
+                        m_pos_c2_aux /= m_pos_c2_aux.z();
+
+                        Eigen::Vector3f m_pos_c2 = m_pos_c2_aux * d2;
+                        // Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
+                        // Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
+
+                        Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
+                        m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
+                        m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
                         
-            //             Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
-            //             Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
-            //             Eigen::Vector3f m_pos_1, m_pos_2;
-            //             m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
-            //             m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
+                        Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
+                        Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
+                        Eigen::Vector3f m_pos_1, m_pos_2;
+                        m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
+                        m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
                         
-            //             glColor3f(0.0,0.7,0.0);
-            //             glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
+                        glColor3f(0.0,0.7,0.0);
+                        glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
 
-            //             glColor3f(0.0,1.0,0.0);
-            //             glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
-            //         }
-            //     }
-            // }
+                        glColor3f(0.0,1.0,0.0);
+                        glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
+                    }
+                }
+            }
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 std::shared_ptr<MapPoint> pMPi1, pMPi2;
@@ -158,29 +170,29 @@ void MapVisualizer::drawMapPoints() {
                 cv::Point2f x1 = pKF1->getKeyPoint(idx1).pt;
                 cv::Point2f x2 = pKF2->getKeyPoint(idx2).pt;
 
-                double d1 = pKF1->getDepthMeasure(x1.x, x1.y, true);
-                double d2 = pKF2->getDepthMeasure(x2.x, x2.y, true);
+                // double d1 = pKF1->getDepthMeasure(x1.x, x1.y, true);
+                // double d2 = pKF2->getDepthMeasure(x2.x, x2.y, true);
 
-                if(d1 != -1 && d2 != -1) {
-                    Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
-                    Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
+                // if(d1 != -1 && d2 != -1) {
+                //     Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
+                //     Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
 
-                    Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
-                    m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
-                    m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
+                //     Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
+                //     m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
+                //     m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
                     
-                    Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
-                    Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
-                    Eigen::Vector3f m_pos_1, m_pos_2;
-                    m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
-                    m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
+                //     Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
+                //     Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
+                //     Eigen::Vector3f m_pos_1, m_pos_2;
+                //     m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
+                //     m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
                     
-                    glColor3f(0.0,0.7,0.0);
-                    glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
+                //     glColor3f(0.0,0.7,0.0);
+                //     glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
 
-                    glColor3f(0.0,1.0,0.0);
-                    glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
-                }
+                //     glColor3f(0.0,1.0,0.0);
+                //     glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
+                // }
                 
                 glColor3f(0.0,0.0,0.0);
                 glVertex3f(pos2(0),pos2(1),pos2(2));

@@ -53,7 +53,7 @@ Triangulation.minCos: 0.5
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 0.3
+Triangulation.depthLimit: 1.0
 
 # LUIS
 #Cameras poses

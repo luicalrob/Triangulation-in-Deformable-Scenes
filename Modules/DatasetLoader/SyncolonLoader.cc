@@ -43,9 +43,9 @@ SyncolonLoader::SyncolonLoader(std::string folderPath, std::string timesPath) {
             // Ensure we have exactly 8 values (7 for pose + 1 timestamp)
             if (tokens.size() == 8) {
                 PoseData pose;
-                pose.tx = std::stod(tokens[0])/1000;
-                pose.ty = std::stod(tokens[1])/1000;
-                pose.tz = std::stod(tokens[2])/1000;
+                pose.tx = std::stod(tokens[0]);
+                pose.ty = std::stod(tokens[1]);
+                pose.tz = std::stod(tokens[2]);
                 pose.qx = std::stod(tokens[3]);
                 pose.qy = std::stod(tokens[4]);
                 pose.qz = std::stod(tokens[5]);
@@ -60,10 +60,10 @@ SyncolonLoader::SyncolonLoader(std::string folderPath, std::string timesPath) {
                 std::ostringstream rgbName, depthName;
 
                 rgbName << std::setw(4) << std::setfill('0') << i << ".png";
-                depthName << std::setw(4) << std::setfill('0') << i << ".png";
+                depthName << std::setw(4) << std::setfill('0') << i << ".exr";
                 
                 vRGBPaths.push_back(folderPath + "/rgb/" + rgbName.str());
-                vDepthPaths.push_back(folderPath + "/depth/" + depthName.str());
+                vDepthPaths.push_back(folderPath + "/depth_exr/" + depthName.str());
 
                 i++;
             } else {
@@ -86,7 +86,7 @@ bool SyncolonLoader::getPoseData(size_t idx, PoseData& poseData) {
 }
 
 bool SyncolonLoader::getRGBImage(size_t idx, cv::Mat& im) {
-    if(idx >= vTimeStamps_.size()) return false;
+    if(idx >= vRGBPaths.size()) return false;
 
     //cout << "[SyncolonLoader]: loading image at " << vImgsPairs_[idx].first << endl;
     im = cv::imread(vRGBPaths[idx], cv::IMREAD_UNCHANGED);
@@ -95,10 +95,21 @@ bool SyncolonLoader::getRGBImage(size_t idx, cv::Mat& im) {
 }
 
 bool SyncolonLoader::getDepthImage(size_t idx, cv::Mat& im) {
-    if(idx >= vTimeStamps_.size()) return false;
+    if(idx >= vDepthPaths.size()) return false;
 
-    //cout << "[SyncolonLoader]: loading image at " << vImgsPairs_[idx].first << endl;
-    im = cv::imread(vDepthPaths[idx], cv::IMREAD_UNCHANGED);
+    cv::Mat depth_image = cv::imread(vDepthPaths[idx], cv::IMREAD_ANYCOLOR | cv::IMREAD_ANYDEPTH);
+
+    cv::Mat channels[3];
+    cv::split(depth_image,channels);
+
+    depth_image = channels[2];
+
+    float x = 1.f - far_clip_ / near_clip_;
+    float y = far_clip_ / near_clip_;
+    float z = x / far_clip_;
+    float w = y / far_clip_;
+
+    im = 1.f / (z * (1 - depth_image) + w);
 
     return true;
 }
