@@ -3,8 +3,8 @@ import cv2
 import os
 
 # Set input and output folders
-input_folder = "/home/luis/datasets/RealColon/58/depth_npy"
-output_folder = "/home/luis/datasets/RealColon/58/depth"
+input_folder = "/home/luis/datasets/RealColon/01/depth_npy"
+output_folder = "/home/luis/datasets/RealColon/01/depth"
 
 # Ensure output folder exists
 os.makedirs(output_folder, exist_ok=True)
