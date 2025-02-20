@@ -109,7 +109,6 @@ bool MonocularMapInitializer::initialize(Frame refFrame, Frame currFrame, const 
     }
 
     return reconstructPoints(T1w,T2w,v3DPoints,vTriangulated, parallax);
-
 }
 
 int MonocularMapInitializer::computeMaxTries(const float fInlierFraction, const float fSuccessLikelihood){

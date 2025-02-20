@@ -137,6 +137,6 @@ void computeR(std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
 /*
  * Interpolates a value in a matrix given a floating point position.
  */
-float Interpolate(const float x, const float y, const float* mat, const int cols);
+float Interpolate(const float x, const float y, float* mat, const int cols);
 
 #endif //SLAM_GEOMETRY_H

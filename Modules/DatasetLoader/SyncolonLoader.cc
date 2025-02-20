@@ -63,7 +63,7 @@ SyncolonLoader::SyncolonLoader(std::string folderPath, std::string timesPath) {
                 depthName << std::setw(4) << std::setfill('0') << i << ".exr";
                 
                 vRGBPaths.push_back(folderPath + "/rgb/" + rgbName.str());
-                vDepthPaths.push_back(folderPath + "/depth_exr/" + depthName.str());
+                vDepthPaths.push_back(folderPath + "/depth/" + depthName.str());
 
                 i++;
             } else {

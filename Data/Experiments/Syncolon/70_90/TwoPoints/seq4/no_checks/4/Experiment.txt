@@ -1,0 +1,88 @@
+Translation norm between cameras (mm): 12,5001
+Parallax: 1,0598
+nMatches: 169
+nMapPoints: 328
+INITIAL MEASUREMENTS: 
+C1 standard desv: 3,25644
+C2 standard desv: 3,36414
+Rel. error: 0
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 12,5001
+Av. error: 1.011,38
+RMSE: 1.052,06
+
+1 / 12 MEASUREMENTS: 
+C1 standard desv: 1,45798
+C2 standard desv: 3,24325
+Rel. error: 0,039256
+Global rotation:     0,999998  -0,00105684  -0,00152127
+  0,00105833     0,999999   0,00097407
+  0,00152024 -0,000975678     0,999998
+Global translation: 4,49393e-05
+-0,00105394
+ 0,00045357
+Av. movement: 12,5001
+Av. error: 1.008,57
+RMSE: 1.048,32
+
+2 / 12 MEASUREMENTS: 
+C1 standard desv: 1,65731
+C2 standard desv: 5,28376
+Rel. error: 0,199622
+Global rotation:     0,999992 -0,000139674   0,00407318
+ 0,000139113            1  0,000138088
+  -0,0040732  -0,00013752     0,999992
+Global translation:  0,00109855
+ 0,00107428
+0,000171415
+Av. movement: 12,5001
+Av. error: 1.004,47
+RMSE: 1.043,3
+
+3 / 12 MEASUREMENTS: 
+C1 standard desv: 1,39972
+C2 standard desv: 5,50189
+Rel. error: 0,241944
+Global rotation:     0,999973   0,00112568   0,00727764
+ -0,00112305     0,999999 -0,000365258
+ -0,00727805  0,000357075     0,999973
+Global translation:  0,00169585
+ 0,00168235
+0,000547065
+Av. movement: 12,5001
+Av. error: 1.002,93
+RMSE: 1.041,51
+
+4 / 12 MEASUREMENTS: 
+C1 standard desv: 1,41644
+C2 standard desv: 5,50861
+Rel. error: 0,242881
+Global rotation:     0,999971   0,00123983   0,00756314
+ -0,00123699     0,999999 -0,000379743
+ -0,00756361  0,000370377     0,999971
+Global translation:  0,0017391
+0,00165206
+0,00061866
+Av. movement: 12,5001
+Av. error: 1.002,93
+RMSE: 1.041,51
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 1,41644
+C2 standard desv: 5,50861
+Rel. error: 0,242881
+Global rotation:     0,999971   0,00123983   0,00756314
+ -0,00123699     0,999999 -0,000379743
+ -0,00756361  0,000370377     0,999971
+Global translation:  0,0017391
+0,00165206
+0,00061866
+Av. movement: 12,5001
+Av. error: 1.002,93
+RMSE: 1.041,51
+

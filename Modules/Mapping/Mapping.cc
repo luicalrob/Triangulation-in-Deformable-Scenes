@@ -155,9 +155,8 @@ bool Mapping::monocularMapInitialization() {
 
     //Try to initialize by finding an Essential matrix
     vector<Eigen::Vector3f> v3DPoints_w;
-    vector<Eigen::Vector3f> v3DPoints_c;
-    v3DPoints_w.reserve(vMatches_.capacity());
-    v3DPoints_c.reserve(vMatches_.capacity());
+    Eigen::Vector3f v3DPoints_c1, v3DPoints_c2;
+    v3DPoints_w.reserve(vMatches_.capacity()*2);
     vector<bool> vTriangulated(vMatches_.capacity(),false);
     float parallax;
     if(!monoInitializer_.initialize(refFrame_, currFrame_, vMatches_, nMatches, v3DPoints_w, vTriangulated, parallax)){
@@ -176,7 +175,6 @@ bool Mapping::monocularMapInitialization() {
     int nTriangulated = 0;
     double scale1 = 0, scale2 = 0;
     float n_points = 0;
-
     for(int i = 0, j = 0; i < vTriangulated.size(); i++, j+=2){
         if(vTriangulated[i]){
             shared_ptr<MapPoint> pMP1(new MapPoint(v3DPoints_w[j]));
@@ -188,7 +186,7 @@ bool Mapping::monocularMapInitialization() {
             double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
             double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
 
-            if(d1 > depthLimit_ || d2 > depthLimit_ || pow((d1-d2), 2) > 1.0)
+            if(d1 > depthLimit_ || d1 < 0.0 || d2 > depthLimit_ || d2 < 0.0)
             continue;
             
             pMap_->insertMapPoint(pMP1);
@@ -203,11 +201,12 @@ bool Mapping::monocularMapInitialization() {
             //scale
             double d1_up_to_scale = refKeyFrame_->getDepthMeasure(x1.x, x1.y, false);
             double d2_up_to_scale = currKeyFrame_->getDepthMeasure(x2.x, x2.y, false);
-            v3DPoints_c[j] = T1w * v3DPoints_w[j];
-            v3DPoints_c[j+1] = T2w * v3DPoints_w[j+1];
+            
+            v3DPoints_c1 = T1w * v3DPoints_w[j];
+            v3DPoints_c2 = T2w * v3DPoints_w[j+1];
 
-            scale1 += d1_up_to_scale / v3DPoints_c[j][2];
-            scale2 += d2_up_to_scale / v3DPoints_c[j+1][2];
+            scale1 += d1_up_to_scale / v3DPoints_c1[2];
+            scale2 += d2_up_to_scale / v3DPoints_c2[2];
 
             nTriangulated += 2;
             n_points ++;
@@ -217,7 +216,7 @@ bool Mapping::monocularMapInitialization() {
     scale1 = scale1 / n_points;
     scale2 = scale2 / n_points;
 
-    refKeyFrame_->setEstimatedDepthScale(scale1);
+    refKeyFrame_->setEstimatedDepthScale(1.0);
     currKeyFrame_->setEstimatedDepthScale(scale2);
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;

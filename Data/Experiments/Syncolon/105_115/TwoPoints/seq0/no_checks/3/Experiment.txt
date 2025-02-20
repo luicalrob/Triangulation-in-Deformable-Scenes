@@ -1,0 +1,186 @@
+Translation norm between cameras (mm): 17,6778
+Parallax: 1,81833
+nMatches: 407
+nMapPoints: 768
+INITIAL MEASUREMENTS: 
+C1 standard desv: 10,0503
+C2 standard desv: 10,6816
+Rel. error: 0
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 35,7016
+Av. error: 852,386
+RMSE: 860,216
+
+1 / 12 MEASUREMENTS: 
+C1 standard desv: 1,10217
+C2 standard desv: 2,52763
+Rel. error: 0,0968785
+Global rotation:    0,999894  0,00381317   0,0140408
+-0,00375802    0,999985 -0,00395214
+ -0,0140557  0,00389895    0,999894
+Global translation:  0,00198254
+ 0,00686383
+-0,00276984
+Av. movement: 35,7016
+Av. error: 849,632
+RMSE: 857,4
+
+2 / 12 MEASUREMENTS: 
+C1 standard desv: 3,57482
+C2 standard desv: 4,42456
+Rel. error: 0,311181
+Global rotation:    0,999826   0,0054657   0,0178201
+-0,00537111    0,999971 -0,00535167
+ -0,0178489  0,00525503    0,999827
+Global translation:  0,00160753
+ 0,00496537
+-0,00231646
+Av. movement: 35,7016
+Av. error: 849,515
+RMSE: 857,272
+
+3 / 12 MEASUREMENTS: 
+C1 standard desv: 5,2971
+C2 standard desv: 5,7249
+Rel. error: 0,397641
+Global rotation:    0,999953   0,0023995  0,00939052
+ -0,0023587    0,999988 -0,00435287
+-0,00940085  0,00433051    0,999946
+Global translation:  0,00364768
+  0,0104055
+-0,00536396
+Av. movement: 35,7016
+Av. error: 841,583
+RMSE: 849,57
+
+4 / 12 MEASUREMENTS: 
+C1 standard desv: 6,83183
+C2 standard desv: 5,59773
+Rel. error: 1,0095
+Global rotation:    0,999911 -0,00455609  -0,0125673
+ 0,00454262    0,999989 -0,00110035
+  0,0125721  0,00104316     0,99992
+Global translation: -0,00203698
+ 0,00778034
+-0,00286159
+Av. movement: 35,7016
+Av. error: 831,063
+RMSE: 839,538
+
+5 / 12 MEASUREMENTS: 
+C1 standard desv: 11,9427
+C2 standard desv: 14,7161
+Rel. error: 1,90208
+Global rotation:   0,997889 -0,0184309 -0,0622746
+ 0,0185644   0,999826 0,00156491
+  0,062235 -0,0027177   0,998058
+Global translation: 0,00430035
+ 0,0200488
+ 0,0363681
+Av. movement: 35,7016
+Av. error: 771,442
+RMSE: 788,256
+
+6 / 12 MEASUREMENTS: 
+C1 standard desv: 9,89821
+C2 standard desv: 5,65439
+Rel. error: 3,31975
+Global rotation:    0,995378  -0,0272936  -0,0920739
+  0,0280104    0,999586  0,00650258
+  0,0918584 -0,00905155    0,995731
+Global translation: 0,00701583
+ 0,0150197
+ 0,0437136
+Av. movement: 35,7016
+Av. error: 770,409
+RMSE: 787,429
+
+7 / 12 MEASUREMENTS: 
+C1 standard desv: 20,1492
+C2 standard desv: 20,9381
+Rel. error: 2,61242
+Global rotation:    0,998752  -0,0152257  -0,0475575
+  0,0150578    0,999879 -0,00388685
+  0,0476109  0,00316589    0,998861
+Global translation:  0,008934
+0,0214393
+ 0,040223
+Av. movement: 35,7016
+Av. error: 770,161
+RMSE: 787,113
+
+8 / 12 MEASUREMENTS: 
+C1 standard desv: 5,81623
+C2 standard desv: 4,74707
+Rel. error: 2,78024
+Global rotation:    0,999877 -0,00481739  -0,0149103
+ 0,00471923    0,999967 -0,00661162
+  0,0149417  0,00654045    0,999867
+Global translation: 0,000829226
+   0,007352
+  0,0634215
+Av. movement: 35,7016
+Av. error: 768,268
+RMSE: 786,181
+
+9 / 12 MEASUREMENTS: 
+C1 standard desv: 16,886
+C2 standard desv: 16,6314
+Rel. error: 2,74419
+Global rotation:    0,999999 0,000529441  0,00100606
+-0,00051788    0,999934  -0,0114568
+-0,00101206   0,0114562    0,999934
+Global translation: -0,000285352
+  0,00932757
+   0,0648591
+Av. movement: 35,7016
+Av. error: 768,246
+RMSE: 786,01
+
+10 / 12 MEASUREMENTS: 
+C1 standard desv: 3,22109
+C2 standard desv: 2,42757
+Rel. error: 2,04857
+Global rotation:    0,999732 -0,00741811  -0,0219167
+ 0,00726589    0,999949  -0,0070168
+  0,0219677  0,00685567    0,999735
+Global translation: -0,000370026
+   0,0283945
+   0,0611694
+Av. movement: 35,7016
+Av. error: 765,311
+RMSE: 783,369
+
+11 / 12 MEASUREMENTS: 
+C1 standard desv: 5,30038
+C2 standard desv: 4,12194
+Rel. error: 1,97202
+Global rotation:    0,999711 -0,00797711  -0,0226959
+ 0,00780826    0,999941 -0,00751892
+  0,0227545  0,00733953    0,999714
+Global translation: -0,00124955
+  0,0230158
+   0,062721
+Av. movement: 35,7016
+Av. error: 763,89
+RMSE: 782,189
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 1,81627
+C2 standard desv: 1,27252
+Rel. error: 1,55906
+Global rotation:    0,999778   -0,006556  -0,0200003
+ 0,00645901    0,999967 -0,00491054
+  0,0200319  0,00478027    0,999788
+Global translation: -0,000133683
+    0,026465
+   0,0622249
+Av. movement: 35,7016
+Av. error: 763,333
+RMSE: 781,797
+

@@ -164,8 +164,7 @@ double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
-    float ground_truth_depth = Interpolate(x, y,
-        depthIm_.ptr<float>(0), depthIm_.cols);
+    float ground_truth_depth = Interpolate(x, y,depthIm_.ptr<float>(0), depthIm_.cols);
 
 
     std::default_random_engine generator;

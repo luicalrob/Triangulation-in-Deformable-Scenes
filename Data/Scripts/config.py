@@ -1,6 +1,73 @@
 #!/usr/bin/env python3
 
-real_values = {
+syncolon_values = {
+    "Pair": [
+        "70-2-90",
+        "105-1-115",
+        "150-2-160",
+        "270-3-300"
+    ],
+    "Triangulation": ["TwoPoints", "FarPoints"],
+    "Level": ["seq0", "seq1", "seq2", "seq3", "seq4", "seq5"],
+    "Checks": ["checks", "no_checks"],
+    "Experiment": range(1, 6),
+}
+
+syncolon_level_types = {
+    "seq0": ["checks", "no_checks"],
+    "seq1": ["no_checks"],
+    "seq2": ["no_checks"],
+    "seq3": ["no_checks"],
+    "seq4": ["no_checks"],
+    "seq5": ["no_checks"]
+}
+
+def setSyncolonParameters(pair, level):
+    """
+    Args:
+        pair (string)
+        level (string)
+    
+    Returns:
+        dict: parameters for .yalm
+    """
+    # Diccionario de configuración
+    experiment_config = {
+        "70-2-90_seq0": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 0.15},
+        "70-2-90_seq1": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 0.15},
+        "70-2-90_seq2": {"Hdist": 35, "window": 15, "maxDepth": 2.0, "minParallax": 0.15},
+        "70-2-90_seq3": {"Hdist": 35, "window": 15, "maxDepth": 2.0, "minParallax": 0.15},
+        "70-2-90_seq4": {"Hdist": 35, "window": 15, "maxDepth": 2.0, "minParallax": 0.15},
+        "70-2-90_seq5": {"Hdist": 35, "window": 20, "maxDepth": 2.0, "minParallax": 0.15},
+
+        "105-1-115_seq0": {"Hdist": 4, "window": 25, "maxDepth": 0.8, "minParallax": 1.0},
+        "105-1-115_seq1": {"Hdist": 15, "window": 25, "maxDepth": 0.8, "minParallax": 1.0},
+        "105-1-115_seq2": {"Hdist": 18, "window": 30, "maxDepth": 0.8, "minParallax": 1.0},
+        "105-1-115_seq3": {"Hdist": 18, "window": 30, "maxDepth": 0.8, "minParallax": 1.0},
+        "105-1-115_seq4": {"Hdist": 18, "window": 30, "maxDepth": 2.0, "minParallax": 0.15},
+        "105-1-115_seq5": {"Hdist": 18, "window": 30, "maxDepth": 2.0, "minParallax": 0.15},
+
+        "150-2-160_seq0": {"Hdist": 30, "window": 30, "maxDepth": 0.8, "minParallax": 1.0},
+        "150-2-160_seq1": {"Hdist": 30, "window": 30, "maxDepth": 0.8, "minParallax": 1.0},
+        "150-2-160_seq2": {"Hdist": 30, "window": 30, "maxDepth": 0.8, "minParallax": 1.0},
+        "150-2-160_seq3": {"Hdist": 30, "window": 30, "maxDepth": 0.8, "minParallax": 1.0},
+        "150-2-160_seq4": {"Hdist": 30, "window": 35, "maxDepth": 2.0, "minParallax": 0.15},
+        "150-2-160_seq5": {"Hdist": 30, "window": 35, "maxDepth": 2.0, "minParallax": 0.15},
+
+        "270-3-300_seq0": {"Hdist": 25, "window": 35, "maxDepth": 2.0, "minParallax": 0.15},
+        "270-3-300_seq1": {"Hdist": 25, "window": 35, "maxDepth": 2.0, "minParallax": 0.15},
+        "270-3-300_seq2": {"Hdist": 25, "window": 35, "maxDepth": 2.0, "minParallax": 0.15},
+        "270-3-300_seq3": {"Hdist": 25, "window": 35, "maxDepth": 2.0, "minParallax": 0.15},
+        "270-3-300_seq4": {"Hdist": 35, "window": 35, "maxDepth": 2.0, "minParallax": 0.15},
+        "270-3-300_seq5": {"Hdist": 35, "window": 35, "maxDepth": 2.0, "minParallax": 0.15},
+    }
+    
+    try:
+        return experiment_config[pair+"_"+level]
+    except KeyError:
+        raise ValueError("The pair must be one the determinated previously.")
+
+drunkard_values = {
     "Pair": [
         "320_00000_1975-1983", 
         "320_00000_2500-2513",
@@ -13,14 +80,14 @@ real_values = {
     "Experiment": range(26, 31),
 }
 
-level_types = {
+drunkard_level_types = {
     "level0": ["checks", "no_checks"],
     "level1": ["no_checks"],
     "level2": ["no_checks"],
     "level3": ["no_checks"]
 }
 
-def setParameters(pair):
+def setDrunkardParameters(pair):
     """
     Args:
         pair (string)
