@@ -1,10 +1,10 @@
 %YAML:1.0
 # Camera calibration and distortion parameters
 # syncolon jj
-Camera.fx: 472.64955100886374
-Camera.fy: 472.64955100886374
-Camera.cx: 479.5
-Camera.cy: 359.5
+Camera.fx: 536.2891
+Camera.fy: 643.5469
+Camera.cx: 675
+Camera.cy: 540
 
 Camera.d0: 0.0
 Camera.d1: 0.0
@@ -12,8 +12,8 @@ Camera.d2: 0.0
 Camera.d3: 0.0
 
 # Camera resolution
-Camera.cols: 960
-Camera.rows: 720
+Camera.cols: 1350
+Camera.rows: 1080
 
 FeatureExtractor.imageBoderMask: mask_border_endo_ori.jpg
 # Number of features per image
@@ -53,7 +53,7 @@ Triangulation.minCos: 0.15
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 2.0
+Triangulation.depthLimit: 3000.0
 
 # LUIS
 #Cameras poses
@@ -115,7 +115,7 @@ Triangulation.seed.location: "FarPoints"
 
 
 # Visualization
-MapVisualizer.showScene: "false"
+MapVisualizer.showScene: "true"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "false"
+Execution.stop: "true"

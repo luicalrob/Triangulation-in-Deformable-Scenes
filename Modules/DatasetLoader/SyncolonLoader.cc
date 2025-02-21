@@ -23,7 +23,7 @@ SyncolonLoader::SyncolonLoader(std::string folderPath, std::string timesPath) {
     //Skip first 2 lines
     string s;
     getline(fTimes,s);
-    //getline(fTimes,s);
+    getline(fTimes,s);
 
     size_t i = 0;    
     while (!fTimes.eof()) {

@@ -50,8 +50,8 @@ private:
     std::vector<PoseData> vPoseData_;
 
     cv::Size imSize_;                       //Size of the images
-    const float far_clip_ = 4.f;
-    const float near_clip_ = 0.01f;
+    const float far_clip_ = 400.0f;
+    const float near_clip_ = 1.0f;
 };
 
 

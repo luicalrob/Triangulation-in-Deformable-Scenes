@@ -605,10 +605,6 @@ void computeR(std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
 
 
 float Interpolate(const float x, const float y, float* mat, const int cols){
-    if (x < 0 || x >= cols - 1 || y < 0) {
-        std::cerr << "Interpolate Error: Coordinates out of bounds (x=" << x << ", y=" << y << ")" << std::endl;
-        return 0.0f; // Or return some default value
-    }
     float x_,_x,y_,_y;
     _x = modf(x,&x_);
     _y = modf(y,&y_);
