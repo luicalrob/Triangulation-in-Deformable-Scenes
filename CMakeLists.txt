@@ -26,6 +26,11 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
   set(OpenCV_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/OpenCV/build")
 endif()
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Pangolin/build")
+  set(Qhull_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Pangolin/build")
+  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Pangolin/build")
+endif()
+
 # Set Open3D_DIR
 if(EXISTS "$ENV{HOME}/open3d_install")
   set(Open3D_DIR "$ENV{HOME}/open3d_install/lib/cmake/Open3D")

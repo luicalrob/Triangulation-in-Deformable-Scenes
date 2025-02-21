@@ -479,7 +479,7 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
 
     double optimizationUpdate = 100;
-    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.00001*mapPoints_corrected.size()); i++){ 
+    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.0005*mapPoints_corrected.size()); i++){ 
         // correct error
         if (OptSelection == "open3DArap") {
             arapOpen3DOptimization(pMap.get());
@@ -708,12 +708,12 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
             double ds_1 = static_cast<double>(pKF1->getEstimatedDepthScale());
             double ds_2 = static_cast<double>(pKF2->getEstimatedDepthScale());
 
-            // VertexDepthScale* vScale1 = new VertexDepthScale();
-            // vScale1->setEstimate(ds_1);
-            // vScale1->setId(currId);
-            // optimizer.addVertex(vScale1);
-            // mKeyFrameId[pKF1] = currId;
-            // currId++;
+            VertexDepthScale* vScale1 = new VertexDepthScale();
+            vScale1->setEstimate(ds_1);
+            vScale1->setId(currId);
+            optimizer.addVertex(vScale1);
+            mKeyFrameId[pKF1] = currId;
+            currId++;
 
             VertexDepthScale* vScale2 = new VertexDepthScale();
             vScale2->setEstimate(ds_2);
@@ -814,25 +814,11 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 // DEPTH ERROR //
                 //Set fisrt depth edge
                 // double depth = static_cast<double>(pKF1->getDepthMeasure(mpIndex));
-                // double d1 = pKF1->getDepthMeasure(uv1.x, uv1.y, false);
-                // EdgeDepthCorrection* eD1 = new EdgeDepthCorrection();
-
-                // eD1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
-                // eD1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
-                // eD1->setMeasurement(d1);
-                // Eigen::Matrix<double, 1, 1> informationMatrixDepth;
-                // double depthUncertainty = static_cast<double>(DepthError);
-                // informationMatrixDepth(0, 0) = 1/(depthUncertainty * depthUncertainty);
-                // eD1->setInformation(informationMatrixDepth);
-                // kfPose = pKF1->getPose();
-                // eD1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
-                // //eD1->scale = ds_1;
-                // optimizer.addEdge(eD1);
-
                 double d1 = pKF1->getDepthMeasure(uv1.x, uv1.y, false);
-                EdgeDepthWithoutScaleCorrection* eD1 = new EdgeDepthWithoutScaleCorrection();
+                EdgeDepthCorrection* eD1 = new EdgeDepthCorrection();
 
                 eD1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                eD1->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mKeyFrameId[pKF1])));
                 eD1->setMeasurement(d1);
                 Eigen::Matrix<double, 1, 1> informationMatrixDepth;
                 double depthUncertainty = static_cast<double>(DepthError);
@@ -840,8 +826,22 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 eD1->setInformation(informationMatrixDepth);
                 kfPose = pKF1->getPose();
                 eD1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
-                eD1->scale = ds_1;
+                //eD1->scale = ds_1;
                 optimizer.addEdge(eD1);
+
+                // double d1 = pKF1->getDepthMeasure(uv1.x, uv1.y, false);
+                // EdgeDepthWithoutScaleCorrection* eD1 = new EdgeDepthWithoutScaleCorrection();
+
+                // eD1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                // eD1->setMeasurement(d1);
+                // Eigen::Matrix<double, 1, 1> informationMatrixDepth;
+                // double depthUncertainty = static_cast<double>(DepthError);
+                // informationMatrixDepth(0, 0) = 1/(depthUncertainty * depthUncertainty);
+                // eD1->setInformation(informationMatrixDepth);
+                // kfPose = pKF1->getPose();
+                // eD1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
+                // eD1->scale = ds_1;
+                // optimizer.addEdge(eD1);
 
                 //Set second depth edge
                 //depth = static_cast<double>(pKF2->getDepthMeasure(mpIndex));
