@@ -178,9 +178,9 @@ double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
     //double scaleFactor = 30.0f / ((pow(2, 16)-1)); // (2^16 - 1) * 30
     //double scaleFactor = 0.2 / (pow(2, 16) - 1);
 
-    //std::cout << "depth measurement: " << rawDepth * scaleFactor << std::endl;
+    //std::cout << "depth measurement: " << ground_truth_depth << std::endl;
 
-    double depth = ((static_cast<double>(ground_truth_depth)) + distribution(generator));
+    double depth = ((static_cast<double>(ground_truth_depth)/10) + distribution(generator));
 
     if(scaled)
         return depth;

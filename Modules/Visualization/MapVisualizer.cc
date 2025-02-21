@@ -42,7 +42,7 @@ MapVisualizer::MapVisualizer(shared_ptr<Map> pMap, const PoseData initialPose, c
 
             Eigen::Quaternionf quaternion(initialPose.qw, initialPose.qx, initialPose.qy, initialPose.qz);
             Eigen::Matrix3f rotation_matrix = quaternion.toRotationMatrix();
-            Eigen::Vector3f camera_offset(0.01f, 0.0f, -0.2f);  // offset behind the keyframe
+            Eigen::Vector3f camera_offset(0.01f, 0.0f, -0.04f);  // offset behind the keyframe
             Eigen::Vector3f camera_position = keyframe_position + rotation_matrix * camera_offset;
             s_cam = pangolin::OpenGlRenderState(
                     pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.0001,1000),
@@ -149,7 +149,7 @@ void MapVisualizer::drawMapPoints() {
             //         }
             //     }
             // }
-
+            
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 std::shared_ptr<MapPoint> pMPi1, pMPi2;
                 pMPi1 = v1MPs[i];
@@ -170,29 +170,37 @@ void MapVisualizer::drawMapPoints() {
                 cv::Point2f x1 = pKF1->getKeyPoint(idx1).pt;
                 cv::Point2f x2 = pKF2->getKeyPoint(idx2).pt;
 
-                // double d1 = pKF1->getDepthMeasure(x1.x, x1.y, true);
-                // double d2 = pKF2->getDepthMeasure(x2.x, x2.y, true);
+                double d1 = pKF1->getDepthMeasure(x1.x, x1.y, true);
+                double d2 = pKF2->getDepthMeasure(x2.x, x2.y, true);
 
-                // if(d1 != -1 && d2 != -1) {
-                //     Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
-                //     Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
+                if(d1 != -1 && d2 != -1) {
+                    Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
+                    m_pos_c1_aux /= m_pos_c1_aux.z();
+                    Eigen::Vector3f m_pos_c1 = m_pos_c1_aux * d1;
 
-                //     Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
-                //     m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
-                //     m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
+                    Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
+                    m_pos_c2_aux /= m_pos_c2_aux.z();
+                    Eigen::Vector3f m_pos_c2 = m_pos_c2_aux * d2;
+
+                    // Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
+                    // Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
+
+                    Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
+                    m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
+                    m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
                     
-                //     Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
-                //     Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
-                //     Eigen::Vector3f m_pos_1, m_pos_2;
-                //     m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
-                //     m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
+                    Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
+                    Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
+                    Eigen::Vector3f m_pos_1, m_pos_2;
+                    m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
+                    m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
                     
-                //     glColor3f(0.0,0.7,0.0);
-                //     glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
+                    glColor3f(0.0,0.7,0.0);
+                    glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
 
-                //     glColor3f(0.0,1.0,0.0);
-                //     glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
-                // }
+                    glColor3f(0.0,1.0,0.0);
+                    glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
+                }
                 
                 glColor3f(0.0,0.0,0.0);
                 glVertex3f(pos2(0),pos2(1),pos2(2));
@@ -245,7 +253,7 @@ void MapVisualizer::drawRays() {
 }
 
 void MapVisualizer::drawKeyFrames() {
-    const float &w = 0.05/2;
+    const float &w = 0.05/20;
     const float h = w*0.75;
     const float z = w*0.6;
 
@@ -292,7 +300,7 @@ void MapVisualizer::drawKeyFrames() {
 }
 
 void MapVisualizer::drawCurrentPose() {
-    const float &w = 0.05/2;
+    const float &w = 0.05/20;
     const float h = w*0.75;
     const float z = w*0.6;
 

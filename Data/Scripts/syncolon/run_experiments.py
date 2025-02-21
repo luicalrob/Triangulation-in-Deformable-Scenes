@@ -109,7 +109,7 @@ for pair, triangulation, level, experiment in product(pairs, triangulations, lev
                 elif "Execution.stop:" in line:
                     file.write(f'Execution.stop: "false"\n')
                 elif "MapVisualizer.showScene:" in line:
-                    file.write(f'MapVisualizer.showScene: "false"\n')
+                    file.write(f'MapVisualizer.showScene: "true"\n')
                 elif "Triangulation.seed.location:" in line:
                     file.write(f'Triangulation.seed.location: "{triangulation}"\n')
                 else:

@@ -176,8 +176,17 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 // cv::Point2f p_p1_cv(p_p1.x(), p_p1.y());
                 // cv::Point2f p_p2_cv(p_p2.x(), p_p2.y());
 
-                Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(x1, d1);
-                Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(x2, d2);
+                // Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(x1, d1);
+                // Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(x2, d2);
+
+                Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
+                m_pos_c1_aux /= m_pos_c1_aux.z();
+                Eigen::Matrix<float,1,3> x3D1 = m_pos_c1_aux * d1;
+
+                Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
+                m_pos_c2_aux /= m_pos_c2_aux.z();
+                Eigen::Matrix<float,1,3> x3D2 = m_pos_c2_aux * d2;
+
                 Eigen::Matrix<float, 1, 4> x3D1_h;
                 Eigen::Matrix<float, 1, 4> x3D2_h;
                 x3D1_h << x3D1[0], x3D1[1], x3D1[2], 1;

@@ -8,6 +8,15 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j 6
 
+cd ../../Pangolin
+
+echo "Configuring and building Thirdparty/Pangolin ..."
+
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j 6
+
 cd ../../Sophus
 
 echo "Configuring and building Thirdparty/Sophus ..."

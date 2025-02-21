@@ -43,9 +43,9 @@ SyncolonLoader::SyncolonLoader(std::string folderPath, std::string timesPath) {
             // Ensure we have exactly 8 values (7 for pose + 1 timestamp)
             if (tokens.size() == 8) {
                 PoseData pose;
-                pose.tx = std::stod(tokens[0]);
-                pose.ty = std::stod(tokens[1]);
-                pose.tz = std::stod(tokens[2]);
+                pose.tx = std::stod(tokens[0])/10;
+                pose.ty = std::stod(tokens[1])/10;
+                pose.tz = std::stod(tokens[2])/10;
                 pose.qx = std::stod(tokens[3]);
                 pose.qy = std::stod(tokens[4]);
                 pose.qz = std::stod(tokens[5]);

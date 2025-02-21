@@ -146,7 +146,7 @@ bool Mapping::monocularMapInitialization() {
     visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
 
     //If not enough matches found, updtate reference frame
-    if(nMatches < 30){
+    if(nMatches < 100){
         refFrame_.assign(currFrame_);
         visualizer_->setReferenceFrame(refFrame_.getKeyPointsDistorted(),currIm_);
 
@@ -216,7 +216,7 @@ bool Mapping::monocularMapInitialization() {
     scale1 = scale1 / n_points;
     scale2 = scale2 / n_points;
 
-    refKeyFrame_->setEstimatedDepthScale(1.0);
+    refKeyFrame_->setEstimatedDepthScale(scale1);
     currKeyFrame_->setEstimatedDepthScale(scale2);
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;
