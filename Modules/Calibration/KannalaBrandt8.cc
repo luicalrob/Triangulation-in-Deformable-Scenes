@@ -111,6 +111,10 @@ void KannalaBrandt8::unprojectWithZ(const Eigen::Vector2f& pixel_position,
         th = theta;
     }
 
+    float z_value = cos(th);
+    float x_value = (sin(th) * pw.x/ theta_d)/cos(th);
+    float y_value = (sin(th) * pw.y/ theta_d)/cos(th);
+
     projecting_ray[0] = z * (sin(th) * pw.x/ theta_d);
     projecting_ray[1] = z * (sin(th) * pw.y/ theta_d);
     projecting_ray[2] = z * (cos(th));

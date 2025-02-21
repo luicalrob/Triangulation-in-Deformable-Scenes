@@ -8,7 +8,7 @@ import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import syncolon_values
 
-default_values = real_values
+default_values = syncolon_values
 
 """
 Script to aggregate resume all the experiments generated as CSV files.
@@ -76,7 +76,10 @@ def process_files(pairs, triangulations, experiment):
     # Now process each model and triangulation combination
     firstIteration = True
     for pair in pairs:
-        DATA_DIR = f'./Data/Excels/Drunkard/{pair}'
+        initial_frame = pair.split("-")[0]
+        step = pair.split("-")[1]
+        final_frame = pair.split("-")[2]
+        DATA_DIR = f'./Data/Excels/Syncolon/{initial_frame}_{final_frame}'
         for triangulation in triangulations:
             file_name = f"{triangulation}_{experiment}.csv"
             file_path = os.path.join(DATA_DIR, file_name)
@@ -140,7 +143,7 @@ parser.add_argument("--Experiment", type=int, required=True, help="Experiment nu
 args = parser.parse_args()
 
 
-output_file = f"./Data/Excels/Drunkard/Resumes/Experiment {args.Experiment}"
+output_file = f"./Data/Excels/Syncolon/Resumes/Experiment {args.Experiment}"
 
 # Validate input
 selected_pairs = args.Pairs
@@ -156,8 +159,11 @@ validate_options(selected_experiment, default_values["Experiment"], "Experiment"
 # Collect relevant CSV files
 csv_files = []
 for pair in selected_pairs:
+    initial_frame = pair.split("-")[0]
+    step = pair.split("-")[1]
+    final_frame = pair.split("-")[2]
 
-    DATA_DIR = f"./Data/Excels/Drunkard/{pair}"
+    DATA_DIR = f"./Data/Excels/Syncolon/{initial_frame}_{final_frame}"
     for triangulation in selected_triangulations:
         filename = get_csv_filename(triangulation, selected_experiment)
         filepath = os.path.join(DATA_DIR, filename)

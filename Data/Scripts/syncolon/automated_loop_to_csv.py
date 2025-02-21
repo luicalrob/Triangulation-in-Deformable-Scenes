@@ -55,8 +55,8 @@ for pair, triangulation, experiment in product(pairs, triangulations, experiment
     print("Triangulation method: " + triangulation)
     print("Experiment: " + str(experiment))
     for level in product(levels):
-        if (level[0] in level_types) and not args.Checks:
-            checks = level_types[level[0]] 
+        if (level[0] in syncolon_level_types) and not args.Checks:
+            checks = syncolon_level_types[level[0]] 
         
         for check_election in checks:
             command = [
