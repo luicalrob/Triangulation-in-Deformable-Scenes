@@ -8,10 +8,10 @@ syncolon_values = {
         "150-2-160", 
         "270-4-300"
     ],
-    "Triangulation": ["TwoPoints", "FarPoints"],
+    "Triangulation": ["FarPoints"],
     "Level": ["seq0", "seq1", "seq2", "seq3", "seq4", "seq5"],
     "Checks": ["checks", "no_checks"],
-    "Experiment": range(6, 7),
+    "Experiment": range(7, 11),
 }
 
 syncolon_level_types = {
