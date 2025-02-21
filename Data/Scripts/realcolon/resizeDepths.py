@@ -4,9 +4,9 @@ import cv2
 from PIL import Image
 
 # Paths
-background_path = "/home/luis/datasets/RealColon/58/mask_border_endo_ori.jpg"
-input_folder = "/home/luis/datasets/RealColon/58/depth_npy"
-output_folder = "/home/luis/datasets/RealColon/58/depth"
+background_path = "/home/luis/datasets/RealColon/mask_border_endo_ori.jpg"
+input_folder = "/home/luis/datasets/RealColon/58/13_43/depth_npy"
+output_folder = "/home/luis/datasets/RealColon/58/13_43/depth"
 
 # Ensure output directory exists
 os.makedirs(output_folder, exist_ok=True)

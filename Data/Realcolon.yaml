@@ -1,6 +1,6 @@
 %YAML:1.0
 # Camera calibration and distortion parameters
-# realcolon 1
+# realcolon 1 #seq01
 # Camera.fx: 717.6911
 # Camera.fy: 718.0214
 # Camera.cx: 734.7278
@@ -11,7 +11,7 @@
 # Camera.d2: 0.001505504
 # Camera.d3: -0.0001316715
 
-# realcolon 4
+# realcolon 4 #seq58
 Camera.fx: 733.0653
 Camera.fy: 734.3432
 Camera.cx: 743.3353
@@ -23,15 +23,15 @@ Camera.d2: 0.001757994
 Camera.d3: -8.190911e-05
 
 # Camera resolution
-# Camera.cols: 1440
-# Camera.rows: 1080
-Camera.cols: 720
-Camera.rows: 540
+Camera.cols: 1440
+Camera.rows: 1080
+# Camera.cols: 720
+# Camera.rows: 540
 
-FeatureExtractor.imageBoderMask: "mask_border_c3vd_ori.jpg"
+FeatureExtractor.imageBoderMask: "mask_border_endo_ori.jpg"
 
 # Number of features per image
-FeatureExtractor.nFeatures: 4096
+FeatureExtractor.nFeatures: 2048
 
 # Number of levels in the scale pyramid
 FeatureExtractor.nScales: 4
@@ -48,20 +48,23 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 30
+Matching.initialization: 35
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 30
+Matching.initialization.radius: 15
 
 #Covisivility graph
 Map.minObs: 6
 
+#Min number of matches to set mapPoints
+Triangulation.minMatches: 200
+
 #Min cos parallax to triangulate
-Triangulation.minCos: 0.4
+Triangulation.minCos: 0.15
 
 #Inliers and reprojection checks
 Triangulation.checks: "false"
@@ -83,8 +86,8 @@ Keypoints.RepError: 1.0
 Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
-Measurements.DepthError: 0.000
-Measurements.DepthWeight: 300
+Measurements.DepthError: 0.0
+Measurements.DepthWeight: 100
 Measurements.DepthScale.C1: 1.0
 Measurements.DepthScale.C2: 1.0
 Measurements.Depth.Scale: 0.0004577706569009
@@ -93,12 +96,12 @@ Measurements.Depth.Scale: 0.0004577706569009
 Optimization.rep: 1
 Optimization.global: 1
 # Optimization.arap: 10000000
-Optimization.arap: 10000
+Optimization.arap: 1000
 Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 30
+Optimization.numberOfOptimizations: 12
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations

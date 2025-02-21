@@ -2,8 +2,8 @@ import cv2
 import os
 
 # Paths for input and output folders
-input_folder = "/home/luis/datasets/RealColon/58/depth"
-output_folder = "/home/luis/datasets/RealColon/58/depth_resize"
+input_folder = "/home/luis/datasets/RealColon/58/10_00/rgb_original"
+output_folder = "/home/luis/datasets/RealColon/58/10_00/rgb"
 
 # Ensure output folder exists
 os.makedirs(output_folder, exist_ok=True)

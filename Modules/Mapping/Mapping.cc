@@ -145,7 +145,7 @@ bool Mapping::monocularMapInitialization() {
     visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
 
     //If not enough matches found, updtate reference frame
-    if(nMatches < 30){
+    if(nMatches < settings_.getMinMatches()){
         refFrame_.assign(currFrame_);
         visualizer_->setReferenceFrame(refFrame_.getKeyPointsDistorted(),currIm_);
 
@@ -155,9 +155,8 @@ bool Mapping::monocularMapInitialization() {
     //Try to initialize by finding an Essential matrix
     Sophus::SE3f Tcw;
     vector<Eigen::Vector3f> v3DPoints_w;
-    vector<Eigen::Vector3f> v3DPoints_c;
-    v3DPoints_w.reserve(vMatches_.capacity());
-    v3DPoints_c.reserve(vMatches_.capacity());
+    Eigen::Vector3f v3DPoint_c1, v3DPoint_c2;
+    v3DPoints_w.reserve(vMatches_.capacity()*2);
     vector<bool> vTriangulated(vMatches_.capacity(),false);
     float parallax;
     if(!monoInitializer_.initialize(refFrame_, currFrame_, vMatches_, nMatches, Tcw, v3DPoints_w, vTriangulated, parallax)){
@@ -207,11 +206,11 @@ bool Mapping::monocularMapInitialization() {
             //scale
             double d1_up_to_scale = refKeyFrame_->getDepthMeasure(x1.x, x1.y, false);
             double d2_up_to_scale = currKeyFrame_->getDepthMeasure(x2.x, x2.y, false);
-            v3DPoints_c[j] = T1w * v3DPoints_w[j];
-            v3DPoints_c[j+1] = T2w * v3DPoints_w[j+1];
+            v3DPoint_c1 = T1w * v3DPoints_w[j];
+            v3DPoint_c2 = T2w * v3DPoints_w[j+1];
 
-            scale1 += d1_up_to_scale / v3DPoints_c[j][2];
-            scale2 += d2_up_to_scale / v3DPoints_c[j+1][2];
+            scale1 += d1_up_to_scale / v3DPoint_c1[2];
+            scale2 += d2_up_to_scale / v3DPoint_c2[2];
 
             nTriangulated += 2;
             n_points ++;

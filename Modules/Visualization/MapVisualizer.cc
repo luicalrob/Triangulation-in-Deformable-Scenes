@@ -42,7 +42,7 @@ MapVisualizer::MapVisualizer(shared_ptr<Map> pMap, const PoseData initialPose, c
 
             Eigen::Quaternionf quaternion(initialPose.qw, initialPose.qx, initialPose.qy, initialPose.qz);
             Eigen::Matrix3f rotation_matrix = quaternion.toRotationMatrix();
-            Eigen::Vector3f camera_offset(0.4f, 0.0f, -3.0f);  // offset behind the keyframe
+            Eigen::Vector3f camera_offset(0.4f, 0.0f, -10.0f);  // offset behind the keyframe
             Eigen::Vector3f camera_position = keyframe_position + rotation_matrix * camera_offset;
             s_cam = pangolin::OpenGlRenderState(
                     pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.1,1000),
@@ -235,7 +235,7 @@ void MapVisualizer::drawRays() {
 }
 
 void MapVisualizer::drawKeyFrames() {
-    const float &w = 0.05*40;
+    const float &w = 0.05*80;
     const float h = w*0.75;
     const float z = w*0.6;
 
@@ -282,7 +282,7 @@ void MapVisualizer::drawKeyFrames() {
 }
 
 void MapVisualizer::drawCurrentPose() {
-    const float &w = 0.05*40;
+    const float &w = 0.05*80;
     const float h = w*0.75;
     const float z = w*0.6;
 

@@ -169,7 +169,7 @@ double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
     uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
     //float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
 
-    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
+    double scaleFactor = 3.0 / (pow(2, 16) - 1); // (2^16 - 1) * 30
 
     //std::cout << "depth measurement: " << static_cast<double>(rawDepth)*scaleFactor << std::endl;
 

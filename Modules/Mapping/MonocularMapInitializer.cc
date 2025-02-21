@@ -369,7 +369,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &Tcw, std::ve
     parallax = degrees;
     std::cerr << "_parallax: "<< degrees << std::endl;
 
-    if(nTriangulated >= 25 && degrees > fMinParallax_) {
+    if(nTriangulated >= 25 && degrees >= fMinParallax_) {
         return true;
     }
     else{

@@ -148,7 +148,9 @@ bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
 }
 
 cv::Mat SLAM::convertImageToGrayScale(const cv::Mat &im) {
-    cv::Mat grayScaled;
+    cv::Mat grayScaled, mImGreen, mImBGR;
+    grayScaled = im;
+    mImBGR = cv::Mat();
 
     if(im.type() == CV_8U)
         grayScaled = im;
@@ -156,7 +158,12 @@ cv::Mat SLAM::convertImageToGrayScale(const cv::Mat &im) {
         cvtColor(im,grayScaled,cv::COLOR_RGB2GRAY);
     }
     else if(im.channels()==4){
+        cvtColor(im,mImBGR,cv::COLOR_BGRA2BGR);
         cvtColor(im,grayScaled,cv::COLOR_BGRA2GRAY);
+        extractChannel(mImBGR, mImGreen, 1);
+        grayScaled = mImGreen.clone();
+
+        //cvtColor(im,grayScaled,cv::COLOR_BGRA2GRAY);
     }
 
     return grayScaled;
