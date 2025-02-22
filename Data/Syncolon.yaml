@@ -50,7 +50,7 @@ Map.minObs: 6
 Triangulation.minCos: 1.0
 
 #Inliers and reprojection checks
-Triangulation.checks: "true"
+Triangulation.checks: "false"
 
 #depth limit
 Triangulation.depthLimit: 2.0
@@ -70,7 +70,7 @@ Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.001
-Measurements.DepthWeight: 0.1
+Measurements.DepthWeight: 0.01
 Measurements.DepthScale.C1: 1.0
 Measurements.DepthScale.C2: 1.4
 Measurements.Depth.Scale: 0.0004577706569009
@@ -84,7 +84,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 50
+Optimization.numberOfOptimizations: 250
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations

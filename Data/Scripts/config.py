@@ -11,7 +11,7 @@ syncolon_values = {
     "Triangulation": ["FarPoints"],
     "Level": ["seq0", "seq1", "seq2", "seq3", "seq4", "seq5"],
     "Checks": ["checks", "no_checks"],
-    "Experiment": range(7, 11),
+    "Experiment": range(31, 41),
 }
 
 syncolon_level_types = {
@@ -34,33 +34,33 @@ def setSyncolonParameters(pair, level):
     """
     # Diccionario de configuración
     experiment_config = {
-        "70-3-90_seq0": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
-        "70-3-90_seq1": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
-        "70-3-90_seq2": {"Hdist": 35, "window": 15, "maxDepth": 2.0, "minParallax": 1.0},
-        "70-3-90_seq3": {"Hdist": 35, "window": 15, "maxDepth": 2.0, "minParallax": 1.0},
-        "70-3-90_seq4": {"Hdist": 35, "window": 15, "maxDepth": 2.0, "minParallax": 1.0},
-        "70-3-90_seq5": {"Hdist": 35, "window": 20, "maxDepth": 2.0, "minParallax": 1.0},
+        "70-3-90_seq0": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
+        "70-3-90_seq1": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
+        "70-3-90_seq2": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.0},
+        "70-3-90_seq3": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.0},
+        "70-3-90_seq4": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.0},
+        "70-3-90_seq5": {"Hdist": 35, "window": 20, "maxDepth": 0.1, "minParallax": 1.0},
 
-        "105-2-115_seq0": {"Hdist": 30, "window": 25, "maxDepth": 2.0, "minParallax": 1.0},
-        "105-2-115_seq1": {"Hdist": 30, "window": 25, "maxDepth": 2.0, "minParallax": 1.0},
-        "105-2-115_seq2": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
-        "105-2-115_seq3": {"Hdist": 35, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
-        "105-2-115_seq4": {"Hdist": 35, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
-        "105-2-115_seq5": {"Hdist": 35, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
+        "105-2-115_seq0": {"Hdist": 30, "window": 25, "maxDepth": 0.1, "minParallax": 1.0},
+        "105-2-115_seq1": {"Hdist": 30, "window": 25, "maxDepth": 0.1, "minParallax": 1.0},
+        "105-2-115_seq2": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
+        "105-2-115_seq3": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
+        "105-2-115_seq4": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
+        "105-2-115_seq5": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
 
-        "150-2-160_seq0": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
-        "150-2-160_seq1": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
-        "150-2-160_seq2": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
+        "150-2-160_seq0": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
+        "150-2-160_seq1": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
+        "150-2-160_seq2": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.0},
         "150-2-160_seq3": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 1.0},
-        "150-2-160_seq4": {"Hdist": 30, "window": 35, "maxDepth": 2.0, "minParallax": 1.0},
-        "150-2-160_seq5": {"Hdist": 30, "window": 35, "maxDepth": 2.0, "minParallax": 1.0},
+        "150-2-160_seq4": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},
+        "150-2-160_seq5": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},
 
-        "270-4-300_seq0": {"Hdist": 25, "window": 25, "maxDepth": 2.0, "minParallax": 1.0},
-        "270-4-300_seq1": {"Hdist": 25, "window": 25, "maxDepth": 2.0, "minParallax": 1.0},
-        "270-4-300_seq2": {"Hdist": 35, "window": 25, "maxDepth": 2.0, "minParallax": 1.0},
-        "270-4-300_seq3": {"Hdist": 35, "window": 25, "maxDepth": 2.0, "minParallax": 1.0},
-        "270-4-300_seq4": {"Hdist": 35, "window": 25, "maxDepth": 2.0, "minParallax": 1.0},
-        "270-4-300_seq5": {"Hdist": 35, "window": 55, "maxDepth": 2.0, "minParallax": 1.0},
+        "270-4-300_seq0": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 1.0},
+        "270-4-300_seq1": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 1.0},
+        "270-4-300_seq2": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 1.0},
+        "270-4-300_seq3": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 1.0},
+        "270-4-300_seq4": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 1.0},
+        "270-4-300_seq5": {"Hdist": 35, "window": 55, "maxDepth": 0.1, "minParallax": 1.0},
     }
     
     try:

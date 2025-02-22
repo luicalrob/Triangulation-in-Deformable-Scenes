@@ -325,10 +325,15 @@ public:
         Eigen::Vector3d firstDiffArap;
         Eigen::Vector3d secondDiffArap;
 
-        firstDiffArap = alpha * (v2i->estimate() - v2j->estimate()) - beta * (Ri * (v1i->estimate() - v1j->estimate()));
-        secondDiffArap = alpha * (v2j->estimate() - v2i->estimate()) - beta * (Rj * (v1j->estimate() - v1i->estimate()));
+        Eigen::Vector3d d1i = v1i->estimate() - v1j->estimate();
+        Eigen::Vector3d d2i = v2i->estimate() - v2j->estimate();
+        Eigen::Vector3d d1j = v1j->estimate() - v1i->estimate();
+        Eigen::Vector3d d2j = v2j->estimate() - v2i->estimate();
 
-        double energyArap = weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm()) + energyGlobalT;
+        firstDiffArap = (d2i) - (Ri * (d1i));
+        secondDiffArap = (d2j) - (Rj * (d1j));
+
+        double energyArap = (weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm()) + energyGlobalT) / area;
         
         _error[0] = energyArap - obs;   
     }
@@ -340,6 +345,7 @@ public:
     double weight;
     double alpha;   // Bulk deformation parameter
     double beta;    // Shear deformation parameter
+    double area;
 };
 
 class EdgeTransformation: public  g2o::BaseMultiEdge<1, double>{
@@ -400,15 +406,14 @@ public:
         g2o::SE3Quat Tcw = cameraPose; 
 
         Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
+        double error = pow((obs - p3Dc[2] * scale),2);
         if (scale <= 0) {
-            _error[0] = 500 * (obs - p3Dc[2] * scale);
-            return;
+            _error[0] = 500 * error;
         } else if (scale >= 8) {
-            _error[0] = 500 * (obs - p3Dc[2] * scale);
-            return;
+            _error[0] = 500 * error;
         } else {
             // Compute the depth error
-            _error[0] = obs - p3Dc[2] * scale;
+            _error[0] = error;
         }
 
     }
@@ -435,17 +440,8 @@ public:
         g2o::SE3Quat Tcw = cameraPose; 
 
         Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
-        if (scale <= 0) {
-            _error[0] = 500 * (obs - p3Dc[2] * scale);
-            return;
-        } else if (scale >= 8) {
-            _error[0] = 500 * (obs - p3Dc[2] * scale);
-            return;
-        } else {
-            // Compute the depth error
-            _error[0] = obs - p3Dc[2] * scale;
-        }
-
+        double error = pow((obs - p3Dc[2] * scale),2);
+        _error[0] = error;
     }
 
     g2o::SE3Quat cameraPose;

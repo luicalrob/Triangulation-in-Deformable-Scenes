@@ -67,6 +67,7 @@ def process_files(pairs, triangulations, experiment):
             pair_columns[f"{col_prefix} Final Vs Mov (%)"] = []
             pair_columns[f"{col_prefix} Av. movement"] = []
             pair_columns[f"{col_prefix} Av. error"] = []
+            pair_columns[f"{col_prefix} Av. upToScale error"] = []
             pair_columns[f"{col_prefix} RMSE"] = []
             pair_columns[f"{col_prefix} t C1C2 norm (mm)"] = []
             pair_columns[f"{col_prefix} parallax"] = []
@@ -103,6 +104,7 @@ def process_files(pairs, triangulations, experiment):
 
                         avg_movement = final_row["Av. movement"]
                         avg_error = final_row["Av. error"]
+                        avg_error = final_row["Av. up-to-scale error in 3D"]
                         RMSE = final_row["RMSE"]
                         improvement = final_row["Improv. (%)"]
                         final_vs_mov = final_row["Final Vs Mov (%)"]
@@ -116,6 +118,7 @@ def process_files(pairs, triangulations, experiment):
                         pair_columns[f"{pair}-{triangulation} Final Vs Mov (%)"].append(final_vs_mov)  
                         pair_columns[f"{pair}-{triangulation} Av. movement"].append(avg_movement)  
                         pair_columns[f"{pair}-{triangulation} Av. error"].append(avg_error)  
+                        pair_columns[f"{pair}-{triangulation} Av. upToScale error"].append(avg_error)  
                         pair_columns[f"{pair}-{triangulation} RMSE"].append(RMSE)
                         pair_columns[f"{pair}-{triangulation} t C1C2 norm (mm)"].append(t)
                         pair_columns[f"{pair}-{triangulation} parallax"].append(parallax)

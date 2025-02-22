@@ -69,7 +69,9 @@ def extract_data(lines):
             section = re.sub(r'\s*MEASUREMENTS\s*', '', line).replace(':', '')
             current_measurement = {"Section": section}
 
-        elif any(keyword in line for keyword in ["Translation norm between cameras (mm)", "Parallax", "nMatches", "nMapPoints", "C1 standard desv", "C2 standard desv", "Rel. error", "Av. movement", "Av. error", "RMSE"]):
+        elif any(keyword in line for keyword in ["Translation norm between cameras (mm)", "Parallax", "nMatches", "nMapPoints", 
+                                                "C1 standard desv", "C2 standard desv", "Rel. error", "depthError", "gloablTError", "Global rotation", 
+                                                "Av. up-to-scale error in 3D", "Av. movement", "Av. error", "RMSE"]):
             value = line.split(':')[1].strip()
             title = line.split(':')[0]
 
@@ -123,9 +125,9 @@ def extract_data(lines):
 def write_csv(measurements, output_path, is_first_measurement, metadata):
     """Write measurements to a CSV file."""
     headers = [
-        "Level", "Checks", "Section", "C1 std dev", "C2 std dev", "Rel. error",
+        "Level", "Checks", "Section", "C1 std dev", "C2 std dev", "Rel. error", "depthError", "gloablTError",
         "Global R X", "Global R Y", "Global R Z", "Global t X", "Global t Y", "Global t Z",
-        "Av. movement", "Av. error", "RMSE", "Improv. (%)", "Final Vs Mov (%)",
+        "Av. movement", "Av. error", "RMSE", "Av. up-to-scale error in 3D", "Improv. (%)", "Final Vs Mov (%)",
         "t C1C2 norm (mm)", "pllx", "nMchs", "nMPs"
     ]
 
