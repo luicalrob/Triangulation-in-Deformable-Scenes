@@ -75,8 +75,10 @@ bool Mapping::doMapping(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f 
     currIm_ = im.clone();
     cv::Mat dIm = depthIm.clone();
 
+    currFrame_.setPose(Tcw);
     currFrame_.setIm(currIm_);
     currFrame_.setDepthIm(dIm);
+    Tcw_ = Tcw;
 
     //Extract features in the current image
     extractFeatures(im);
@@ -87,7 +89,6 @@ bool Mapping::doMapping(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f 
     if(status_ == NOT_INITIALIZED){
         if(monocularMapInitialization()){
             status_ = GOOD;
-            Tcw = currFrame_.getPose();
         
             return true;
         }
@@ -153,19 +154,14 @@ bool Mapping::monocularMapInitialization() {
     }
 
     //Try to initialize by finding an Essential matrix
-    Sophus::SE3f Tcw;
     vector<Eigen::Vector3f> v3DPoints_w;
-    Eigen::Vector3f v3DPoint_c1, v3DPoint_c2;
+    Eigen::Vector3f v3DPoints_c1, v3DPoints_c2;
     v3DPoints_w.reserve(vMatches_.capacity()*2);
     vector<bool> vTriangulated(vMatches_.capacity(),false);
     float parallax;
-    if(!monoInitializer_.initialize(refFrame_, currFrame_, vMatches_, nMatches, Tcw, v3DPoints_w, vTriangulated, parallax)){
+    if(!monoInitializer_.initialize(refFrame_, currFrame_, vMatches_, nMatches, v3DPoints_w, vTriangulated, parallax)){
         return false;
     }
-    
-    Sophus::SE3f Tw = Sophus::SE3f();
-    refFrame_.setPose(Tw);
-    currFrame_.setPose(Tcw);
 
     refKeyFrame_ = std::make_shared<KeyFrame>(refFrame_);
     currKeyFrame_ = std::make_shared<KeyFrame>(currFrame_);
@@ -179,7 +175,6 @@ bool Mapping::monocularMapInitialization() {
     int nTriangulated = 0;
     double scale1 = 0, scale2 = 0;
     float n_points = 0;
-
     for(int i = 0, j = 0; i < vTriangulated.size(); i++, j+=2){
         if(vTriangulated[i]){
             shared_ptr<MapPoint> pMP1(new MapPoint(v3DPoints_w[j]));
@@ -206,11 +201,12 @@ bool Mapping::monocularMapInitialization() {
             //scale
             double d1_up_to_scale = refKeyFrame_->getDepthMeasure(x1.x, x1.y, false);
             double d2_up_to_scale = currKeyFrame_->getDepthMeasure(x2.x, x2.y, false);
-            v3DPoint_c1 = T1w * v3DPoints_w[j];
-            v3DPoint_c2 = T2w * v3DPoints_w[j+1];
+            
+            v3DPoints_c1 = T1w * v3DPoints_w[j];
+            v3DPoints_c2 = T2w * v3DPoints_w[j+1];
 
-            scale1 += d1_up_to_scale / v3DPoint_c1[2];
-            scale2 += d2_up_to_scale / v3DPoint_c2[2];
+            scale1 += d1_up_to_scale / v3DPoints_c1[2];
+            scale2 += d2_up_to_scale / v3DPoints_c2[2];
 
             nTriangulated += 2;
             n_points ++;
@@ -220,8 +216,8 @@ bool Mapping::monocularMapInitialization() {
     scale1 = scale1 / n_points;
     scale2 = scale2 / n_points;
 
-    refKeyFrame_->setEstimatedDepthScale(scale1);
-    currKeyFrame_->setEstimatedDepthScale(scale2);
+    // refKeyFrame_->setEstimatedDepthScale(scale1);
+    // currKeyFrame_->setEstimatedDepthScale(scale2);
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;
 
@@ -331,4 +327,3 @@ bool Mapping::isValidParallax(const Eigen::Vector3f& xn1, const Eigen::Vector3f&
 
     return parallax <= settings_.getMinCos();
 }
-

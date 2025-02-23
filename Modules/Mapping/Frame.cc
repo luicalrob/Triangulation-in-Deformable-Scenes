@@ -17,6 +17,7 @@
 
 
 #include "Frame.h"
+#include "Utils/Geometry.h"
 
 #include <cmath>
 
@@ -37,7 +38,7 @@ Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
     vMapPoints_ = vector<shared_ptr<MapPoint>>(nFeatures,nullptr);
 
     calibration_ = calibration;
-    depthScale_ = dScale;
+    imageDepthScale_ = dScale;
     depthError_ = depthError;
 
     //Compute image boundaries as distortion can change typical values
@@ -113,9 +114,9 @@ double Frame::getDepthMeasure(float x, float y) {
 
     double scaleFactor = 3.0 / (pow(2, 16) - 1); // (2^16 - 1) * 30
 
-    //double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
+    double depth = ((static_cast<double>(rawDepth)*scaleFactor) + distribution(generator));
 
-    return ((static_cast<double>(rawDepth)*scaleFactor) + distribution(generator));
+    return depth * imageDepthScale_;
 }
 
 Grid Frame::getGrid() {
@@ -366,7 +367,15 @@ cv::Mat Frame::getIm(){
 }
 
 double Frame::getDepthScale(){
-    return depthScale_;
+    return imageDepthScale_;
+}
+
+double Frame::getEstimatedDepthScale() {
+    return estimatedDepthScale_;
+}
+
+void Frame::setEstimatedDepthScale(double scale) {
+    estimatedDepthScale_ = scale;
 }
 
 float Frame::getDepthError(){
