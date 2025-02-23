@@ -70,7 +70,7 @@ def extract_data(lines):
             current_measurement = {"Section": section}
 
         elif any(keyword in line for keyword in ["Translation norm between cameras (mm)", "Parallax", "nMatches", "nMapPoints", 
-                                                "C1 standard desv", "C2 standard desv", "Rel. error", "depthError", "gloablTError", "Global rotation", 
+                                                "C1 standard desv", "C2 standard desv", "Rel. error", "depthError", "gloablTError",
                                                 "Av. up-to-scale error in 3D", "Av. movement", "Av. error", "RMSE"]):
             value = line.split(':')[1].strip()
             title = line.split(':')[0]

@@ -479,7 +479,7 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
 
     double optimizationUpdate = 100;
-    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.000002*mapPoints_corrected.size()); i++){ 
+    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.00002*mapPoints_corrected.size()); i++){ 
         // correct error
         if (OptSelection == "open3DArap") {
             arapOpen3DOptimization(pMap.get());
@@ -939,10 +939,11 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                     eArap->weight = edge_weights[GetOrderedEdge(i, j)];
                     eArap->alpha = alphaWeight;
                     eArap->beta = betaWeight;
-                    eArap->area = static_cast<double>(mesh->GetSurfaceArea());
+                    double area = static_cast<double>(mesh->GetSurfaceArea());
+                    eArap->area = area;
 
                     Eigen::Matrix<double, 1, 1> informationMatrixArap;
-                    informationMatrixArap(0, 0) = (arapBalanceWeight) * std::pow(mesh->triangles_.size(), 2); // * distancesInvTipDesv;
+                    informationMatrixArap(0, 0) = (arapBalanceWeight) * std::pow(mesh->triangles_.size(), 2);// * std::pow(area, 5); // * distancesInvTipDesv;
 
                     eArap->setInformation(informationMatrixArap);
                     double measurementArap = 0.0;

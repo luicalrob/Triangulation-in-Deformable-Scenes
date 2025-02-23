@@ -34,7 +34,7 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 30
+Matching.initialization: 35
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
@@ -53,7 +53,7 @@ Triangulation.minCos: 1.0
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 2.0
+Triangulation.depthLimit: 0.1
 
 # LUIS
 #Cameras poses
@@ -84,7 +84,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 250
+Optimization.numberOfOptimizations: 100
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations

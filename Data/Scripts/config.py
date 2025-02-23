@@ -3,15 +3,15 @@
       
 syncolon_values = {
     "Pair": [
-        "70-3-90", 
-        "105-2-115",
         "150-2-160", 
-        "270-4-300"
+        "270-4-300",
+        "70-3-90", 
+        "105-2-115"
     ],
     "Triangulation": ["FarPoints"],
     "Level": ["seq0", "seq1", "seq2", "seq3", "seq4", "seq5"],
     "Checks": ["checks", "no_checks"],
-    "Experiment": range(31, 41),
+    "Experiment": range(61, 66),
 }
 
 syncolon_level_types = {

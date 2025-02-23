@@ -1,0 +1,89 @@
+Translation norm between cameras (mm): 2,50009
+Parallax: 2,16772
+nMatches: 122
+nMapPoints: 244
+INITIAL MEASUREMENTS: 
+C1 standard desv: 14,55
+C2 standard desv: 10,4433
+Rel. error: 0,0289427
+depthError: 0,341127
+gloablTError: 9,05614
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 3,28259
+Av. error: 26,5289
+RMSE: 30,6861
+Av. up-to-scale error in 3D: 12,1383
+
+1 / 100 MEASUREMENTS: 
+C1 standard desv: 0,000855976
+C2 standard desv: 0,000519413
+Rel. error: 0,119126
+depthError: 0,0715764
+gloablTError: 67,5577
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 3,28259
+Av. error: 33,1999
+RMSE: 34,2861
+Av. up-to-scale error in 3D: 0,000893226
+
+2 / 100 MEASUREMENTS: 
+C1 standard desv: 0,0190485
+C2 standard desv: 0,0358085
+Rel. error: 0,116818
+depthError: 0,0716251
+gloablTError: 9,57181
+Global rotation:     0,999998   0,00177421 -0,000341702
+ -0,00177306     0,999993   0,00332868
+ 0,000347606  -0,00332807     0,999994
+Global translation: -0,00192044
+-0,00105351
+ 0,00380857
+Av. movement: 3,28259
+Av. error: 33,2
+RMSE: 34,2805
+Av. up-to-scale error in 3D: 0,068304
+
+3 / 100 MEASUREMENTS: 
+C1 standard desv: 0,0222487
+C2 standard desv: 0,0295155
+Rel. error: 0,116829
+depthError: 0,0716244
+gloablTError: 9,52439
+Global rotation:     0,999998   0,00177835 -0,000342698
+  -0,0017772     0,999993    0,0033333
+ 0,000348623  -0,00333269     0,999994
+Global translation: -0,00192511
+-0,00105871
+ 0,00381505
+Av. movement: 3,28259
+Av. error: 33,2001
+RMSE: 34,2805
+Av. up-to-scale error in 3D: 0,0680996
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 0,0222487
+C2 standard desv: 0,0295155
+Rel. error: 0,116829
+depthError: 0,0716244
+gloablTError: 9,52439
+Global rotation:     0,999998   0,00177835 -0,000342698
+  -0,0017772     0,999993    0,0033333
+ 0,000348623  -0,00333269     0,999994
+Global translation: -0,00192511
+-0,00105871
+ 0,00381505
+Av. movement: 3,28259
+Av. error: 33,2001
+RMSE: 34,2805
+Av. up-to-scale error in 3D: 0,0680996
+

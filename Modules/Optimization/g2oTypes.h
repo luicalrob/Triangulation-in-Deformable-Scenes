@@ -318,7 +318,7 @@ public:
         Eigen::Matrix3d Rg = T_global.rotation().toRotationMatrix();
         Eigen::Vector3d t = T_global.translation();
 
-        Eigen::Vector3d diffGlobalT = ((Rg * v2i->estimate() - t) - v1i->estimate()) + ((Rg * v2j->estimate() - t) - v1j->estimate());
+        Eigen::Vector3d diffGlobalT = ((Rg * v2i->estimate() - t) - v1i->estimate()) + ((Rg * v2j->estimate() - t) - v1j->estimate())/area;
         double energyGlobalT = diffGlobalT.squaredNorm();
 
         double obs(_measurement);
@@ -333,7 +333,7 @@ public:
         firstDiffArap = (d2i) - (Ri * (d1i));
         secondDiffArap = (d2j) - (Rj * (d1j));
 
-        double energyArap = (weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm()) + energyGlobalT) / area;
+        double energyArap = (weight * (firstDiffArap.squaredNorm() + secondDiffArap.squaredNorm()) + energyGlobalT);// ;
         
         _error[0] = energyArap - obs;   
     }

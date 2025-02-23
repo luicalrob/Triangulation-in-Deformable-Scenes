@@ -122,6 +122,8 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
 
     int point_count = mapPoints_corrected.size();
     int point_count_in_kf = mapPoints_corrected.size() / 2.0;
+    int n_points = 0;
+    float scale1 = 0, scale2 = 0;
     
     std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
 
@@ -131,7 +133,6 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
             std::shared_ptr<KeyFrame> pKF2 = k1->second;
             int kf1ID = k2->first;
             int kf2ID = k1->first;
-            float scale1 = 0, scale2 = 0;
             std::cout << "Pair: (" << k1->first << ", " << k2->first<< ")\n";
 
             vector<std::shared_ptr<MapPoint>>& v1MPs = pKF1->getMapPoints();
@@ -240,9 +241,10 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 // std::cout << "moved point x: " << moved_position.x() << " y: " << moved_position.y() << " z: " << moved_position.z() << std::endl;
                 // std::cout << "x: " << total_error << std::endl;
                 //point_count++;
+                n_points++;
             }
-            scale1 = scale1 / point_count;
-            scale2 = scale2 / point_count;
+            scale1 = scale1 / n_points;
+            scale2 = scale2 / n_points;
 
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 std::shared_ptr<MapPoint> pMPi1, pMPi2;
@@ -269,11 +271,11 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
 
                 Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
                 m_pos_c1_aux /= m_pos_c1_aux.z();
-                Eigen::Matrix<float,1,3> x3D1 = m_pos_c1_aux * d1 * scale1;
+                Eigen::Matrix<float,1,3> x3D1 = m_pos_c1_aux * d1 / scale1;
 
                 Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
                 m_pos_c2_aux /= m_pos_c2_aux.z();
-                Eigen::Matrix<float,1,3> x3D2 = m_pos_c2_aux * d2 * scale2;
+                Eigen::Matrix<float,1,3> x3D2 = m_pos_c2_aux * d2 / scale2;
 
                 Eigen::Matrix<float, 1, 4> x3D1_h;
                 Eigen::Matrix<float, 1, 4> x3D2_h;

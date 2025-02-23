@@ -1,0 +1,89 @@
+Translation norm between cameras (mm): 2,49995
+Parallax: 3,43496
+nMatches: 112
+nMapPoints: 224
+INITIAL MEASUREMENTS: 
+C1 standard desv: 31,4878
+C2 standard desv: 18,5091
+Rel. error: 0,0667011
+depthError: 0,549258
+gloablTError: 14,2433
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 4,74063
+Av. error: 33,1048
+RMSE: 35,8097
+Av. up-to-scale error in 3D: 9,42241
+
+1 / 100 MEASUREMENTS: 
+C1 standard desv: 0,00245363
+C2 standard desv: 0,00107705
+Rel. error: 0,334117
+depthError: 0,146357
+gloablTError: 78,7928
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 4,74063
+Av. error: 38,7913
+RMSE: 39,6145
+Av. up-to-scale error in 3D: 0,000386962
+
+2 / 100 MEASUREMENTS: 
+C1 standard desv: 1,11186
+C2 standard desv: 0,647298
+Rel. error: 0,341799
+depthError: 0,14606
+gloablTError: 16,5316
+Global rotation:    0,999997  0,00209531 -0,00083639
+-0,00209656    0,999997 -0,00150445
+0,000833235   0,0015062    0,999999
+Global translation: -0,00174935
+ 0,00278045
+-0,00236361
+Av. movement: 4,74063
+Av. error: 38,7915
+RMSE: 39,6112
+Av. up-to-scale error in 3D: 0,0736005
+
+3 / 100 MEASUREMENTS: 
+C1 standard desv: 0,99528
+C2 standard desv: 0,631748
+Rel. error: 0,341374
+depthError: 0,146055
+gloablTError: 16,4009
+Global rotation:     0,999997     0,002092 -0,000838633
+ -0,00209327     0,999997  -0,00152095
+ 0,000835448    0,0015227     0,999999
+Global translation: -0,00174604
+ 0,00277916
+-0,00238113
+Av. movement: 4,74063
+Av. error: 38,7916
+RMSE: 39,6113
+Av. up-to-scale error in 3D: 0,0733871
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 0,99528
+C2 standard desv: 0,631748
+Rel. error: 0,341374
+depthError: 0,146055
+gloablTError: 16,4009
+Global rotation:     0,999997     0,002092 -0,000838633
+ -0,00209327     0,999997  -0,00152095
+ 0,000835448    0,0015227     0,999999
+Global translation: -0,00174604
+ 0,00277916
+-0,00238113
+Av. movement: 4,74063
+Av. error: 38,7916
+RMSE: 39,6113
+Av. up-to-scale error in 3D: 0,0733871
+
