@@ -1,0 +1,89 @@
+Translation norm between cameras (mm): 1,76782
+Parallax: 2,0991
+nMatches: 205
+nMapPoints: 362
+INITIAL MEASUREMENTS: 
+C1 standard desv: 10,7722
+C2 standard desv: 9,10549
+Rel. error: 0,0309048
+depthError: 1,23679
+gloablTError: 2,14341
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 2,28169
+Av. error: 28,5634
+RMSE: 32,0879
+Av. up-to-scale error in 3D: 22,5648
+
+1 / 100 MEASUREMENTS: 
+C1 standard desv: 1,02027
+C2 standard desv: 1,00842
+Rel. error: 0,171782
+depthError: 0,221044
+gloablTError: 2,52375
+Global rotation:     0,999998   0,00177979  0,000548102
+ -0,00177964     0,999998 -0,000262634
+-0,000548568  0,000261658            1
+Global translation:  0,00195754
+0,000152773
+-0,00117139
+Av. movement: 2,28169
+Av. error: 19,6744
+RMSE: 20,5407
+Av. up-to-scale error in 3D: 1,35722
+
+2 / 100 MEASUREMENTS: 
+C1 standard desv: 1,11702
+C2 standard desv: 1,16344
+Rel. error: 0,197863
+depthError: 0,221361
+gloablTError: 3,06377
+Global rotation:     0,999997   0,00207049  0,000883511
+ -0,00207057     0,999998   8,6259e-05
+-0,000883331 -8,80881e-05            1
+Global translation:   0,00265148
+-9,07541e-05
+ -0,00125755
+Av. movement: 2,28169
+Av. error: 19,7044
+RMSE: 20,5497
+Av. up-to-scale error in 3D: 1,30723
+
+3 / 100 MEASUREMENTS: 
+C1 standard desv: 0,931728
+C2 standard desv: 0,970701
+Rel. error: 0,199643
+depthError: 0,221413
+gloablTError: 3,19063
+Global rotation:     0,999997   0,00208042  0,000939071
+ -0,00208057     0,999998  0,000155856
+-0,000938745 -0,000157809            1
+Global translation:   0,00274136
+-0,000128888
+ -0,00125385
+Av. movement: 2,28169
+Av. error: 19,7049
+RMSE: 20,5497
+Av. up-to-scale error in 3D: 1,3082
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 0,931728
+C2 standard desv: 0,970701
+Rel. error: 0,199643
+depthError: 0,221413
+gloablTError: 3,19063
+Global rotation:     0,999997   0,00208042  0,000939071
+ -0,00208057     0,999998  0,000155856
+-0,000938745 -0,000157809            1
+Global translation:   0,00274136
+-0,000128888
+ -0,00125385
+Av. movement: 2,28169
+Av. error: 19,7049
+RMSE: 20,5497
+Av. up-to-scale error in 3D: 1,3082
+

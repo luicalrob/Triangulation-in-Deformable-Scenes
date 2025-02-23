@@ -47,7 +47,7 @@ Matching.initialization.radius: 30
 Map.minObs: 6
 
 #Min cos parallax to triangulate
-Triangulation.minCos: 1.0
+Triangulation.minCos: 1.8
 
 #Inliers and reprojection checks
 Triangulation.checks: "false"

@@ -226,6 +226,16 @@ public:
     double getDepthScale();
 
     /*
+     * Gets Frame estimated depth scale (up to scale depth measurements) (real images)
+     */
+    double getEstimatedDepthScale();
+
+    /*
+     * Set KF estimated depth scale (up to scale depth measurements) (real images)
+     */
+    void setEstimatedDepthScale(double scale);
+
+    /*
      * Gets the depth error introduced to the real depth measurements
      */
     float getDepthError();
@@ -286,7 +296,8 @@ private:
     cv::Mat im_;
     cv::Mat depthIm_;
     double timestamp_;
-    double depthScale_;
+    float imageDepthScale_ = 1.0f; // for simulatng an unknown scale
+    double estimatedDepthScale_ = 1.0f; // scale estimated
     float depthError_;
 };
 

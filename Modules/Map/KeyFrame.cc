@@ -31,6 +31,7 @@ KeyFrame::KeyFrame(Frame &f) {
     vDepthMeasurements_ = f.getDepthMeasurements();
     depthIm_ = f.getDepthIm();
     imageDepthScale_ = f.getDepthScale();
+    estimatedDepthScale_ = f.getEstimatedDepthScale();
     depthError_ = f.getDepthError();
 
     Tcw_ = f.getPose();
