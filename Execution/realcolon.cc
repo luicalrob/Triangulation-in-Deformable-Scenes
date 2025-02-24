@@ -76,7 +76,7 @@ int main(int argc, char **argv){
     for(int i = startingFrame; i <= endingFrame; i+=framesStep){
         sequence.getRGBImage(i,currIm);
         sequence.getDepthImage(i,currDepthIm);
-        // sequence.getTimeStamp(i,currTs);
+        sequence.getTimeStamp(i,currTs);
 
         if (currIm.empty()) {
             std::cerr << "Error: Could not load image!" << std::endl;

@@ -48,14 +48,14 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 35
+Matching.initialization: 40
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 100
+Matching.initialization.radius: 120
 
 #Covisivility graph
 Map.minObs: 6
@@ -70,7 +70,7 @@ Triangulation.minCos: 0.1
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 0.5
+Triangulation.depthLimit: 500.0
 
 # LUIS
 #Cameras poses

@@ -189,8 +189,8 @@ bool Mapping::monocularMapInitialization() {
             double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
             double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
 
-            if(d1 > depthLimit_ || d1 < 0.0 || d2 > depthLimit_ || d2 < 0.0)
-            continue;
+            // if(d1 > depthLimit_ || d1 < 0.0 || d2 > depthLimit_ || d2 < 0.0)
+            // continue;
             
             pMap_->insertMapPoint(pMP1);
             pMap_->insertMapPoint(pMP2);

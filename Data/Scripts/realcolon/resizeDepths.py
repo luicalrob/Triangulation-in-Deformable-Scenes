@@ -5,14 +5,14 @@ from PIL import Image
 
 # Paths
 background_path = "/home/luis/datasets/RealColon/mask_border_endo_ori.jpg"
-input_folder = "/home/luis/datasets/RealColon/58/13_43/depth_npy"
-output_folder = "/home/luis/datasets/RealColon/58/13_43/depth"
+input_folder = "/home/luis/datasets/RealColon/27/depth_npy"
+output_folder = "/home/luis/datasets/RealColon/27/depth"
 
 # Ensure output directory exists
 os.makedirs(output_folder, exist_ok=True)
 
 # Constants
-SCALE_FACTOR = 3.0 / (pow(2, 16) - 1)
+SCALE_FACTOR = 4.0 / (pow(2, 16) - 1)
 FINAL_HEIGHT = 1080
 FINAL_WIDTH = 1440
 DEPTH_HEIGHT = 992
@@ -34,32 +34,42 @@ top = (FINAL_HEIGHT - DEPTH_HEIGHT) // 2
 left = (FINAL_WIDTH - DEPTH_WIDTH) // 2
 
 # Process each .npy depth file
-for filename in os.listdir(input_folder):
-    if filename.endswith(".npy"):
-        depth_path = os.path.join(input_folder, filename)
-        output_path = os.path.join(output_folder, filename.replace(".npy", ".png"))
+# for filename in os.listdir(input_folder):
+filename = "0288.npy"
+if filename.endswith(".npy"):
+    depth_path = os.path.join(input_folder, filename)
+    output_path = os.path.join(output_folder, filename.replace(".npy", ".png"))
 
-        # Load .npy depth image
-        depth = np.load(depth_path)
-        depth = np.squeeze(depth)  # Remove extra dimensions
-        # print("Depth map resolution:", depth.shape) 
+    print(f"Processing: {depth_path}")
 
-        if depth.shape != (DEPTH_HEIGHT, DEPTH_WIDTH):
-            raise ValueError(f"Unexpected depth image shape {depth.shape}, expected {(DEPTH_HEIGHT, DEPTH_WIDTH)}")
+    # Load .npy depth image
+    depth = np.load(depth_path)
+    depth = np.squeeze(depth)  # Remove extra dimensions
+    print("Depth map resolution:", depth.shape) 
+    min_val, max_val = np.min(depth), np.max(depth)
+    print(f" - Raw Depth Min: {min_val}, Max: {max_val}")
+    # print("Depth map resolution:", depth.shape) 
 
-        final_image = np.ones((FINAL_HEIGHT, FINAL_WIDTH), dtype=np.uint16)
+    if depth.shape != (DEPTH_HEIGHT, DEPTH_WIDTH):
+        raise ValueError(f"Unexpected depth image shape {depth.shape}, expected {(DEPTH_HEIGHT, DEPTH_WIDTH)}")
 
-        # Ensure depth is in uint16 format before inserting
-        # scale_factor = 3.0 / (pow(2, 16) - 1) 
-        depth_uint16 = np.clip(depth / SCALE_FACTOR, 0, 65535).astype(np.uint16)
+    final_image = np.ones((FINAL_HEIGHT, FINAL_WIDTH), dtype=np.uint16)
 
-        # Now assign the properly formatted depth image
-        final_image[top:top + DEPTH_HEIGHT, left:left + DEPTH_WIDTH] = depth_uint16
+    # Ensure depth is in uint16 format before inserting
+    # scale_factor = 3.0 / (pow(2, 16) - 1) 
+    depth_uint16 = np.clip(depth / SCALE_FACTOR, 0, 65535).astype(np.uint16)
+    
+    scaled_min, scaled_max = np.min(depth_uint16), np.max(depth_uint16)
+    print(f" - Scaled Depth Min: {scaled_min}, Max: {scaled_max}")
 
-        # Apply border mask (set border regions to 0)
-        final_image *= border_mask
+    # Now assign the properly formatted depth image
+    final_image[top:top + DEPTH_HEIGHT, left:left + DEPTH_WIDTH] = depth_uint16
 
-        # Save as 16-bit PNG
-        Image.fromarray(final_image).save(output_path)
+    # Apply border mask (set border regions to 0)
+    final_image *= border_mask
+
+    # Save as 16-bit PNG
+    Image.fromarray(final_image).save(output_path)
+    print(f"Saved: {output_path}")
 
 print("Processing complete! Depth images saved.")

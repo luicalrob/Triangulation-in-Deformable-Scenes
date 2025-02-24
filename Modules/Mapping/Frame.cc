@@ -112,7 +112,7 @@ double Frame::getDepthMeasure(float x, float y) {
     uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
     //float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
 
-    double scaleFactor = 3.0 / (pow(2, 16) - 1); // (2^16 - 1) * 30
+    double scaleFactor = 4.0 / (pow(2, 16) - 1); // (2^16 - 1) * 30
 
     double depth = ((static_cast<double>(rawDepth)*scaleFactor) + distribution(generator));
 

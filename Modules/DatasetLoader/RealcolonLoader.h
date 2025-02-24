@@ -44,8 +44,8 @@ public:
     cv::Size getImageSize();
 
 private:
-    std::vector<std::string> vRGBPaths;     //RGB images paths
-    std::vector<std::string> vDepthPaths;   //Depth images paths
+    std::vector<std::string> vRGBPaths_;     //RGB images paths
+    std::vector<std::string> vDepthPaths_;   //Depth images paths
     std::vector<double> vTimeStamps_;       //Vector with the timestamps
     std::vector<PoseData> vPoseData_;
 
