@@ -146,6 +146,8 @@ private:
 
     std::string TrianMethod_;
     std::string TrianLocation_;
+
+    std::shared_ptr<CameraModel> prevCalibration_, currCalibration_;
 };
 
 

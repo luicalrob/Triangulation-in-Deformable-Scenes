@@ -296,8 +296,8 @@ private:
     cv::Mat im_;
     cv::Mat depthIm_;
     double timestamp_;
-    float imageDepthScale_ = 1.0f; // for simulatng an unknown scale
-    double estimatedDepthScale_ = 1.0f; // scale estimated
+    double imageDepthScale_ = 1.0; // for simulatng an unknown scale
+    double estimatedDepthScale_ = 1.0; // scale estimated
     float depthError_;
 };
 

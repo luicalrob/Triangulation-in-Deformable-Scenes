@@ -104,6 +104,7 @@ void FAST::extract(const cv::Mat &im, std::vector<cv::KeyPoint> &vKeys) {
     vKeys.clear();
     //vKeys.reserve(nExtracted);
     int extracted = 0;
+    std::cout << "nExtracted " << nExtracted << std::endl;
     for(auto vExtracedLevel : allKeypoints){
         for(auto kp : vExtracedLevel){
             if(extracted < vKeys.capacity()){
@@ -113,6 +114,7 @@ void FAST::extract(const cv::Mat &im, std::vector<cv::KeyPoint> &vKeys) {
             }
         }
     }
+    std::cout << "extracted " << extracted << std::endl;
 }
 
 void FAST::computePyramid(const cv::Mat& im){
