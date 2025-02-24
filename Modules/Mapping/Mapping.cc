@@ -146,7 +146,7 @@ bool Mapping::monocularMapInitialization() {
     visualizer_->drawFrameMatches(currFrame_.getKeyPointsDistorted(),currIm_,vMatches_);
 
     //If not enough matches found, updtate reference frame
-    if(nMatches < 100){
+    if(nMatches < settings_.getMinMatches()){
         refFrame_.assign(currFrame_);
         visualizer_->setReferenceFrame(refFrame_.getKeyPointsDistorted(),currIm_);
 
@@ -163,9 +163,12 @@ bool Mapping::monocularMapInitialization() {
         return false;
     }
 
+    prevCalibration_ = refFrame_.getCalibration();
+    currCalibration_ = currFrame_.getCalibration();
+
     refKeyFrame_ = std::make_shared<KeyFrame>(refFrame_);
     currKeyFrame_ = std::make_shared<KeyFrame>(currFrame_);
-    
+
     pMap_->insertKeyFrame(refKeyFrame_);
     pMap_->insertKeyFrame(currKeyFrame_);
 
@@ -198,27 +201,52 @@ bool Mapping::monocularMapInitialization() {
             refKeyFrame_->setMapPoint(i, pMP1);
             currKeyFrame_->setMapPoint(i, pMP2);
 
-            //scale
-            double d1_up_to_scale = refKeyFrame_->getDepthMeasure(x1.x, x1.y, false);
-            double d2_up_to_scale = currKeyFrame_->getDepthMeasure(x2.x, x2.y, false);
-            
-            v3DPoints_c1 = T1w * v3DPoints_w[j];
-            v3DPoints_c2 = T2w * v3DPoints_w[j+1];
+            //parallax for scale (here to get depth limits)
+            Eigen::Vector3f r1 = prevCalibration_->unproject(x1).normalized();
+            Eigen::Vector3f r2 = currCalibration_->unproject(x2).normalized();
+            auto ray1 = (T1w.inverse().rotationMatrix() * r1).normalized();
+            auto ray2 = (T2w.inverse().rotationMatrix() * r2).normalized();
+            float cosParallaxPoint = cosRayParallax(ray1, ray2);
+            float radiansPoint = acos(cosParallaxPoint);
+            float degreesPoint = radiansPoint * (180.0 / M_PI);
 
-            scale1 += d1_up_to_scale / v3DPoints_c1[2];
-            scale2 += d2_up_to_scale / v3DPoints_c2[2];
+            if(degreesPoint > settings_.getMinCos()){
+                double d1_up_to_scale = refKeyFrame_->getDepthMeasure(x1.x, x1.y, false);
+                double d2_up_to_scale = currKeyFrame_->getDepthMeasure(x2.x, x2.y, false);
+
+                v3DPoints_c1 = T1w * v3DPoints_w[j];
+                v3DPoints_c2 = T2w * v3DPoints_w[j+1];
+
+                scale1 += d1_up_to_scale / v3DPoints_c1[2];
+                scale2 += d2_up_to_scale / v3DPoints_c2[2];
+                // std::cerr << "estimatedScale1: "<< d1_up_to_scale / p3D_c1[2] << std::endl;
+                // std::cerr << "estimatedScale2: "<< d2_up_to_scale / p3D_c2[2] << std::endl;
+
+                n_points++;
+            }
+
+            // double d1_up_to_scal = refKeyFrame_->getDepthMeasure(x1.x, x1.y, false);
+            // double d2_up_to_scal = currKeyFrame_->getDepthMeasure(x2.x, x2.y, false);
+            
+            // v3DPoints_c1 = T1w * v3DPoints_w[j];
+            // v3DPoints_c2 = T2w * v3DPoints_w[j+1];
+
+            // scale1 += d1_up_to_scale / v3DPoints_c1[2];
+            // scale2 += d2_up_to_scale / v3DPoints_c2[2];
+
+            // n_points ++;
 
             nTriangulated += 2;
-            n_points ++;
         }
     }
 
     scale1 = scale1 / n_points;
     scale2 = scale2 / n_points;
 
-    // refKeyFrame_->setEstimatedDepthScale(scale1);
-    // currKeyFrame_->setEstimatedDepthScale(scale2);
+    refKeyFrame_->setEstimatedDepthScale(scale1);
+    currKeyFrame_->setEstimatedDepthScale(scale2);
 
+    cout << "n points for scale: " << n_points << endl;
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;
 
     Eigen::Vector3f t1 = T1w.inverse().translation();

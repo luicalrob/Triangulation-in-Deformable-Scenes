@@ -161,7 +161,8 @@ double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
     // std::cout << "y: " << y << std::endl;
     // std::cout << "depthIm_.cols: " << depthIm_.cols << std::endl;
     // std::cout << "depthIm_.rows: " << depthIm_.rows << std::endl;
-    if (x > depthIm_.cols || y > depthIm_.rows) {
+    if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        std::cout << x << " " << y << std::endl;
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 

@@ -363,23 +363,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
             v3DPoints[j+1] = p3D_2;
 
             nTriangulated += 2;
-            
-            float radiansPoint = acos(cosParallaxPoint);
-            float degreesPoint = radiansPoint * (180.0 / M_PI);
-            //std::cerr << "degreesPoint: "<< degreesPoint << std::endl;
-            if(degreesPoint > fMinParallax_){
-                double d1_up_to_scale = refFrame_->getDepthMeasure(x1.x, x1.y);
-                double d2_up_to_scale = currFrame_->getDepthMeasure(x2.x, x2.y);
-
-                estimatedScale1 += d1_up_to_scale / p3D_c1[2];
-                estimatedScale2 += d2_up_to_scale / p3D_c2[2];
-
-                n_points_toScale++;
-            }
-
-            nTriangulated += 2;
             vParallax.push_back(cosParallaxPoint);
-
         }
     }
 
@@ -402,11 +386,7 @@ bool MonocularMapInitializer::reconstructPoints(const Sophus::SE3f &T1w, const S
     parallax = degrees;
     std::cerr << "_parallax: "<< degrees << std::endl;
 
-    if(nTriangulated >= 25 && degrees > fMinParallax_/5.0 && n_points_toScale > 5) {
-        estimatedScale1 = estimatedScale1 / n_points_toScale;
-        estimatedScale2 = estimatedScale2 / n_points_toScale;
-        refFrame_->setEstimatedDepthScale(estimatedScale1);
-        currFrame_->setEstimatedDepthScale(estimatedScale2);
+    if(nTriangulated >= 25 && degrees > fMinParallax_){
         return true;
     }
     else{

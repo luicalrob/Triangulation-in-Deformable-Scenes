@@ -102,8 +102,8 @@ double Frame::getDepthMeasure(float x, float y) {
     if (depthIm_.empty()) {
         throw std::runtime_error("Depth image is not initialized.");
     }
-    
-    if (x > depthIm_.cols || y > depthIm_.rows) {
+    if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        std::cout << x << " " << y << std::endl;
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
@@ -112,16 +112,6 @@ double Frame::getDepthMeasure(float x, float y) {
 
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0.0, depthError_/1000);
-    
-    //uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
-    //float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
-
-    // std::cout << "depth measurement: " << rawDepth << std::endl;
-
-    //double scaleFactor = 30.0f / ((pow(2, 16)-1)); // (2^16 - 1) * 30
-    //double scaleFactor = 0.2 / (pow(2, 16) - 1);
-
-    //std::cout << "depth measurement: " << rawDepth * scaleFactor << std::endl;
 
     double depth = ((static_cast<double>(ground_truth_depth)) + distribution(generator));
 
@@ -185,7 +175,7 @@ void Frame::assign(Frame &F) {
     }
 
     Tcw_ = F.Tcw_;
-    // depthScale_ = F.depthScale_;
+    estimatedDepthScale_ = F.estimatedDepthScale_;
     depthError_ = F.depthError_;
 
     im_ = F.im_.clone();
