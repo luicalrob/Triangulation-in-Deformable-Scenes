@@ -55,7 +55,7 @@ Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 50
+Matching.initialization.radius: 100
 
 #Covisivility graph
 Map.minObs: 6

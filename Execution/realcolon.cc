@@ -21,7 +21,7 @@ int main(int argc, char **argv){
     
     //Load dataset sequence
     string datasetPath = argv[1];
-    RealcolonLoader sequence(datasetPath, datasetPath + "/images.txt");
+    RealcolonLoader sequence(datasetPath, datasetPath + "/trajectory.txt");
 
     int startingFrame, framesStep, endingFrame;
     if (argc >= 3) {
