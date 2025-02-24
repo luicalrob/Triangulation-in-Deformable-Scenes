@@ -705,8 +705,8 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
             mTGlobalId[T] = currId;
             currId++;
 
-            double ds_1 = static_cast<double>(pKF1->getEstimatedDepthScale());
-            double ds_2 = static_cast<double>(pKF2->getEstimatedDepthScale());
+            double ds_1 = pKF1->getEstimatedDepthScale();
+            double ds_2 = pKF2->getEstimatedDepthScale();
 
             VertexDepthScale* vScale1 = new VertexDepthScale();
             vScale1->setEstimate(ds_1);

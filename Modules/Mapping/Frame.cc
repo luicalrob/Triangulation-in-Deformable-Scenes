@@ -103,6 +103,7 @@ double Frame::getDepthMeasure(float x, float y) {
         throw std::runtime_error("Depth image is not initialized.");
     }
     if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        std::cout << x << " " << y << std::endl;
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
@@ -174,7 +175,7 @@ void Frame::assign(Frame &F) {
     }
 
     Tcw_ = F.Tcw_;
-    // depthScale_ = F.depthScale_;
+    estimatedDepthScale_ = F.estimatedDepthScale_;
     depthError_ = F.depthError_;
 
     im_ = F.im_.clone();

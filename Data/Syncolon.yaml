@@ -20,7 +20,7 @@ FeatureExtractor.imageBoderMask: mask_border_endo_ori.jpg
 FeatureExtractor.nFeatures: 2048
 
 # Number of levels in the scale pyramid
-FeatureExtractor.nScales: 4
+FeatureExtractor.nScales: 1
 
 # Scale factor between levels in the scale pyramid
 FeatureExtractor.fScaleFactor: 1.6666666
@@ -34,26 +34,26 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 35
+Matching.initialization: 100
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 25
+Matching.initialization.radius: 15
 
 #Covisivility graph
 Map.minObs: 6
 
 #Min cos parallax to triangulate
-Triangulation.minCos: 0.15
+Triangulation.minCos: 0.1
 
 #Inliers and reprojection checks
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 3000000.0
+Triangulation.depthLimit: 3.0
 
 # LUIS
 #Cameras poses
@@ -71,8 +71,8 @@ Keypoints.decimalsApproximation: 1
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.001
 Measurements.DepthWeight: 0.1
-Measurements.DepthScale.C1: 1.0
-Measurements.DepthScale.C2: 1.4
+Measurements.DepthScale.C1: 500
+Measurements.DepthScale.C2: 600
 Measurements.Depth.Scale: 0.0004577706569009
 
 #Weights for optimization
@@ -84,7 +84,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 30
+Optimization.numberOfOptimizations: 100
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
