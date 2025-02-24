@@ -38,7 +38,7 @@ Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
     vMapPoints_ = vector<shared_ptr<MapPoint>>(nFeatures,nullptr);
 
     calibration_ = calibration;
-    depthScale_ = dScale;
+    imageDepthScale_ = dScale;
     depthError_ = depthError;
 
     //Compute image boundaries as distortion can change typical values
@@ -102,8 +102,7 @@ double Frame::getDepthMeasure(float x, float y) {
     if (depthIm_.empty()) {
         throw std::runtime_error("Depth image is not initialized.");
     }
-    
-    if (x > depthIm_.cols || y > depthIm_.rows) {
+    if (x >= depthIm_.cols || y >= depthIm_.rows) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
@@ -112,20 +111,10 @@ double Frame::getDepthMeasure(float x, float y) {
 
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0.0, depthError_/1000);
-    
-    //uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
-    //float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
-
-    // std::cout << "depth measurement: " << rawDepth << std::endl;
-
-    //double scaleFactor = 30.0f / ((pow(2, 16)-1)); // (2^16 - 1) * 30
-    //double scaleFactor = 0.2 / (pow(2, 16) - 1);
-
-    //std::cout << "depth measurement: " << rawDepth * scaleFactor << std::endl;
 
     double depth = ((static_cast<double>(ground_truth_depth)) + distribution(generator));
 
-    return depth;
+    return depth * imageDepthScale_;
 }
 
 Grid Frame::getGrid() {
@@ -376,7 +365,15 @@ cv::Mat Frame::getIm(){
 }
 
 double Frame::getDepthScale(){
-    return depthScale_;
+    return imageDepthScale_;
+}
+
+double Frame::getEstimatedDepthScale() {
+    return estimatedDepthScale_;
+}
+
+void Frame::setEstimatedDepthScale(double scale) {
+    estimatedDepthScale_ = scale;
 }
 
 float Frame::getDepthError(){

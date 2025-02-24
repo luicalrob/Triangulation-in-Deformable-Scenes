@@ -87,6 +87,7 @@ Settings::Settings(const std::string& configFile) {
 
     nMinCommonObs_ = fSettings["Map.minObs"];
     fMinCos_ = fSettings["Triangulation.minCos"];
+    fMinMatches_ = fSettings["Triangulation.minMatches"];
 
     //LUIS
     std::string checksString;
@@ -282,6 +283,10 @@ float Settings::getMatchingInitRadius(){
 
 int Settings::getMinCommonObs(){
     return nMinCommonObs_;
+}
+
+float Settings::getMinMatches(){
+    return fMinMatches_;
 }
 
 float Settings::getMinCos(){

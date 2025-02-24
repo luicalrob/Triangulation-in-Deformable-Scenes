@@ -71,6 +71,7 @@ public:
 
     int getMinCommonObs();
 
+    float getMinMatches();
     float getMinCos();
     bool getCheckingSelection();
     float getDepthLimit();
@@ -144,6 +145,7 @@ private:
 
     int nMinCommonObs_;
 
+    float fMinMatches_;
     float fMinCos_;
     bool checkingSelection_;
     float fDepthLimit_;

@@ -188,8 +188,8 @@ private:
     cv::Mat descriptors_;
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
     std::vector<float> vDepthMeasurements_;
-    float imageDepthScale_ = 1.0f; // for simulatng an unknown scale
-    double estimatedDepthScale_ = 1.0f; // scale estimated
+    double imageDepthScale_ = 1.0; // for simulatng an unknown scale
+    double estimatedDepthScale_ = 1.0; // scale estimated
     cv::Mat depthIm_;
     float depthError_;
 
