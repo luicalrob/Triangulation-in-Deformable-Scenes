@@ -87,7 +87,7 @@ Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.0
-Measurements.DepthWeight: 0.1
+Measurements.DepthWeight: 0.01
 Measurements.DepthScale.C1: 1.0
 Measurements.DepthScale.C2: 1.0
 Measurements.Depth.Scale: 0.0004577706569009
