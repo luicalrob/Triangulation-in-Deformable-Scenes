@@ -3,7 +3,7 @@
       
 syncolon_values = {
     "Pair": [
-        "150-2-160", 
+        # "150-2-160", 
         "270-2-300",
         "70-3-90", 
         "105-2-115"
@@ -55,12 +55,12 @@ def setSyncolonParameters(pair, level):
         "150-2-160_seq4": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 2.5},
         "150-2-160_seq5": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 2.5},
 
-        "270-4-300_seq0": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-4-300_seq1": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-4-300_seq2": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-4-300_seq3": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-4-300_seq4": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-4-300_seq5": {"Hdist": 35, "window": 55, "maxDepth": 0.1, "minParallax": 2.5},
+        "270-2-300_seq0": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
+        "270-2-300_seq1": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
+        "270-2-300_seq2": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
+        "270-2-300_seq3": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
+        "270-2-300_seq4": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
+        "270-2-300_seq5": {"Hdist": 35, "window": 55, "maxDepth": 0.1, "minParallax": 2.5},
     }
     
     try:

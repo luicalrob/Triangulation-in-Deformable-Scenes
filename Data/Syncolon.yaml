@@ -34,20 +34,20 @@ FeatureGrid.nGridRows: 48
 Epipolar.th: 0.5
 
 #Feature matching Hamming distance thresholds
-Matching.initialization: 35
+Matching.initialization: 30
 Matching.guidedMatching: 50
 Matching.searchByProjection: 100
 Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 30
+Matching.initialization.radius: 35
 
 #Covisivility graph
 Map.minObs: 6
 
 #Min cos parallax to triangulate
-Triangulation.minCos: 1.8
+Triangulation.minCos: 2.5
 
 #Inliers and reprojection checks
 Triangulation.checks: "false"

@@ -216,8 +216,8 @@ bool Mapping::monocularMapInitialization() {
     scale1 = scale1 / n_points;
     scale2 = scale2 / n_points;
 
-    refKeyFrame_->setEstimatedDepthScale(scale1);
-    currKeyFrame_->setEstimatedDepthScale(scale2);
+    // refKeyFrame_->setEstimatedDepthScale(scale1);
+    // currKeyFrame_->setEstimatedDepthScale(scale2);
 
     cout << "Map initialized with " << nTriangulated << " MapPoints" << endl;
 
