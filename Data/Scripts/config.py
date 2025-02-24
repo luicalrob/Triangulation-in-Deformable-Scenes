@@ -34,9 +34,9 @@ def setSyncolonParameters(pair, level):
     """
     # Diccionario de configuración
     experiment_config = {
-        "70-3-90_seq0": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
+        "70-3-90_seq0": {"Hdist": 35, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},#check, not very good initial seeds
         "70-3-90_seq1": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
-        "70-3-90_seq2": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.8},
+        "70-3-90_seq2": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
         "70-3-90_seq3": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.8},
         "70-3-90_seq4": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.8},
         "70-3-90_seq5": {"Hdist": 35, "window": 20, "maxDepth": 0.1, "minParallax": 1.8},
