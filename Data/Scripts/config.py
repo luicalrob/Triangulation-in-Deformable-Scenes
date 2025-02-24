@@ -41,19 +41,19 @@ def setSyncolonParameters(pair, level):
         "70-3-90_seq4": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.8},
         "70-3-90_seq5": {"Hdist": 35, "window": 20, "maxDepth": 0.1, "minParallax": 1.8},
 
-        "105-2-115_seq0": {"Hdist": 30, "window": 25, "maxDepth": 0.1, "minParallax": 1.8},
-        "105-2-115_seq1": {"Hdist": 30, "window": 25, "maxDepth": 0.1, "minParallax": 1.8},
+        "105-2-115_seq0": {"Hdist": 30, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},#check
+        "105-2-115_seq1": {"Hdist": 30, "window": 25, "maxDepth": 0.1, "minParallax": 2.8},
         "105-2-115_seq2": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
         "105-2-115_seq3": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
         "105-2-115_seq4": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
         "105-2-115_seq5": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
 
-        "150-2-160_seq0": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 2.5},
-        "150-2-160_seq1": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 2.5},
-        "150-2-160_seq2": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 2.5},
-        "150-2-160_seq3": {"Hdist": 30, "window": 30, "maxDepth": 2.0, "minParallax": 2.5},
-        "150-2-160_seq4": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 2.5},
-        "150-2-160_seq5": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 2.5},
+        "150-2-160_seq0": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},#check
+        "150-2-160_seq1": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},
+        "150-2-160_seq2": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},
+        "150-2-160_seq3": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},
+        "150-2-160_seq4": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 2.8},
+        "150-2-160_seq5": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 2.8},
 
         "270-2-300_seq0": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
         "270-2-300_seq1": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},

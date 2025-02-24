@@ -406,7 +406,12 @@ public:
         g2o::SE3Quat Tcw = cameraPose; 
 
         Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
+        
         double error = pow((obs / scale - p3Dc[2] ),2);
+
+        if(scale <= 0.0){
+            error = error * 10;
+        }
         _error[0] = error;
     }
 

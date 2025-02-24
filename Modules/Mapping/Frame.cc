@@ -113,7 +113,7 @@ double Frame::getDepthMeasure(float x, float y) {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0.0, depthError_/1000);
 
-    double depth = ((static_cast<double>(ground_truth_depth)) + distribution(generator));
+    double depth = ((static_cast<double>(ground_truth_depth)/10) + distribution(generator));
 
     return depth * imageDepthScale_;
 }

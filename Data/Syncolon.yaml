@@ -47,7 +47,7 @@ Matching.initialization.radius: 35
 Map.minObs: 6
 
 #Min cos parallax to triangulate
-Triangulation.minCos: 2.5
+Triangulation.minCos: 1.0
 
 #Inliers and reprojection checks
 Triangulation.checks: "false"
@@ -71,8 +71,8 @@ Keypoints.decimalsApproximation: 1
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.001
 Measurements.DepthWeight: 0.01
-Measurements.DepthScale.C1: 1.0
-Measurements.DepthScale.C2: 1.4
+Measurements.DepthScale.C1: 0.01
+Measurements.DepthScale.C2: 0.04
 Measurements.Depth.Scale: 0.0004577706569009
 
 #Weights for optimization
@@ -118,4 +118,4 @@ Triangulation.seed.location: "FarPoints"
 MapVisualizer.showScene: "true"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "false"
+Execution.stop: "true"
