@@ -45,7 +45,7 @@ MapVisualizer::MapVisualizer(shared_ptr<Map> pMap, const PoseData initialPose, c
             Eigen::Vector3f camera_offset(0.0f, 0.0f, -0.005f);  // offset behind the keyframe
             Eigen::Vector3f camera_position = keyframe_position + rotation_matrix * camera_offset;
             s_cam = pangolin::OpenGlRenderState(
-                    pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.000001,1),
+                    pangolin::ProjectionMatrix(1024,768,500,500,512,389,0.000001,100),
                     pangolin::ModelViewLookAt(
                         camera_position[0], camera_position[1], camera_position[2],
                         keyframe_position[0], keyframe_position[1], keyframe_position[2],
