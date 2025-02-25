@@ -479,7 +479,7 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
 
     double optimizationUpdate = 100;
-    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.00002*mapPoints_corrected.size()); i++){ 
+    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.0001*mapPoints_corrected.size()); i++){ 
         // correct error
         if (OptSelection == "open3DArap") {
             arapOpen3DOptimization(pMap.get());

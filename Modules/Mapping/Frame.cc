@@ -102,7 +102,7 @@ double Frame::getDepthMeasure(float x, float y) {
     if (depthIm_.empty()) {
         throw std::runtime_error("Depth image is not initialized.");
     }
-    if (x >= depthIm_.cols || y >= depthIm_.rows) {
+    if (x > depthIm_.cols || y > depthIm_.rows) {
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
@@ -114,7 +114,7 @@ double Frame::getDepthMeasure(float x, float y) {
 
     double scaleFactor = 4.0 / (pow(2, 16) - 1); // (2^16 - 1) * 30
 
-    double depth = ((static_cast<double>(rawDepth)*scaleFactor) + distribution(generator));
+    double depth = ((static_cast<double>(rawDepth)*scaleFactor/100) + distribution(generator));
 
     return depth * imageDepthScale_;
 }
