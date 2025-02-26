@@ -7,7 +7,7 @@ syncolon_values = {
         "105-2-115",
         "125-3-140",
         "140-3-150",
-        "150-2-160", 
+        "150-2-160" 
     ],
     "Triangulation": ["TwoPoints", "FarPoints"],
     "Level": ["seq0", "seq1", "seq2", "seq3", "seq4", "seq5"],
