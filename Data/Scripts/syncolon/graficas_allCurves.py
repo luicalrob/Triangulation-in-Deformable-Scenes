@@ -14,8 +14,8 @@ default_values = syncolon_values
 
 # Configuración de los archivos y parámetros
 folder_path = "./Data/Excels/Syncolon/Resumes"
-triangulation_type = "TwoPoints"  # O "TwoPoints"
-data_type = "Initial"  # O "Final"
+triangulation_type = "FarPoints"  # "FarPoints" O "TwoPoints"
+data_type = "Final"  # "Initial" O "Final"
 file_range = range(66, 71)
 
 data = {}
