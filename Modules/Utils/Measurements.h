@@ -29,4 +29,9 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
 */
 void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath);
 
+/*
+* Write the abs error divided by the t norm and the parallax of each point in a separated file
+*/
+void measureErrorParallaxVsPoints(std::shared_ptr<Map> pMap, std::string filePath);
+
 #endif //SLAM_MEASUREMENTS_H

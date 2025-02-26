@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
       
+# "270-2-300",
 syncolon_values = {
     "Pair": [
-        # "150-2-160", 
-        "270-2-300",
-        "70-3-90", 
+        "150-2-160", 
+        "125-3-140",
+        "140-3-150",
         "105-2-115"
     ],
-    "Triangulation": ["FarPoints"],
+    "Triangulation": ["TwoPoints", "FarPoints"],
     "Level": ["seq0", "seq1", "seq2", "seq3", "seq4", "seq5"],
     "Checks": ["checks", "no_checks"],
     "Experiment": range(66, 71),
@@ -34,19 +35,19 @@ def setSyncolonParameters(pair, level):
     """
     # Diccionario de configuración
     experiment_config = {
-        "70-3-90_seq0": {"Hdist": 35, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},#check, not very good initial seeds
-        "70-3-90_seq1": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
-        "70-3-90_seq2": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
-        "70-3-90_seq3": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.8},
-        "70-3-90_seq4": {"Hdist": 35, "window": 15, "maxDepth": 0.1, "minParallax": 1.8},
-        "70-3-90_seq5": {"Hdist": 35, "window": 20, "maxDepth": 0.1, "minParallax": 1.8},
+        "140-3-150_seq0": {"Hdist": 35, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},#check, not very good initial seeds
+        "140-3-150_seq1": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
+        "140-3-150_seq2": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
+        "140-3-150_seq3": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
+        "140-3-150_seq4": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
+        "140-3-150_seq5": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
 
-        "105-2-115_seq0": {"Hdist": 30, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},#check
-        "105-2-115_seq1": {"Hdist": 30, "window": 25, "maxDepth": 0.1, "minParallax": 2.8},
-        "105-2-115_seq2": {"Hdist": 30, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
-        "105-2-115_seq3": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
-        "105-2-115_seq4": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
-        "105-2-115_seq5": {"Hdist": 35, "window": 30, "maxDepth": 0.1, "minParallax": 1.8},
+        "105-2-115_seq0": {"Hdist": 35, "window": 35, "maxDepth": 1.0, "minParallax": 0.15},#check
+        "105-2-115_seq1": {"Hdist": 35, "window": 35, "maxDepth": 0.15, "minParallax": 2.8},
+        "105-2-115_seq2": {"Hdist": 35, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
+        "105-2-115_seq3": {"Hdist": 35, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
+        "105-2-115_seq4": {"Hdist": 35, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
+        "105-2-115_seq5": {"Hdist": 35, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
 
         "150-2-160_seq0": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},#check
         "150-2-160_seq1": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 1.0},
@@ -55,12 +56,12 @@ def setSyncolonParameters(pair, level):
         "150-2-160_seq4": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 2.8},
         "150-2-160_seq5": {"Hdist": 30, "window": 35, "maxDepth": 0.1, "minParallax": 2.8},
 
-        "270-2-300_seq0": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-2-300_seq1": {"Hdist": 25, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-2-300_seq2": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-2-300_seq3": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-2-300_seq4": {"Hdist": 35, "window": 25, "maxDepth": 0.1, "minParallax": 2.5},
-        "270-2-300_seq5": {"Hdist": 35, "window": 55, "maxDepth": 0.1, "minParallax": 2.5},
+        "125-3-140_seq0": {"Hdist": 40, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
+        "125-3-140_seq1": {"Hdist": 40, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
+        "125-3-140_seq2": {"Hdist": 40, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
+        "125-3-140_seq3": {"Hdist": 40, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
+        "125-3-140_seq4": {"Hdist": 40, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
+        "125-3-140_seq5": {"Hdist": 40, "window": 35, "maxDepth": 0.15, "minParallax": 1.8},
     }
     
     try:

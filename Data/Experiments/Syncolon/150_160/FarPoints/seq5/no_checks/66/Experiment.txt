@@ -5,9 +5,9 @@ nMapPoints: 232
 INITIAL MEASUREMENTS: 
 C1 standard desv: 17,6363
 C2 standard desv: 14,9212
-Rel. error: 0,00697344
-depthError: 0,137863
-gloablTError: 0,584891
+Rel. error: 0,0222059
+depthError: 0,000127076
+gloablTError: 1,73922
 Global rotation: 1 0 0
 0 1 0
 0 0 1
@@ -19,12 +19,12 @@ Av. error: 34,1904
 RMSE: 35,4349
 Av. up-to-scale error in 3D: 5,2766
 
-1 / 100 MEASUREMENTS: 
-C1 standard desv: 0,00126658
-C2 standard desv: 0,000711392
-Rel. error: 0,0136555
-depthError: 0,0886569
-gloablTError: 1,18259
+1 / 15 MEASUREMENTS: 
+C1 standard desv: 0,00110922
+C2 standard desv: 0,000808028
+Rel. error: 0,014973
+depthError: 7,40874e-05
+gloablTError: 0,449576
 Global rotation: 1 0 0
 0 1 0
 0 0 1
@@ -32,16 +32,16 @@ Global translation: 0
 0
 0
 Av. movement: 3,93298
-Av. error: 36,1381
-RMSE: 36,7157
-Av. up-to-scale error in 3D: 0,000689482
+Av. error: 34,6074
+RMSE: 35,1055
+Av. up-to-scale error in 3D: 0,0198401
 
-2 / 100 MEASUREMENTS: 
-C1 standard desv: 0,00127607
-C2 standard desv: 0,000717001
-Rel. error: 0,0136556
-depthError: 0,0886569
-gloablTError: 1,18259
+2 / 15 MEASUREMENTS: 
+C1 standard desv: 0,00111173
+C2 standard desv: 0,000777514
+Rel. error: 0,014973
+depthError: 7,40874e-05
+gloablTError: 0,449575
 Global rotation: 1 0 0
 0 1 0
 0 0 1
@@ -49,16 +49,16 @@ Global translation: 0
 0
 0
 Av. movement: 3,93298
-Av. error: 36,1381
-RMSE: 36,7157
-Av. up-to-scale error in 3D: 0,000688028
+Av. error: 34,6074
+RMSE: 35,1055
+Av. up-to-scale error in 3D: 0,0198396
 
 FINAL MEASUREMENTS: 
-C1 standard desv: 0,00127607
-C2 standard desv: 0,000717001
-Rel. error: 0,0136556
-depthError: 0,0886569
-gloablTError: 1,18259
+C1 standard desv: 0,00111173
+C2 standard desv: 0,000777514
+Rel. error: 0,014973
+depthError: 7,40874e-05
+gloablTError: 0,449575
 Global rotation: 1 0 0
 0 1 0
 0 0 1
@@ -66,7 +66,7 @@ Global translation: 0
 0
 0
 Av. movement: 3,93298
-Av. error: 36,1381
-RMSE: 36,7157
-Av. up-to-scale error in 3D: 0,000688028
+Av. error: 34,6074
+RMSE: 35,1055
+Av. up-to-scale error in 3D: 0,0198396
 

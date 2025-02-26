@@ -1,0 +1,106 @@
+Translation norm between cameras (mm): 1,76774
+Parallax: 2,71657
+nMatches: 353
+nMapPoints: 624
+INITIAL MEASUREMENTS: 
+C1 standard desv: 8,06056
+C2 standard desv: 8,32587
+Rel. error: 0
+depthError: 0,000518412
+gloablTError: 0
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 1,9747
+Av. error: 17,5873
+RMSE: 23,1161
+Av. up-to-scale error in 3D: 13,3653
+
+1 / 12 MEASUREMENTS: 
+C1 standard desv: 1,03845
+C2 standard desv: 0,956144
+Rel. error: 0,00409028
+depthError: 0,00041125
+gloablTError: 0,0322186
+Global rotation:            1 -0,000264646  3,52793e-05
+ 0,000264658            1 -0,000332698
+-3,51913e-05  0,000332708            1
+Global translation:  7,14172e-05
+ 0,000872318
+-0,000373939
+Av. movement: 1,9747
+Av. error: 17,509
+RMSE: 23,0064
+Av. up-to-scale error in 3D: 13,2821
+
+2 / 12 MEASUREMENTS: 
+C1 standard desv: 8,18775
+C2 standard desv: 8,86776
+Rel. error: 0,00512266
+depthError: 0,000312719
+gloablTError: 0,0399968
+Global rotation:            1 -0,000748392 -0,000384864
+ 0,000748067     0,999999 -0,000843903
+ 0,000385496  0,000843615            1
+Global translation: -0,000489147
+   0,0013404
+-4,69727e-07
+Av. movement: 1,9747
+Av. error: 17,411
+RMSE: 22,7177
+Av. up-to-scale error in 3D: 13,1973
+
+3 / 12 MEASUREMENTS: 
+C1 standard desv: 2,47373
+C2 standard desv: 2,1056
+Rel. error: 0,00457769
+depthError: 0,000311872
+gloablTError: 0,0369991
+Global rotation:            1 -0,000827514 -3,87524e-05
+ 0,000827476     0,999999 -0,000969325
+ 3,95545e-05  0,000969292            1
+Global translation: -0,000662602
+  0,00120379
+  0,00017938
+Av. movement: 1,9747
+Av. error: 17,3845
+RMSE: 22,6669
+Av. up-to-scale error in 3D: 13,1663
+
+4 / 12 MEASUREMENTS: 
+C1 standard desv: 2,39296
+C2 standard desv: 2,0853
+Rel. error: 0,00484764
+depthError: 0,000311873
+gloablTError: 0,0299642
+Global rotation:            1 -0,000942191  0,000110864
+ 0,000942295     0,999999  -0,00094257
+-0,000109975  0,000942674            1
+Global translation: -0,000643473
+  0,00133659
+ 0,000154979
+Av. movement: 1,9747
+Av. error: 17,3832
+RMSE: 22,6647
+Av. up-to-scale error in 3D: 13,1644
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 2,39296
+C2 standard desv: 2,0853
+Rel. error: 0,00484764
+depthError: 0,000311873
+gloablTError: 0,0299642
+Global rotation:            1 -0,000942191  0,000110864
+ 0,000942295     0,999999  -0,00094257
+-0,000109975  0,000942674            1
+Global translation: -0,000643473
+  0,00133659
+ 0,000154979
+Av. movement: 1,9747
+Av. error: 17,3832
+RMSE: 22,6647
+Av. up-to-scale error in 3D: 13,1644
+

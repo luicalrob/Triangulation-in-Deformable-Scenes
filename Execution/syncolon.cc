@@ -91,6 +91,7 @@ int main(int argc, char **argv){
     
     timer = clock() - timer;
 
+    SLAM.writePointsData("Final");
     SLAM.stop();
 	cout << "[END] Seconds: " << fixed << setprecision(4) << ((float)timer)/CLOCKS_PER_SEC << endl;
     cout << "[END] Number of Keyframes: " << nKF << endl;

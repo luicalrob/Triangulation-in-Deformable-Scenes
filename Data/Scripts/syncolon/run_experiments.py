@@ -128,3 +128,11 @@ for pair, triangulation, level, experiment in product(pairs, triangulations, lev
             shutil.move(experiment_file, f'{result_folder}/Experiment.txt')
         else:
             raise FileNotFoundError(f"The experiment result file {experiment_file} does not exist.")
+
+        initial_data_file = f'{destination_folder}/Initial.txt'
+        if os.path.isfile(initial_data_file):
+            shutil.move(initial_data_file, f'{result_folder}/Initial.txt')
+
+        final_data_file = f'{destination_folder}/Final.txt'
+        if os.path.isfile(final_data_file):
+            shutil.move(final_data_file, f'{result_folder}/Final.txt')

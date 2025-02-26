@@ -53,7 +53,7 @@ Triangulation.minCos: 1.8
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 0.1
+Triangulation.depthLimit: 0.15
 
 # LUIS
 #Cameras poses
@@ -70,7 +70,7 @@ Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.001
-Measurements.DepthWeight: 0.01
+Measurements.DepthWeight: 0.05
 Measurements.DepthScale.C1: 0.01
 Measurements.DepthScale.C2: 0.04
 Measurements.Depth.Scale: 0.0004577706569009
@@ -79,12 +79,12 @@ Measurements.Depth.Scale: 0.0004577706569009
 Optimization.rep: 1
 Optimization.global: 1
 # Optimization.arap: 10000000
-Optimization.arap: 1000
+Optimization.arap: 100
 Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 100
+Optimization.numberOfOptimizations: 12
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations
@@ -118,4 +118,4 @@ Triangulation.seed.location: "FarPoints"
 MapVisualizer.showScene: "true"
 MapVisualizer.drawRays: "false"
 Visualizer.showSolution: "false"
-Execution.stop: "true"
+Execution.stop: "false"

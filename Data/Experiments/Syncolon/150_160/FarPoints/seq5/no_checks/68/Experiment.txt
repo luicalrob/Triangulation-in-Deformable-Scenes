@@ -5,9 +5,9 @@ nMapPoints: 232
 INITIAL MEASUREMENTS: 
 C1 standard desv: 17,6363
 C2 standard desv: 14,9212
-Rel. error: 0,0138221
-depthError: 0,142284
-gloablTError: 0,883833
+Rel. error: 0,00697344
+depthError: 0,000142287
+gloablTError: 0,584891
 Global rotation: 1 0 0
 0 1 0
 0 0 1
@@ -19,12 +19,12 @@ Av. error: 34,1904
 RMSE: 35,4349
 Av. up-to-scale error in 3D: 5,2766
 
-1 / 100 MEASUREMENTS: 
-C1 standard desv: 0,00126189
-C2 standard desv: 0,000711519
-Rel. error: 0,0441852
-depthError: 0,085012
-gloablTError: 1,3775
+1 / 15 MEASUREMENTS: 
+C1 standard desv: 0,00110922
+C2 standard desv: 0,000808028
+Rel. error: 0,00653577
+depthError: 8,54921e-05
+gloablTError: 0,380196
 Global rotation: 1 0 0
 0 1 0
 0 0 1
@@ -32,16 +32,16 @@ Global translation: 0
 0
 0
 Av. movement: 3,93298
-Av. error: 36,1381
-RMSE: 36,7157
-Av. up-to-scale error in 3D: 0,000689696
+Av. error: 34,6074
+RMSE: 35,1055
+Av. up-to-scale error in 3D: 0,0198407
 
-2 / 100 MEASUREMENTS: 
-C1 standard desv: 0,00126995
-C2 standard desv: 0,000717131
-Rel. error: 0,0441852
-depthError: 0,085012
-gloablTError: 1,3775
+2 / 15 MEASUREMENTS: 
+C1 standard desv: 0,00111173
+C2 standard desv: 0,000777514
+Rel. error: 0,0065358
+depthError: 8,54921e-05
+gloablTError: 0,380196
 Global rotation: 1 0 0
 0 1 0
 0 0 1
@@ -49,16 +49,16 @@ Global translation: 0
 0
 0
 Av. movement: 3,93298
-Av. error: 36,1381
-RMSE: 36,7157
-Av. up-to-scale error in 3D: 0,000688516
+Av. error: 34,6074
+RMSE: 35,1055
+Av. up-to-scale error in 3D: 0,0198396
 
 FINAL MEASUREMENTS: 
-C1 standard desv: 0,00126995
-C2 standard desv: 0,000717131
-Rel. error: 0,0441852
-depthError: 0,085012
-gloablTError: 1,3775
+C1 standard desv: 0,00111173
+C2 standard desv: 0,000777514
+Rel. error: 0,0065358
+depthError: 8,54921e-05
+gloablTError: 0,380196
 Global rotation: 1 0 0
 0 1 0
 0 0 1
@@ -66,7 +66,7 @@ Global translation: 0
 0
 0
 Av. movement: 3,93298
-Av. error: 36,1381
-RMSE: 36,7157
-Av. up-to-scale error in 3D: 0,000688516
+Av. error: 34,6074
+RMSE: 35,1055
+Av. up-to-scale error in 3D: 0,0198396
 

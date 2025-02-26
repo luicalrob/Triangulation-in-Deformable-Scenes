@@ -1,0 +1,89 @@
+Translation norm between cameras (mm): 1,76774
+Parallax: 3,41105
+nMatches: 291
+nMapPoints: 576
+INITIAL MEASUREMENTS: 
+C1 standard desv: 11,5675
+C2 standard desv: 12,0831
+Rel. error: 0
+depthError: 0,000386582
+gloablTError: 0
+Global rotation: 1 0 0
+0 1 0
+0 0 1
+Global translation: 0
+0
+0
+Av. movement: 2,51542
+Av. error: 22,4589
+RMSE: 25,4265
+Av. up-to-scale error in 3D: 12,2155
+
+1 / 12 MEASUREMENTS: 
+C1 standard desv: 1,03025
+C2 standard desv: 0,969734
+Rel. error: 0,00472753
+depthError: 0,000379427
+gloablTError: 0,0680368
+Global rotation:            1 -0,000171738 -3,90141e-05
+ 0,000171728            1 -0,000245116
+ 3,90562e-05  0,000245109            1
+Global translation:  0,000173717
+ 0,000932939
+-0,000549725
+Av. movement: 2,51542
+Av. error: 22,4195
+RMSE: 25,3988
+Av. up-to-scale error in 3D: 12,1559
+
+2 / 12 MEASUREMENTS: 
+C1 standard desv: 1,0565
+C2 standard desv: 1,04446
+Rel. error: 0,00537248
+depthError: 0,000376461
+gloablTError: 0,0619538
+Global rotation:            1 -0,000183912 -1,78393e-05
+ 0,000183908            1 -0,000255229
+ 1,78863e-05  0,000255226            1
+Global translation:  0,000181766
+  0,00118523
+-0,000534507
+Av. movement: 2,51542
+Av. error: 22,4167
+RMSE: 25,3957
+Av. up-to-scale error in 3D: 12,1505
+
+3 / 12 MEASUREMENTS: 
+C1 standard desv: 1,06588
+C2 standard desv: 1,06328
+Rel. error: 0,00537197
+depthError: 0,000376483
+gloablTError: 0,061731
+Global rotation:            1 -0,000198086   -1,104e-05
+ 0,000198083            1 -0,000265186
+ 1,10925e-05  0,000265184            1
+Global translation:  0,000182504
+  0,00119855
+-0,000522007
+Av. movement: 2,51542
+Av. error: 22,4167
+RMSE: 25,3956
+Av. up-to-scale error in 3D: 12,1503
+
+FINAL MEASUREMENTS: 
+C1 standard desv: 1,06588
+C2 standard desv: 1,06328
+Rel. error: 0,00537197
+depthError: 0,000376483
+gloablTError: 0,061731
+Global rotation:            1 -0,000198086   -1,104e-05
+ 0,000198083            1 -0,000265186
+ 1,10925e-05  0,000265184            1
+Global translation:  0,000182504
+  0,00119855
+-0,000522007
+Av. movement: 2,51542
+Av. error: 22,4167
+RMSE: 25,3956
+Av. up-to-scale error in 3D: 12,1503
+

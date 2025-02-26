@@ -941,6 +941,7 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                     eArap->beta = betaWeight;
                     double area = static_cast<double>(mesh->GetSurfaceArea());
                     eArap->area = area;
+                    eArap->nPoints = mesh->vertices_.size();
 
                     Eigen::Matrix<double, 1, 1> informationMatrixArap;
                     informationMatrixArap(0, 0) = (arapBalanceWeight) * std::pow(mesh->triangles_.size(), 2);// * std::pow(area, 5); // * distancesInvTipDesv;

@@ -19,4 +19,5 @@ void stopWithMeasurements(const std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw,
                         const std::shared_ptr<MapVisualizer> mapVisualizer, const std::string filePath, bool drawRaysSelection, bool stop,
                         const std::vector<Eigen::Vector3f> originalPoints = {}, const std::vector<Eigen::Vector3f> movedPoints ={});
 
+void writePointsVsParallax(const std::shared_ptr<Map>& pMap, const std::string filePath, const std::string name);
 #endif //SLAM_UTILS_H

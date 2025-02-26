@@ -109,6 +109,8 @@ public:
 
     void stop();
 
+    void writePointsData(std::string name);
+
 
     /*
      * Map of the SLAM system

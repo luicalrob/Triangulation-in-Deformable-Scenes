@@ -30,3 +30,14 @@ void stopWithMeasurements(const std::shared_ptr<Map>& pMap, Sophus::SE3f Tcw,
         mapVisualizer->updateCurrentPose(Tcw);
     }
 }
+
+void writePointsVsParallax(const std::shared_ptr<Map>& pMap, const std::string filePath, const std::string name){
+    std::string path = filePath;
+    std::string experimentName = "Experiment";
+    size_t pos = path.find(experimentName);
+    if (pos != std::string::npos) {
+        path.replace(pos, experimentName.length(), name);
+    }
+
+    measureErrorParallaxVsPoints(pMap, path);
+}

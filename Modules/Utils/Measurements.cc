@@ -515,3 +515,114 @@ void measureRelativeMapErrors(std::shared_ptr<Map> pMap, std::string filePath){
         }
     }
 }
+
+
+void measureErrorParallaxVsPoints(std::shared_ptr<Map> pMap, std::string filePath){
+    std::ofstream outFile;
+    outFile.imbue(std::locale("es_ES.UTF-8"));
+
+    // 3D Error measurement in map points
+    std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints = pMap->getMapPoints();
+
+    float error2 = 0.0f;
+    float error1 = 0.0f;
+    float parallax = 0.0f;
+    float translationNorm = 0.0f;
+
+    int point_count = mapPoints.size();
+    int point_count_in_kf = mapPoints.size() / 2.0;
+    
+    std::unordered_map<ID,KeyFrame_>&  mKeyFrames = pMap->getKeyFrames();
+
+    for (auto k1 = mKeyFrames.begin(); k1 != mKeyFrames.end(); ++k1) {
+        for (auto k2 = std::next(k1); k2 != mKeyFrames.end(); ++k2) {
+            std::shared_ptr<KeyFrame> pKF1 = k2->second;
+            std::shared_ptr<KeyFrame> pKF2 = k1->second;
+            int kf1ID = k2->first;
+            int kf2ID = k1->first;
+
+            vector<std::shared_ptr<MapPoint>>& v1MPs = pKF1->getMapPoints();
+            vector<std::shared_ptr<MapPoint>>& v2MPs = pKF2->getMapPoints();
+            
+            std::shared_ptr<CameraModel> pCamera1 = pKF1->getCalibration();
+            g2o::SE3Quat camera1Pose = g2o::SE3Quat(pKF1->getPose().unit_quaternion().cast<double>(),pKF1->getPose().translation().cast<double>());
+            std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
+            g2o::SE3Quat camera2Pose = g2o::SE3Quat(pKF2->getPose().unit_quaternion().cast<double>(),pKF2->getPose().translation().cast<double>());
+            Sophus::SE3f T1w = pKF1->getPose();
+            Sophus::SE3f T2w = pKF2->getPose();
+
+            Eigen::Vector3f t1 = T1w.inverse().translation();
+            Eigen::Vector3f t2 = T2w.inverse().translation();
+            translationNorm = (t2 - t1).norm();
+
+            for (size_t i = 0; i < v1MPs.size(); i++) {
+                std::shared_ptr<MapPoint> pMPi1, pMPi2;
+                pMPi1 = v1MPs[i];
+                pMPi2 = v2MPs[i];
+                if (!pMPi1) continue;
+                if (!pMPi2) continue;
+
+                Eigen::Vector3f opt_original_position = pMPi1->getWorldPosition();
+                Eigen::Vector3f opt_moved_position = pMPi2->getWorldPosition();
+
+                int index_in_kf1 = pMap->isMapPointInKeyFrame(pMPi1->getId(), kf1ID);
+                int index_in_kf2 = pMap->isMapPointInKeyFrame(pMPi2->getId(), kf2ID);
+
+                if(index_in_kf1 < 0 || index_in_kf2 < 0) continue;
+                size_t idx1 = (size_t)index_in_kf1;
+                size_t idx2 = (size_t)index_in_kf2;
+
+                cv::Point2f x1 = pKF1->getKeyPoint(idx1).pt;
+                cv::Point2f x2 = pKF2->getKeyPoint(idx2).pt;
+
+                double d1 = pKF1->getDepthMeasure(x1.x, x1.y);
+                double d2 = pKF2->getDepthMeasure(x2.x, x2.y);
+
+                Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
+                m_pos_c1_aux /= m_pos_c1_aux.z();
+                Eigen::Matrix<float,1,3> x3D1 = m_pos_c1_aux * d1;
+
+                Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
+                m_pos_c2_aux /= m_pos_c2_aux.z();
+                Eigen::Matrix<float,1,3> x3D2 = m_pos_c2_aux * d2;
+
+                Eigen::Matrix<float, 1, 4> x3D1_h;
+                Eigen::Matrix<float, 1, 4> x3D2_h;
+                x3D1_h << x3D1[0], x3D1[1], x3D1[2], 1;
+                x3D2_h << x3D2[0], x3D2[1], x3D2[2], 1; 
+                Eigen::Vector4f original_position_h = T1w.inverse().matrix() * x3D1_h.transpose();
+                Eigen::Vector4f moved_position_h = T2w.inverse().matrix() * x3D2_h.transpose();
+
+                Eigen::Vector3f original_position;
+                Eigen::Vector3f moved_position;
+                original_position << original_position_h[0], original_position_h[1], original_position_h[2];
+                moved_position << moved_position_h[0], moved_position_h[1], moved_position_h[2];
+
+                Eigen::Vector3f original_error = opt_original_position - original_position;
+                Eigen::Vector3f moved_error = opt_moved_position - moved_position;
+                error1 = original_error.norm()* 1000;
+                error2 = moved_error.norm()* 1000;
+
+                //parallax for scale (here to get depth limits)
+                Eigen::Vector3f r1 = pCamera1->unproject(x1).normalized();
+                Eigen::Vector3f r2 = pCamera2->unproject(x2).normalized();
+                auto ray1 = (T1w.inverse().rotationMatrix() * r1).normalized();
+                auto ray2 = (T2w.inverse().rotationMatrix() * r2).normalized();
+                float cosParallaxPoint = cosRayParallax(ray1, ray2);
+                float radiansPoint = acos(cosParallaxPoint);
+                parallax = radiansPoint * (180.0 / M_PI);
+
+                outFile.open(filePath, std::ios::app);
+                if (outFile.is_open()) {
+                    outFile << error1 << ";" << parallax << '\n';
+                    outFile << error2 << ";" << parallax << '\n';
+                    outFile.close();
+                    //std::cout << "Data has been written to Points.txt" << std::endl;
+                } else {
+                    std::cerr << "Unable to open file for writing" << std::endl;
+                }
+            }
+
+        }
+    }
+}

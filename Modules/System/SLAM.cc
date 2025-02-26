@@ -121,6 +121,7 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     
     if (goodMapped) {
         startMeasurementsOnFile();
+        writePointsData("Initial");
         stop();
 
         //Run deformation optimization
@@ -367,3 +368,8 @@ void SLAM::startMeasurementsOnFile(){
         std::cerr << "Unable to open file for writing" << std::endl;
     }
 }
+
+void SLAM::writePointsData(std::string name){
+    writePointsVsParallax(pMap_, filePath_, name);
+}
+
