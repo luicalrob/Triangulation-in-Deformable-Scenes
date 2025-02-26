@@ -23,26 +23,27 @@ def get_csv_filename(triangulation, experiment, data):
 # Argument parser
 parser = argparse.ArgumentParser(description="Process CSV data for experiments.")
 parser.add_argument("--Pairs", nargs='+', required=True, help="List of pairs to include.")
-parser.add_argument("--Triangulation", nargs='+', required=True, help="Triangulation methods to include.")
+parser.add_argument('--Triangulation', type=str, choices=default_values["Triangulation"], required=True, help="Triangulation type")
 parser.add_argument("--Experiment", type=int, required=True, help="Experiment number (1-6).")
 parser.add_argument("--Data", required=True, help="Initial or Final.")
 args = parser.parse_args()
 
 # Output file paths
-output_file = f"./Data/Excels/Syncolon/Resumes/Data {args.Experiment} {args.Data}"
+output_file = f"./Data/Excels/Syncolon/Resumes/Data {args.Experiment} {args.Triangulation} {args.Data}"
 csv_files = []
 data_frames = []
 
 # Validate input
 selected_pairs = args.Pairs
-selected_triangulations = args.Triangulation
+triangulation = args.Triangulation
 selected_experiment = args.Experiment
 selected_data = args.Data
 
+print(triangulation)
 for pair in selected_pairs:
     validate_options(pair, default_values["Pair"], "Pair")
-for triangulation in selected_triangulations:
-    validate_options(triangulation, default_values["Triangulation"], "Triangulation")
+    
+validate_options(triangulation, default_values["Triangulation"], "Triangulation")
 validate_options(selected_experiment, default_values["Experiment"], "Experiment")
 
 # Collect relevant CSV files
@@ -50,21 +51,20 @@ for pair in selected_pairs:
     initial_frame, step, final_frame = pair.split("-")
 
     DATA_DIR = f"./Data/Excels/Syncolon/{initial_frame}_{final_frame}"
-    for triangulation in selected_triangulations:
-        filename = get_csv_filename(triangulation, selected_experiment, selected_data)
-        filepath = os.path.join(DATA_DIR, filename)
+    filename = get_csv_filename(triangulation, selected_experiment, selected_data)
+    filepath = os.path.join(DATA_DIR, filename)
 
-        if os.path.exists(filepath):
-            df = pd.read_csv(filepath, header=0, dtype=str)
-            
-            # Generate the "Higher Info" column
-            higher_info = f"{pair}_{triangulation}_{initial_frame}_{final_frame}"
-            df["Higher Info"] = higher_info
-            
-            # Append DataFrame
-            data_frames.append(df)
-        else:
-            print(f"Warning: File {filename} not found in {DATA_DIR}.")
+    if os.path.exists(filepath):
+        df = pd.read_csv(filepath, header=0, dtype=str)
+        
+        # Generate the "Higher Info" column
+        higher_info = f"{pair}_{triangulation}"
+        df["Higher Info"] = higher_info
+        
+        # Append DataFrame
+        data_frames.append(df)
+    else:
+        print(f"Warning: File {filename} not found in {DATA_DIR}.")
 
 # Ensure that at least one file was processed
 if not data_frames:
@@ -74,7 +74,7 @@ if not data_frames:
 merged_df = pd.concat(data_frames, ignore_index=True)
 
 # Remove duplicate "Higher Info" values (only keep the first occurrence)
-merged_df["Higher Info"] = merged_df["Higher Info"].mask(merged_df["Higher Info"].duplicated(), '')
+# merged_df["Higher Info"] = merged_df["Higher Info"].mask(merged_df["Higher Info"].duplicated(), '')
 
 # Save as CSV
 csv_file = output_file + '.csv'
