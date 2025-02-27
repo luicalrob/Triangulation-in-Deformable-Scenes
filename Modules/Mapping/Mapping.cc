@@ -71,17 +71,19 @@ Mapping::Mapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualize
     settings_ = settings;
 }
 
-bool Mapping::doMapping(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f &Tcw, int &nKF, int &nMPs, clock_t &timer) {
-    currIm_ = im.clone();
+bool Mapping::doMapping(const cv::Mat &rgbIm, const cv::Mat &grayIm, const cv::Mat &depthIm, Sophus::SE3f &Tcw, int &nKF, int &nMPs, clock_t &timer) {
+    currIm_ = grayIm.clone();
+    cv::Mat rgbImage = rgbIm.clone();
     cv::Mat dIm = depthIm.clone();
 
     currFrame_.setPose(Tcw);
     currFrame_.setIm(currIm_);
+    currFrame_.setRgbIm(rgbImage);
     currFrame_.setDepthIm(dIm);
     Tcw_ = Tcw;
 
     //Extract features in the current image
-    extractFeatures(im);
+    extractFeatures(grayIm);
 
     visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
 

@@ -205,6 +205,8 @@ public:
      */
     void setIm(cv::Mat& im);
 
+    void setRgbIm(cv::Mat& im);
+
     /*
      * Sets the depth image for the Frame
      */
@@ -214,6 +216,8 @@ public:
      * Gets the image of the frame
      */
     cv::Mat getIm();
+
+    cv::Mat getRgbIm();
 
     /*
      * Gets the depth image of the frame
@@ -294,6 +298,7 @@ private:
     std::vector<float> vSigma2_, vInvSigma2_;           //Uncertainties for a KeyPoint extracted at a image scale
 
     cv::Mat im_;
+    cv::Mat rgbIm_;
     cv::Mat depthIm_;
     double timestamp_;
     double imageDepthScale_ = 1.0; // for simulatng an unknown scale

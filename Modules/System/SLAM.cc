@@ -117,7 +117,7 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     std::cerr << "Let's do Mapping! " << std::endl;
 
     // Do mapping
-    bool goodMapped = mapper_.doMapping(grayIm, depthIm, Tcw_, nKF, nMPs, timer);
+    bool goodMapped = mapper_.doMapping(im, grayIm, depthIm, Tcw_, nKF, nMPs, timer);
     
     if (goodMapped) {
         startMeasurementsOnFile();
