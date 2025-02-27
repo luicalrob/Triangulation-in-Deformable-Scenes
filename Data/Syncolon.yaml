@@ -41,7 +41,7 @@ Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 35
+Matching.initialization.radius: 40
 
 #Covisivility graph
 Map.minObs: 6
@@ -53,7 +53,7 @@ Triangulation.minCos: 1.8
 Triangulation.checks: "false"
 
 #depth limit
-Triangulation.depthLimit: 0.15
+Triangulation.depthLimit: 0.22
 
 # LUIS
 #Cameras poses
@@ -70,7 +70,7 @@ Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.001
-Measurements.DepthWeight: 0.05
+Measurements.DepthWeight: 0.025
 Measurements.DepthScale.C1: 0.01
 Measurements.DepthScale.C2: 0.04
 Measurements.Depth.Scale: 0.0004577706569009
@@ -84,7 +84,7 @@ Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 12
+Optimization.numberOfOptimizations: 3
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations

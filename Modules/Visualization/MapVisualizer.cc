@@ -27,7 +27,7 @@ using namespace std;
 
 MapVisualizer::MapVisualizer(shared_ptr<Map> pMap, const PoseData initialPose, const bool showScene) : pMap_(pMap), showScene_(showScene){
     if (showScene_) {
-        pangolin::CreateWindowAndBind("SLAM",1024,768);
+        pangolin::CreateWindowAndBind("Triangulation",1024,768);
 
         // 3D Mouse handler requires depth testing to be enabled
         glEnable(GL_DEPTH_TEST);
