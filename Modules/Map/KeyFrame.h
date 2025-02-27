@@ -68,6 +68,10 @@ public:
      */
     cv::Mat getDepthIm();
 
+    cv::Mat getRgbIm();
+
+    cv::Vec4f getPixelColor(int x, int y, float alpha = 1.0f);
+
     /*
      * Gets the depth measure at index idx in the KeyFrame (simulation images)
      */
@@ -191,6 +195,7 @@ private:
     double imageDepthScale_ = 1.0; // for simulatng an unknown scale
     double estimatedDepthScale_ = 1.0; // scale estimated
     cv::Mat depthIm_;
+    cv::Mat rgbIm_;
     float depthError_;
 
     Sophus::SE3f Tcw_;

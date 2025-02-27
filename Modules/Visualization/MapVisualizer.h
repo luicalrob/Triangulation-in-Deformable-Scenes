@@ -53,6 +53,7 @@ private:
     void drawKeyFrames();
     void drawRays();
     void drawCurrentPose();
+    bool isGray(const cv::Vec4f& color, float th = 0.05f);
 
     pangolin::View d_cam;
     pangolin::OpenGlRenderState s_cam;

@@ -180,6 +180,7 @@ void Frame::assign(Frame &F) {
     depthError_ = F.depthError_;
 
     im_ = F.im_.clone();
+    rgbIm_ = F.rgbIm_.clone();
     depthIm_ = F.depthIm_.clone();
 }
 
@@ -358,12 +359,20 @@ void Frame::setIm(cv::Mat& im){
     im_ = im.clone();
 }
 
+void Frame::setRgbIm(cv::Mat& im){
+    rgbIm_ = im.clone();
+}
+
 void Frame::setDepthIm(cv::Mat& im){
     depthIm_ = im.clone();
 }
 
 cv::Mat Frame::getIm(){
     return im_.clone();
+}
+
+cv::Mat Frame::getRgbIm(){
+    return rgbIm_.clone();
 }
 
 double Frame::getDepthScale(){

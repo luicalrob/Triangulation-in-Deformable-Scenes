@@ -61,7 +61,7 @@ RealcolonLoader::RealcolonLoader(std::string folderPath, std::string timesPath) 
                 // Generate filenames with zero-padding
                 std::ostringstream rgbName, depthName;
 
-                rgbName << std::setw(4) << std::setfill('0') << i+1 << ".jpg";
+                rgbName << std::setw(4) << std::setfill('0') << i << ".jpg";
                 depthName << std::setw(4) << std::setfill('0') << i << ".png";
                 
                 vRGBPaths_.push_back(folderPath + "/rgb/" + rgbName.str());

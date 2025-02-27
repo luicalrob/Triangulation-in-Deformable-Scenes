@@ -30,6 +30,7 @@ KeyFrame::KeyFrame(Frame &f) {
     vMapPoints_ = f.getMapPoints();
     vDepthMeasurements_ = f.getDepthMeasurements();
     depthIm_ = f.getDepthIm();
+    rgbIm_ = f.getRgbIm();
     imageDepthScale_ = f.getDepthScale();
     estimatedDepthScale_ = f.getEstimatedDepthScale();
     depthError_ = f.getDepthError();
@@ -71,6 +72,7 @@ KeyFrame::KeyFrame(const KeyFrame& other)
       imageDepthScale_(other.imageDepthScale_),
       estimatedDepthScale_(other.estimatedDepthScale_),
       depthIm_(other.depthIm_),
+      rgbIm_(other.rgbIm_),
       descriptors_(other.descriptors_.clone()),
       Tcw_(other.Tcw_),
       calibration_(other.calibration_),
@@ -151,6 +153,27 @@ void KeyFrame::setInitialDepthScaleInSimulationImages(){
 //real images
 cv::Mat KeyFrame::getDepthIm(){
     return depthIm_.clone();
+}
+
+cv::Mat KeyFrame::getRgbIm(){
+    return rgbIm_.clone();
+}
+
+cv::Vec4f KeyFrame::getPixelColor(int x, int y, float alpha) {
+    cv::Vec4f color(0, 0, 0, alpha);  // Default black with given alpha
+
+    if (x >= 0 && x < rgbIm_.cols && y >= 0 && y < rgbIm_.rows) {
+        if (rgbIm_.channels() == 3) {  // RGB image
+            cv::Vec3b pixel = rgbIm_.at<cv::Vec3b>(y, x);
+            color = cv::Vec4f(pixel[2] / 255.0f, pixel[1] / 255.0f, pixel[0] / 255.0f, alpha);
+        } 
+        else if (rgbIm_.channels() == 4) {  // RGBA image
+            cv::Vec4b pixel = rgbIm_.at<cv::Vec4b>(y, x);
+            color = cv::Vec4f(pixel[2] / 255.0f, pixel[1] / 255.0f, pixel[0] / 255.0f, pixel[3]*alpha / 255.0f);
+        }
+    }
+
+    return color;
 }
 
 double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {

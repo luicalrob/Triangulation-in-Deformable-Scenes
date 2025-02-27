@@ -109,44 +109,50 @@ void MapVisualizer::drawMapPoints() {
             Sophus::SE3f T2w = pKF2->getPose();
             double estimatedScale1 = pKF1->getEstimatedDepthScale();
             double estimatedScale2 = pKF2->getEstimatedDepthScale();
-            // for (size_t col = 1; col <= 1440; col++) {
-            //     for (size_t row = 1; row <= 1080; row++) {
-            //         double d1 = pKF1->getDepthMeasure(col, row) / estimatedScale1;
-            //         double d2 = pKF2->getDepthMeasure(col, row) / estimatedScale2;
+            for (size_t col = 1; col <= 1440; col++) {
+                for (size_t row = 1; row <= 1080; row++) {
+                    double d1 = pKF1->getDepthMeasure(col, row) / estimatedScale1;
+                    double d2 = pKF2->getDepthMeasure(col, row) / estimatedScale2;
 
-            //         cv::Point2f x1(col, row);
-            //         cv::Point2f x2(col, row);
+                    cv::Point2f x1(col, row);
+                    cv::Point2f x2(col, row);
 
-                    // if(d1 != -1 || d1 < 10.0 || d2 != -1 || d2 < 10.0) {
-                    //     // Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
-                    //     // Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
-                    //     Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
-                    //     m_pos_c1_aux /= m_pos_c1_aux.z();
-                    //     Eigen::Matrix<float,1,3> m_pos_c1 = m_pos_c1_aux * d1;
+                    if(d1 > 0.0 && d1 < 10.0 && d2 > 0.0 && d2 < 10.0) {
+                            // Eigen::Matrix<float,1,3> m_pos_c1 = pCamera1->unproject(x1, d1);
+                        // Eigen::Matrix<float,1,3> m_pos_c2 = pCamera2->unproject(x2, d2);
+                        Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
+                        m_pos_c1_aux /= m_pos_c1_aux.z();
+                        Eigen::Matrix<float,1,3> m_pos_c1 = m_pos_c1_aux * d1;
 
-                    //     Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
-                    //     m_pos_c2_aux /= m_pos_c2_aux.z();
-                    //     Eigen::Matrix<float,1,3> m_pos_c2 = m_pos_c2_aux * d2;
+                        Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
+                        m_pos_c2_aux /= m_pos_c2_aux.z();
+                        Eigen::Matrix<float,1,3> m_pos_c2 = m_pos_c2_aux * d2;
 
-                    //     Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
-                    //     m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
-                    //     m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
+                        Eigen::Matrix<float,1,4> m_pos_c1_h, m_pos_c2_h;
+                        m_pos_c1_h << m_pos_c1[0], m_pos_c1[1], m_pos_c1[2], 1;
+                        m_pos_c2_h << m_pos_c2[0], m_pos_c2[1], m_pos_c2[2], 1;
                         
-                    //     Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
-                    //     Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
-                    //     Eigen::Vector3f m_pos_1, m_pos_2;
-                    //     m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
-                    //     m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
+                        Eigen::Vector4f m_pos_1_h = T1w.inverse().matrix() * m_pos_c1_h.transpose();
+                        Eigen::Vector4f m_pos_2_h = T2w.inverse().matrix() * m_pos_c2_h.transpose();
+                        Eigen::Vector3f m_pos_1, m_pos_2;
+                        m_pos_1 << m_pos_1_h[0], m_pos_1_h[1], m_pos_1_h[2];
+                        m_pos_2 << m_pos_2_h[0], m_pos_2_h[1], m_pos_2_h[2];
                         
-                    //     glColor3f(0.0,0.7,0.0);
-                    //     glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
-
-                    //     glColor3f(0.0,1.0,0.0);
-                    //     glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
-                    // }
-            //     }
-            // }
-
+                        cv::Vec4f color = pKF1->getPixelColor(col, row, 1.0f);
+                        if (!isGray(color)) {
+                            glColor4f(color[0], color[1], color[2], color[3]);
+                            glVertex3f(m_pos_1(0),m_pos_1(1),m_pos_1(2));
+                        }
+                        
+                        color = pKF2->getPixelColor(col, row, 1.0f);
+                        if (!isGray(color)) {
+                            glColor4f(color[0], color[1], color[2], color[3]);
+                            glVertex3f(m_pos_2(0),m_pos_2(1),m_pos_2(2));
+                        }
+                    }
+                }
+            }
+            
             for (size_t i = 0; i < v1MPs.size(); i++) {
                 std::shared_ptr<MapPoint> pMPi1, pMPi2;
                 pMPi1 = v1MPs[i];
@@ -166,7 +172,7 @@ void MapVisualizer::drawMapPoints() {
 
                 cv::Point2f x1 = pKF1->getKeyPoint(idx1).pt;
                 cv::Point2f x2 = pKF2->getKeyPoint(idx2).pt;
-                
+
                 double estimatedScale1 = pKF1->getEstimatedDepthScale();
                 double estimatedScale2 = pKF2->getEstimatedDepthScale();
 
@@ -252,7 +258,7 @@ void MapVisualizer::drawRays() {
 }
 
 void MapVisualizer::drawKeyFrames() {
-    const float &w = 0.05*0.05;
+    const float &w = 0.05*1;
     const float h = w*0.75;
     const float z = w*0.6;
 
@@ -299,7 +305,7 @@ void MapVisualizer::drawKeyFrames() {
 }
 
 void MapVisualizer::drawCurrentPose() {
-    const float &w = 0.05*0.05;
+    const float &w = 0.05*1;
     const float h = w*0.75;
     const float z = w*0.6;
 
@@ -333,4 +339,11 @@ void MapVisualizer::drawCurrentPose() {
     glEnd();
 
     glPopMatrix();
+}
+
+bool MapVisualizer::isGray(const cv::Vec4f& color, float th) {
+    float dif12 = std::abs(color[0] - color[1]);
+    float dif23 = std::abs(color[1] - color[2]);
+    float dif13 = std::abs(color[0] - color[2]);
+    return (dif12 < th && dif23 < th && dif13 < th);
 }

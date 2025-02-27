@@ -1,26 +1,26 @@
 %YAML:1.0
 # Camera calibration and distortion parameters
 # realcolon 1 #seq01
-# Camera.fx: 717.6911
-# Camera.fy: 718.0214
-# Camera.cx: 734.7278
-# Camera.cy: 552.0724
+Camera.fx: 717.6911
+Camera.fy: 718.0214
+Camera.cx: 734.7278
+Camera.cy: 552.0724
 
-# Camera.d0: -0.1396589
-# Camera.d1: -0.0003139987
-# Camera.d2: 0.001505504
-# Camera.d3: -0.0001316715
+Camera.d0: -0.1396589
+Camera.d1: -0.0003139987
+Camera.d2: 0.001505504
+Camera.d3: -0.0001316715
 
 # realcolon 4 #seq58
-Camera.fx: 733.0653
-Camera.fy: 734.3432
-Camera.cx: 743.3353
-Camera.cy: 539.6794
+# Camera.fx: 733.0653
+# Camera.fy: 734.3432
+# Camera.cx: 743.3353
+# Camera.cy: 539.6794
 
-Camera.d0: -0.1273872
-Camera.d1: -0.006822601
-Camera.d2: 0.001757994
-Camera.d3: -8.190911e-05
+# Camera.d0: -0.1273872
+# Camera.d1: -0.006822601
+# Camera.d2: 0.001757994
+# Camera.d3: -8.190911e-05
 
 # Camera resolution
 Camera.cols: 1440
@@ -87,7 +87,7 @@ Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.0
-Measurements.DepthWeight: 0.01
+Measurements.DepthWeight: 100.0
 Measurements.DepthScale.C1: 1.0
 Measurements.DepthScale.C2: 1.0
 Measurements.Depth.Scale: 0.0004577706569009
@@ -96,7 +96,7 @@ Measurements.Depth.Scale: 0.0004577706569009
 Optimization.rep: 1
 Optimization.global: 1
 # Optimization.arap: 10000000
-Optimization.arap: 0.75
+Optimization.arap: 0.0001
 Optimization.alpha:  1
 Optimization.beta: 1
 

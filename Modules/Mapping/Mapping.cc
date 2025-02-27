@@ -71,17 +71,19 @@ Mapping::Mapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualize
     settings_ = settings;
 }
 
-bool Mapping::doMapping(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f &Tcw, int &nKF, int &nMPs, clock_t &timer) {
-    currIm_ = im.clone();
+bool Mapping::doMapping(const cv::Mat &rgbIm, const cv::Mat &grayIm, const cv::Mat &depthIm, Sophus::SE3f &Tcw, int &nKF, int &nMPs, clock_t &timer) {
+    currIm_ = grayIm.clone();
+    cv::Mat rgbImage = rgbIm.clone();
     cv::Mat dIm = depthIm.clone();
 
     currFrame_.setPose(Tcw);
     currFrame_.setIm(currIm_);
+    currFrame_.setRgbIm(rgbImage);
     currFrame_.setDepthIm(dIm);
     Tcw_ = Tcw;
 
     //Extract features in the current image
-    extractFeatures(im);
+    extractFeatures(grayIm);
 
     visualizer_->drawCurrentFeatures(currFrame_.getKeyPointsDistorted(),currIm_);
 
@@ -189,8 +191,8 @@ bool Mapping::monocularMapInitialization() {
             double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
             double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
 
-            // if(d1 > depthLimit_ || d1 < 0.0 || d2 > depthLimit_ || d2 < 0.0)
-            // continue;
+            if(d1 < 0.0 || d2 < 0.0)
+            continue;
             
             pMap_->insertMapPoint(pMP1);
             pMap_->insertMapPoint(pMP2);
