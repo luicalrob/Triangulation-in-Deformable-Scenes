@@ -6,7 +6,6 @@ import glob
 import re
 import numpy as np
 from collections import defaultdict
-from scipy.interpolate import make_interp_spline
 
 # Configuration
 folder_path = "./Data/Excels/Syncolon/Resumes"
@@ -65,12 +64,8 @@ for data_type in ["Initial", "Final"]:
                             continue
 
 # Plot configuration
-key_parallax_values = [1, 1.5, 2, 2.5, 3, 3.5]
-min_e, max_e = 0.0, 30
-min_p, max_p = 0.1, 5.7
-num_intervals = 8
 colors = ["cyan", "red", "green", "purple", "orange", "blue", "black"]
-custom_titles = {  # Custom titles for each series
+custom_titles = {
     "seq0_no_checks": "No deformation",
     "seq1_no_checks": "Deformation level 1",
     "seq2_no_checks": "Deformation level 2",
@@ -87,35 +82,16 @@ for i, (seq, initial_values) in enumerate(data["Initial"].items()):
     plt.figure(figsize=(6, 5))
     color = colors[i % len(colors)]
     
-    for label, values, linestyle in zip(["MidPoint", "Our non-rigid triangulation"], [initial_values, final_values], ["--", "-"]):
-        if values["parallax"]:
-            parallax, error = zip(*sorted(zip(values["parallax"], values["error"])))
-            interval_bounds = np.linspace(min_p, max_p, num_intervals)
-            grouped_parallax, avg_errors = [], []
-            
-            for j in range(len(interval_bounds) - 1):
-                lower, upper = interval_bounds[j], interval_bounds[j + 1]
-                indices = [k for k, p in enumerate(parallax) if lower <= p < upper]
-                if indices:
-                    grouped_parallax.append(np.mean([parallax[k] for k in indices]))
-                    avg_errors.append(np.mean([error[k] for k in indices]))
-            
-            if len(grouped_parallax) > 2:
-                trend_smooth = np.linspace(min(grouped_parallax), max(grouped_parallax), 50)
-                spline = make_interp_spline(grouped_parallax, avg_errors, k=2)
-                error_smooth = spline(trend_smooth)
-                plt.plot(trend_smooth, error_smooth, label=label, color=color, linewidth=2, linestyle=linestyle)
-                key_errors = spline(key_parallax_values)
-                plt.scatter(key_parallax_values, key_errors, color=color, edgecolors="black", s=20, zorder=3)
-            else:
-                plt.plot(grouped_parallax, avg_errors, label=label, color=color, linewidth=2, linestyle=linestyle)
+    if final_values["parallax"]:
+        plt.scatter(final_values["parallax"], final_values["error"], label="Our non-rigid triangulation", color=color, marker="s", edgecolors="black", s=20, zorder=3)
+    if initial_values["parallax"]:
+        plt.scatter(initial_values["parallax"], initial_values["error"], label="MidPoint", color="black", marker="x", s=20, zorder=3)
     
+
     font_size = 16
     plt.title(custom_titles.get(seq, seq), fontsize=font_size)
     plt.xlabel("Parallax (degrees)", fontsize=font_size)
     plt.ylabel("Av. error / t", fontsize=font_size)
-    plt.xlim(min_p, max_p)
-    plt.ylim(min_e, max_e)
     plt.grid()
     plt.legend(loc="upper right", fontsize=font_size)
     plt.show()
