@@ -19,7 +19,7 @@ RealcolonLoader::RealcolonLoader(std::string folderPath, std::string timesPath) 
     ifstream fTimes;
     fTimes.open(timesPath.c_str());
     if(!fTimes.is_open()){
-        cerr << "[SyncolonLoader]: Could not load dataset at " << folderPath << endl;
+        cerr << "[RealcolonLoader]: Could not load dataset at " << folderPath << endl;
         return;
     }
 
