@@ -1,15 +1,26 @@
 %YAML:1.0
 # Camera calibration and distortion parameters
 # realcolon 1 #seq01
-Camera.fx: 717.6911
-Camera.fy: 718.0214
-Camera.cx: 734.7278
-Camera.cy: 552.0724
+# Camera.fx: 717.6911
+# Camera.fy: 718.0214
+# Camera.cx: 734.7278
+# Camera.cy: 552.0724
 
-Camera.d0: -0.1396589
-Camera.d1: -0.0003139987
-Camera.d2: 0.001505504
-Camera.d3: -0.0001316715
+# Camera.d0: -0.1396589
+# Camera.d1: -0.0003139987
+# Camera.d2: 0.001505504
+# Camera.d3: -0.0001316715
+
+# realcolon 1 #seq27
+Camera.fx: 727.1851
+Camera.fy: 728.5954
+Camera.cx: 738.1817
+Camera.cy: 537.4003
+
+Camera.d0: -0.1311029
+Camera.d1: -0.005149247
+Camera.d2: 0.001512357
+Camera.d3: -6.998448e-05
 
 # realcolon 4 #seq58
 # Camera.fx: 733.0653
@@ -55,16 +66,16 @@ Matching.searchForTriangulation: 50
 Matching.fuse: 50
 
 #radius
-Matching.initialization.radius: 4
+Matching.initialization.radius: 25
 
 #Covisivility graph
 Map.minObs: 6
 
 #Min number of matches to set mapPoints
-Triangulation.minMatches: 600
+Triangulation.minMatches: 200
 
 #Min cos parallax to triangulate
-Triangulation.minCos: 0.1
+Triangulation.minCos: 2.0
 
 #Inliers and reprojection checks
 Triangulation.checks: "false"
@@ -87,7 +98,7 @@ Keypoints.decimalsApproximation: 1
 
 #Simulated typical desviation depth measurements error (mm)
 Measurements.DepthError: 0.0
-Measurements.DepthWeight: 100.0
+Measurements.DepthWeight: 0.001 #0.001 #100.0
 Measurements.DepthScale.C1: 1.0
 Measurements.DepthScale.C2: 1.0
 Measurements.Depth.Scale: 0.0004577706569009
@@ -96,12 +107,12 @@ Measurements.Depth.Scale: 0.0004577706569009
 Optimization.rep: 1
 Optimization.global: 1
 # Optimization.arap: 10000000
-Optimization.arap: 0.0001
+Optimization.arap: 0.1 # 0.1 #0.0001
 Optimization.alpha:  1
 Optimization.beta: 1
 
 #Optimization values
-Optimization.numberOfOptimizations: 10
+Optimization.numberOfOptimizations: 1
 Optimization.numberOfIterations: 30
 
 Optimization.selection: "twoOptimizations" # g2oArap or open3DArap or twoOptimizations

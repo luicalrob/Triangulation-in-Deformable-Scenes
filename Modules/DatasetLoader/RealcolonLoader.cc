@@ -61,11 +61,11 @@ RealcolonLoader::RealcolonLoader(std::string folderPath, std::string timesPath) 
                 // Generate filenames with zero-padding
                 std::ostringstream rgbName, depthName;
 
-                rgbName << std::setw(4) << std::setfill('0') << i << ".jpg";
-                depthName << std::setw(4) << std::setfill('0') << i << ".png";
+                rgbName << std::setw(4) << std::setfill('0') << i+1 << ".jpg";
+                depthName << std::setw(4) << std::setfill('0') << i << ".exr";
                 
                 vRGBPaths_.push_back(folderPath + "/rgb/" + rgbName.str());
-                vDepthPaths_.push_back(folderPath + "/depth/" + depthName.str());
+                vDepthPaths_.push_back(folderPath + "/depth_exr/" + depthName.str());
 
                 i++;
             } else {
@@ -103,7 +103,7 @@ bool RealcolonLoader::getDepthImage(size_t idx, cv::Mat& im) {
     if(idx >= vRGBPaths_.size()) return false;
 
     //cout << "[RealcolonLoader]: loading image at " << vImgsPairs_[idx].first << endl;
-    im = cv::imread(vDepthPaths_[idx], cv::IMREAD_UNCHANGED);
+    im = cv::imread(vDepthPaths_[idx], cv::IMREAD_ANYDEPTH);
 
     return true;
 }

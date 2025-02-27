@@ -28,6 +28,7 @@ Frame::Frame(){}
 Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
              const int nImCols, const int nImRows, int nScales, float fScaleFactor,
              const std::shared_ptr<CameraModel> calibration,
+             const std::shared_ptr<CameraModel> phcalibration,
              const vector<float>& vDistortion,
              const double dScale,
              const float depthError){
@@ -38,6 +39,7 @@ Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
     vMapPoints_ = vector<shared_ptr<MapPoint>>(nFeatures,nullptr);
 
     calibration_ = calibration;
+    phcalibration_ = phcalibration;
     imageDepthScale_ = dScale;
     depthError_ = depthError;
 
@@ -102,19 +104,14 @@ double Frame::getDepthMeasure(float x, float y) {
     if (depthIm_.empty()) {
         throw std::runtime_error("Depth image is not initialized.");
     }
-    if (x > depthIm_.cols || y > depthIm_.rows) {
+    if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        std::cout << x << " " << y << std::endl;
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(0.0, depthError_/1000);
+    float ground_truth_depth = Interpolate(x, y,depthIm_.ptr<float>(0), depthIm_.cols);
 
-    uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
-    //float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
-
-    double scaleFactor = 4.0 / (pow(2, 16) - 1); // (2^16 - 1) * 30
-
-    double depth = ((static_cast<double>(rawDepth)*scaleFactor/100) + distribution(generator));
+    double depth = ((static_cast<double>(ground_truth_depth)/100));
 
     return depth * imageDepthScale_;
 }
@@ -153,6 +150,10 @@ std::shared_ptr<MapPoint> Frame::getMapPoint(const size_t idx) {
 
 void Frame::clearMapPoints() {
     fill(vMapPoints_.begin(),vMapPoints_.end(), nullptr);
+}
+
+std::shared_ptr<CameraModel> Frame::getPHCalibration() {
+    return phcalibration_;
 }
 
 std::shared_ptr<CameraModel> Frame::getCalibration() {

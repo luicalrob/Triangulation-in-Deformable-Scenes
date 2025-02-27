@@ -38,6 +38,7 @@ KeyFrame::KeyFrame(Frame &f) {
     Tcw_ = f.getPose();
 
     calibration_ = f.getCalibration();
+    phcalibration_ = f.getPHCalibration();
 
     grid_ = f.getGrid();
 
@@ -76,6 +77,7 @@ KeyFrame::KeyFrame(const KeyFrame& other)
       descriptors_(other.descriptors_.clone()),
       Tcw_(other.Tcw_),
       calibration_(other.calibration_),
+      phcalibration_(other.phcalibration_),
       grid_(other.grid_),
       gridElementWidthInv_(other.gridElementWidthInv_),
       gridElementHeightInv_(other.gridElementHeightInv_),
@@ -184,21 +186,14 @@ double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
     // std::cout << "y: " << y << std::endl;
     // std::cout << "depthIm_.cols: " << depthIm_.cols << std::endl;
     // std::cout << "depthIm_.rows: " << depthIm_.rows << std::endl;
-    if (x > depthIm_.cols || y > depthIm_.rows) {
+    if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        std::cout << x << " " << y << std::endl;
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(0.0, depthError_/1000);
+    float ground_truth_depth = Interpolate(x, y,depthIm_.ptr<float>(0), depthIm_.cols);
     
-    uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
-    //float rawDepth = depthIm_.at<float>(std::round(y), std::round(x));
-
-    double scaleFactor = 4.0 / (pow(2, 16) - 1); // (2^16 - 1) * 30
-
-    //std::cout << "depth measurement: " << static_cast<double>(rawDepth)*scaleFactor << std::endl;
-
-    double depth = ((static_cast<double>(rawDepth)*scaleFactor/100) + distribution(generator));
+    double depth = ((static_cast<double>(ground_truth_depth)/100));
 
     if(scaled)
         return depth;
@@ -261,6 +256,10 @@ std::shared_ptr<MapPoint> KeyFrame::getMapPoint(size_t idx) {
 
 std::shared_ptr<CameraModel> KeyFrame::getCalibration() {
     return calibration_;
+}
+
+std::shared_ptr<CameraModel> KeyFrame::getPHCalibration() {
+    return phcalibration_;
 }
 
 long unsigned int KeyFrame::getId() {

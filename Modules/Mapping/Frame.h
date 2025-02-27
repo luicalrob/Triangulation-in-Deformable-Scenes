@@ -46,6 +46,7 @@ public:
     Frame(const int nFeatures, const int nGridCols, const int nGridRows,
           const int nImCols, const int nImRows, int nScales, float fScaleFactor,
           const std::shared_ptr<CameraModel> calibration,
+          const std::shared_ptr<CameraModel> phcalibration,
           const std::vector<float>& vDistortion = {},
           const double dScale = 0.0,
           const float depthError = 0.0);
@@ -134,6 +135,8 @@ public:
      * Gets the calibration of the Frame
      */
     std::shared_ptr<CameraModel> getCalibration();
+
+    std::shared_ptr<CameraModel> getPHCalibration();
 
     /*
      * Swaps the contents of 2 frames
@@ -278,6 +281,7 @@ private:
     //     Calibration
     //------------------------
     std::shared_ptr<CameraModel> calibration_;  //Camera calibration
+    std::shared_ptr<CameraModel> phcalibration_;
     std::vector<float> vDistortion_;                //Distortion parameters (optional)
     float minCol_, maxCol_;                         //Undistorted image boundaries (cols)
     float minRow_, maxRow_;                         //Undistorted image boundaries (rows)

@@ -54,11 +54,11 @@ SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
 
     refFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
-                       settings_.getCalibration(),settings_.getDistortionParameters(), settings_.getSimulatedDepthError());
+                       settings_.getCalibration(), settings_.getPHCalibration(), settings_.getDistortionParameters(), settings_.getSimulatedDepthError());
 
     currFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(), settings_.getNumberOfScales(), settings_.getScaleFactor(),
-                       settings_.getCalibration(),settings_.getDistortionParameters(), settings_.getSimulatedDepthError());
+                       settings_.getCalibration(), settings_.getPHCalibration() ,settings_.getDistortionParameters(), settings_.getSimulatedDepthError());
 
     prevCalibration_ = refFrame_.getCalibration();
     currCalibration_ = currFrame_.getCalibration();

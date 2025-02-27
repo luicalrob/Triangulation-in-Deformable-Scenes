@@ -4,8 +4,8 @@ import cv2
 
 # Paths
 background_path = "/home/luis/datasets/RealColon/mask_border_endo_ori.jpg"
-input_folder = "/home/luis/datasets/RealColon/27/depth_npy"
-output_folder = "/home/luis/datasets/RealColon/27/depth_exr"
+input_folder = "/home/luis/datasets/RealColon/58/depth_npy"
+output_folder = "/home/luis/datasets/RealColon/58/depth_exr"
 
 # Ensure output directory exists
 os.makedirs(output_folder, exist_ok=True)

@@ -142,6 +142,7 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
             g2o::SE3Quat camera1Pose = g2o::SE3Quat(pKF1->getPose().unit_quaternion().cast<double>(),pKF1->getPose().translation().cast<double>());
             std::shared_ptr<CameraModel> pCamera2 = pKF2->getCalibration();
             g2o::SE3Quat camera2Pose = g2o::SE3Quat(pKF2->getPose().unit_quaternion().cast<double>(),pKF2->getPose().translation().cast<double>());
+            std::shared_ptr<CameraModel> pPHCamera = pKF1->getPHCalibration();
             Sophus::SE3f T1w = pKF1->getPose();
             Sophus::SE3f T2w = pKF2->getPose();
 
@@ -189,11 +190,11 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 // Eigen::Matrix<float,1,3> x3D1 = pCamera1->unproject(x1, d1);
                 // Eigen::Matrix<float,1,3> x3D2 = pCamera2->unproject(x2, d2);
 
-                Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
+                Eigen::Vector3f m_pos_c1_aux = pPHCamera->unproject(x1);
                 m_pos_c1_aux /= m_pos_c1_aux.z();
                 Eigen::Matrix<float,1,3> x3D1 = m_pos_c1_aux * d1;
 
-                Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
+                Eigen::Vector3f m_pos_c2_aux = pPHCamera->unproject(x2);
                 m_pos_c2_aux /= m_pos_c2_aux.z();
                 Eigen::Matrix<float,1,3> x3D2 = m_pos_c2_aux * d2;
 
@@ -269,11 +270,11 @@ void measureRealAbsoluteMapErrors(const std::shared_ptr<Map> pMap, const std::st
                 double d1 = pKF1->getDepthMeasure(x1.x, x1.y);
                 double d2 = pKF2->getDepthMeasure(x2.x, x2.y);
 
-                Eigen::Vector3f m_pos_c1_aux = pCamera1->unproject(x1);
+                Eigen::Vector3f m_pos_c1_aux = pPHCamera->unproject(x1);
                 m_pos_c1_aux /= m_pos_c1_aux.z();
                 Eigen::Matrix<float,1,3> x3D1 = m_pos_c1_aux * d1 / scale1;
 
-                Eigen::Vector3f m_pos_c2_aux = pCamera2->unproject(x2);
+                Eigen::Vector3f m_pos_c2_aux = pPHCamera->unproject(x2);
                 m_pos_c2_aux /= m_pos_c2_aux.z();
                 Eigen::Matrix<float,1,3> x3D2 = m_pos_c2_aux * d2 / scale2;
 

@@ -47,6 +47,7 @@ public:
 
     //Getter methods
     std::shared_ptr<CameraModel> getCalibration();
+    std::shared_ptr<CameraModel> getPHCalibration();
     std::vector<float> getDistortionParameters();
     int getImCols();
     int getImRows();
@@ -121,6 +122,7 @@ public:
 private:
     //Camera parameters
     std::shared_ptr<CameraModel> calibration_;  //Geometric calibration with projection and unprojection functions
+    std::shared_ptr<CameraModel> pinHolecalibration_; 
     std::vector<float> vDistortion_;                //[Optional] Image distortion parameters
     int imCols_, imRows_;                           //Image size
 

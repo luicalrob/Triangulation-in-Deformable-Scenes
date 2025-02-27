@@ -407,7 +407,7 @@ public:
 
         Eigen::Vector3d p3Dc = Tcw.map(p3Dw);
         
-        double error = pow((obs / scale - p3Dc[2] ),2);
+        double error = pow((obs / scale - p3Dc[2]),2);
 
         if(scale <= 0.0){
             error = error * 500;

@@ -137,6 +137,8 @@ public:
      */
     std::shared_ptr<CameraModel> getCalibration();
 
+    std::shared_ptr<CameraModel> getPHCalibration();
+
     /*
      * Get the unique id of the KeyFrame
      */
@@ -204,6 +206,7 @@ private:
     //     Calibration
     //------------------------
     std::shared_ptr<CameraModel> calibration_;
+    std::shared_ptr<CameraModel> phcalibration_;
 
     //------------------------
     // Point grid for faster feature matching

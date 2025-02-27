@@ -16,6 +16,7 @@
 */
 
 #include "Calibration/KannalaBrandt8.h"
+#include "Calibration/PinHole.h"
 
 #include "Settings.h"
 
@@ -44,8 +45,10 @@ Settings::Settings(const std::string& configFile) {
     float k2 = fSettings["Camera.d2"];
     float k3 = fSettings["Camera.d3"];
     vector<float> vCalibration = {fx,fy,cx,cy,k0,k1,k2,k3};
+    vector<float> vCalibration1 = {fx,fy,cx,cy};
 
     calibration_ = shared_ptr<CameraModel>(new KannalaBrandt8(vCalibration));
+    pinHolecalibration_ = shared_ptr<CameraModel>(new PinHole(vCalibration1));
 
     //Read (if exists) distortion parameters
     if(!fSettings["Camera.k1"].empty()){
@@ -220,6 +223,10 @@ ostream &operator<<(std::ostream& output, const Settings& settings){
 
 std::shared_ptr<CameraModel> Settings::getCalibration() {
     return calibration_;
+}
+
+std::shared_ptr<CameraModel> Settings::getPHCalibration() {
+    return pinHolecalibration_;
 }
 
 std::vector<float> Settings::getDistortionParameters() {

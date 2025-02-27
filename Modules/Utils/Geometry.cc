@@ -602,3 +602,19 @@ void computeR(std::shared_ptr<open3d::geometry::TriangleMesh> mesh,
         Rs[i] = Ri;
     }
 }
+
+
+float Interpolate(const float x, const float y, float* mat, const int cols){
+    float x_,_x,y_,_y;
+    _x = modf(x,&x_);
+    _y = modf(y,&y_);
+
+    //Get interpolation weights
+    float w00 = (1.f - _x)*(1.f - _y);
+    float w01 = (1.f - _x)*_y;
+    float w10 = _x*(1.f -_y);
+    float w11 = 1.f - w00 - w01 - w10;
+
+    return (float)(mat[(int)y_*cols+(int)x_])*w00 + (float)(mat[(int)y_*cols+(int)x_+1])*w10 +
+           (float)(mat[((int)y_+1)*cols+(int)x_])*w01 + (float)(mat[((int)y_+1)*cols+(int)x_+1])*w11;
+}

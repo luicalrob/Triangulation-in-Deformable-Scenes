@@ -37,11 +37,11 @@ Mapping::Mapping(Settings& settings, std::shared_ptr<FrameVisualizer>& visualize
                     std::shared_ptr<MapVisualizer>& mapVisualizer, std::shared_ptr<Map> map) {
     refFrame_ = Frame(settings.getFeaturesPerImage(),settings.getGridCols(),settings.getGridRows(),
                        settings.getImCols(),settings.getImRows(),settings.getNumberOfScales(), settings.getScaleFactor(),
-                       settings.getCalibration(),settings.getDistortionParameters(), settings.getSimulatedDepthScaleC1());
+                       settings.getCalibration(), settings.getPHCalibration(), settings.getDistortionParameters(), settings.getSimulatedDepthScaleC1());
 
     currFrame_ = Frame(settings.getFeaturesPerImage(),settings.getGridCols(),settings.getGridRows(),
                        settings.getImCols(),settings.getImRows(), settings.getNumberOfScales(), settings.getScaleFactor(),
-                       settings.getCalibration(),settings.getDistortionParameters(), settings.getSimulatedDepthScaleC2());
+                       settings.getCalibration(), settings.getPHCalibration(), settings.getDistortionParameters(), settings.getSimulatedDepthScaleC2());
 
     featExtractor_ = shared_ptr<Feature>(new FAST(settings.getNumberOfScales(),settings.getScaleFactor(),settings.getFeaturesPerImage()*2,10,4, settings.getBorderMask()));
     descExtractor_ = shared_ptr<Descriptor>(new ORB(settings.getNumberOfScales(),settings.getScaleFactor()));
@@ -191,7 +191,12 @@ bool Mapping::monocularMapInitialization() {
             double d1 = refKeyFrame_->getDepthMeasure(x1.x, x1.y);
             double d2 = currKeyFrame_->getDepthMeasure(x2.x, x2.y);
 
-            if(d1 < 0.0 || d2 < 0.0)
+            if(d1 <= 0.0 || d2 <= 0.0)
+            continue;
+
+            if(x1.x <= 0.1 || x1.x >= 1500 || x1.y <= 0.1 || x1.y >= 1500)
+            continue;
+            if(x2.x <= 0.1 || x2.x >= 1500 || x2.y <= 0.1 || x2.y >= 1500)
             continue;
             
             pMap_->insertMapPoint(pMP1);
