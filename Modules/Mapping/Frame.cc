@@ -17,6 +17,7 @@
 
 
 #include "Frame.h"
+#include "Utils/Geometry.h"
 
 #include <cmath>
 
@@ -27,8 +28,10 @@ Frame::Frame(){}
 Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
              const int nImCols, const int nImRows, int nScales, float fScaleFactor,
              const std::shared_ptr<CameraModel> calibration,
+             const std::shared_ptr<CameraModel> phcalibration,
              const vector<float>& vDistortion,
-             const double dScale){
+             const double dScale,
+             const float depthError){
     vKeys_ = vector<cv::KeyPoint>(nFeatures);
     vKeysDis_ = vector<cv::KeyPoint>(nFeatures);
     vDepthMeasurements_ = vector<float>(nFeatures);
@@ -36,7 +39,9 @@ Frame::Frame(const int nFeatures, const int nGridCols, const int nGridRows,
     vMapPoints_ = vector<shared_ptr<MapPoint>>(nFeatures,nullptr);
 
     calibration_ = calibration;
-    depthScale_ = dScale;
+    phcalibration_ = phcalibration;
+    imageDepthScale_ = dScale;
+    depthError_ = depthError;
 
     //Compute image boundaries as distortion can change typical values
     computeImageBoundaries(vDistortion,nImCols,nImRows);
@@ -100,14 +105,15 @@ double Frame::getDepthMeasure(float x, float y) {
         throw std::runtime_error("Depth image is not initialized.");
     }
     if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        std::cout << x << " " << y << std::endl;
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
-    uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
+    float ground_truth_depth = Interpolate(x, y,depthIm_.ptr<float>(0), depthIm_.cols);
 
-    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
+    double depth = ((static_cast<double>(ground_truth_depth)/100));
 
-    return static_cast<double>(rawDepth) * scaleFactor;
+    return depth * imageDepthScale_;
 }
 
 Grid Frame::getGrid() {
@@ -146,6 +152,10 @@ void Frame::clearMapPoints() {
     fill(vMapPoints_.begin(),vMapPoints_.end(), nullptr);
 }
 
+std::shared_ptr<CameraModel> Frame::getPHCalibration() {
+    return phcalibration_;
+}
+
 std::shared_ptr<CameraModel> Frame::getCalibration() {
     return calibration_;
 }
@@ -167,9 +177,11 @@ void Frame::assign(Frame &F) {
     }
 
     Tcw_ = F.Tcw_;
-    // depthScale_ = F.depthScale_;
+    estimatedDepthScale_ = F.estimatedDepthScale_;
+    depthError_ = F.depthError_;
 
     im_ = F.im_.clone();
+    rgbIm_ = F.rgbIm_.clone();
     depthIm_ = F.depthIm_.clone();
 }
 
@@ -348,6 +360,10 @@ void Frame::setIm(cv::Mat& im){
     im_ = im.clone();
 }
 
+void Frame::setRgbIm(cv::Mat& im){
+    rgbIm_ = im.clone();
+}
+
 void Frame::setDepthIm(cv::Mat& im){
     depthIm_ = im.clone();
 }
@@ -356,8 +372,24 @@ cv::Mat Frame::getIm(){
     return im_.clone();
 }
 
+cv::Mat Frame::getRgbIm(){
+    return rgbIm_.clone();
+}
+
 double Frame::getDepthScale(){
-    return depthScale_;
+    return imageDepthScale_;
+}
+
+double Frame::getEstimatedDepthScale() {
+    return estimatedDepthScale_;
+}
+
+void Frame::setEstimatedDepthScale(double scale) {
+    estimatedDepthScale_ = scale;
+}
+
+float Frame::getDepthError(){
+    return depthError_;
 }
 
 cv::Mat Frame::getDepthIm(){

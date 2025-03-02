@@ -68,6 +68,10 @@ public:
      */
     cv::Mat getDepthIm();
 
+    cv::Mat getRgbIm();
+
+    cv::Vec4f getPixelColor(int x, int y, float alpha = 1.0f);
+
     /*
      * Gets the depth measure at index idx in the KeyFrame (simulation images)
      */
@@ -133,6 +137,8 @@ public:
      */
     std::shared_ptr<CameraModel> getCalibration();
 
+    std::shared_ptr<CameraModel> getPHCalibration();
+
     /*
      * Get the unique id of the KeyFrame
      */
@@ -188,9 +194,11 @@ private:
     cv::Mat descriptors_;
     std::vector<std::shared_ptr<MapPoint>> vMapPoints_;
     std::vector<float> vDepthMeasurements_;
-    float imageDepthScale_ = 1.0f; // for simulatng an unknown scale
-    double estimatedDepthScale_ = 1.0f; // scale estimated
+    double imageDepthScale_ = 1.0; // for simulatng an unknown scale
+    double estimatedDepthScale_ = 1.0; // scale estimated
     cv::Mat depthIm_;
+    cv::Mat rgbIm_;
+    float depthError_;
 
     Sophus::SE3f Tcw_;
 
@@ -198,6 +206,7 @@ private:
     //     Calibration
     //------------------------
     std::shared_ptr<CameraModel> calibration_;
+    std::shared_ptr<CameraModel> phcalibration_;
 
     //------------------------
     // Point grid for faster feature matching

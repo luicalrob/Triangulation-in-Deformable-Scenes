@@ -47,10 +47,12 @@ public:
 
     //Getter methods
     std::shared_ptr<CameraModel> getCalibration();
+    std::shared_ptr<CameraModel> getPHCalibration();
     std::vector<float> getDistortionParameters();
     int getImCols();
     int getImRows();
 
+    std::string getBorderMask();
     int getFeaturesPerImage();
     int getNumberOfScales();
     float getScaleFactor();
@@ -70,6 +72,7 @@ public:
 
     int getMinCommonObs();
 
+    float getMinMatches();
     float getMinCos();
     bool getCheckingSelection();
     float getDepthLimit();
@@ -80,6 +83,7 @@ public:
     float getSimulatedRepError();
     int getDecimalsRepError();
     float getSimulatedDepthError();
+    float getSimulatedDepthWeight();
     float getSimulatedDepthScaleC1();
     float getSimulatedDepthScaleC2();
     double getDepthMeasurementsScale();
@@ -118,10 +122,12 @@ public:
 private:
     //Camera parameters
     std::shared_ptr<CameraModel> calibration_;  //Geometric calibration with projection and unprojection functions
+    std::shared_ptr<CameraModel> pinHolecalibration_; 
     std::vector<float> vDistortion_;                //[Optional] Image distortion parameters
     int imCols_, imRows_;                           //Image size
 
     //Feature extractor parameters
+    std::string borderMask_;
     int nFeatures_;                                 //Number of features to extract per image
     int nScales_;                                   //Number of scales in the image pyramid representation
     float fScaleFactor_;                            //Scale factor
@@ -141,6 +147,7 @@ private:
 
     int nMinCommonObs_;
 
+    float fMinMatches_;
     float fMinCos_;
     bool checkingSelection_;
     float fDepthLimit_;
@@ -151,6 +158,7 @@ private:
     float SimulatedRepError_;
     int DecimalsRepError_;
     float SimulatedDepthError_;
+    float SimulatedDepthWeight_;
     float SimulatedDepthScaleC1_;
     float SimulatedDepthScaleC2_;
     double DepthMeasurementsScale_;

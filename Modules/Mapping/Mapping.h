@@ -57,7 +57,7 @@ public:
     /*
      * Performs the mapping for an image. Returns true on success
      */
-    bool doMapping(const cv::Mat& im, const cv::Mat &depthIm, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer);
+    bool doMapping(const cv::Mat &im, const cv::Mat &grayIm, const cv::Mat &depthIm, Sophus::SE3f& Tcw, int &nKF, int &nMPs, clock_t &timer);
     
     /*
      * Does the simulated mapping operation: triangulation and optimization
@@ -146,6 +146,8 @@ private:
 
     std::string TrianMethod_;
     std::string TrianLocation_;
+
+    std::shared_ptr<CameraModel> prevCalibration_, currCalibration_;
 };
 
 

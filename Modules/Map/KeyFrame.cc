@@ -16,6 +16,7 @@
 */
 
 #include "KeyFrame.h"
+#include "Utils/Geometry.h"
 
 #include <cmath>
 
@@ -29,11 +30,15 @@ KeyFrame::KeyFrame(Frame &f) {
     vMapPoints_ = f.getMapPoints();
     vDepthMeasurements_ = f.getDepthMeasurements();
     depthIm_ = f.getDepthIm();
+    rgbIm_ = f.getRgbIm();
     imageDepthScale_ = f.getDepthScale();
+    estimatedDepthScale_ = f.getEstimatedDepthScale();
+    depthError_ = f.getDepthError();
 
     Tcw_ = f.getPose();
 
     calibration_ = f.getCalibration();
+    phcalibration_ = f.getPHCalibration();
 
     grid_ = f.getGrid();
 
@@ -64,12 +69,15 @@ KeyFrame::KeyFrame(Frame &f) {
 KeyFrame::KeyFrame(const KeyFrame& other)
     : vKeys_(other.vKeys_),
       vDepthMeasurements_(other.vDepthMeasurements_),
+      depthError_(other.depthError_),
       imageDepthScale_(other.imageDepthScale_),
       estimatedDepthScale_(other.estimatedDepthScale_),
       depthIm_(other.depthIm_),
+      rgbIm_(other.rgbIm_),
       descriptors_(other.descriptors_.clone()),
       Tcw_(other.Tcw_),
       calibration_(other.calibration_),
+      phcalibration_(other.phcalibration_),
       grid_(other.grid_),
       gridElementWidthInv_(other.gridElementWidthInv_),
       gridElementHeightInv_(other.gridElementHeightInv_),
@@ -149,20 +157,43 @@ cv::Mat KeyFrame::getDepthIm(){
     return depthIm_.clone();
 }
 
+cv::Mat KeyFrame::getRgbIm(){
+    return rgbIm_.clone();
+}
+
+cv::Vec4f KeyFrame::getPixelColor(int x, int y, float alpha) {
+    cv::Vec4f color(0, 0, 0, alpha);  // Default black with given alpha
+
+    if (x >= 0 && x < rgbIm_.cols && y >= 0 && y < rgbIm_.rows) {
+        if (rgbIm_.channels() == 3) {  // RGB image
+            cv::Vec3b pixel = rgbIm_.at<cv::Vec3b>(y, x);
+            color = cv::Vec4f(pixel[2] / 255.0f, pixel[1] / 255.0f, pixel[0] / 255.0f, alpha);
+        } 
+        else if (rgbIm_.channels() == 4) {  // RGBA image
+            cv::Vec4b pixel = rgbIm_.at<cv::Vec4b>(y, x);
+            color = cv::Vec4f(pixel[2] / 255.0f, pixel[1] / 255.0f, pixel[0] / 255.0f, pixel[3]*alpha / 255.0f);
+        }
+    }
+
+    return color;
+}
+
 double KeyFrame::getDepthMeasure(float x, float y, bool scaled) {
     if (depthIm_.empty()) {
-        return -1;
-        //throw std::runtime_error("Depth image is not initialized.");
+        throw std::runtime_error("Depth image is not initialized.");
     }
+    // std::cout << "x: " << x << std::endl;
+    // std::cout << "y: " << y << std::endl;
+    // std::cout << "depthIm_.cols: " << depthIm_.cols << std::endl;
+    // std::cout << "depthIm_.rows: " << depthIm_.rows << std::endl;
     if (x >= depthIm_.cols || y >= depthIm_.rows) {
+        std::cout << x << " " << y << std::endl;
         throw std::out_of_range("Pixel coordinates are out of range.");
     }
 
-    uint16_t rawDepth = depthIm_.at<uint16_t>(std::round(y), std::round(x));
-
-    double scaleFactor = 30.0f / (pow(2, 16)-1); // (2^16 - 1) * 30
-
-    double depth = static_cast<double>(rawDepth) * scaleFactor;
+    float ground_truth_depth = Interpolate(x, y,depthIm_.ptr<float>(0), depthIm_.cols);
+    
+    double depth = ((static_cast<double>(ground_truth_depth)/100));
 
     if(scaled)
         return depth;
@@ -225,6 +256,10 @@ std::shared_ptr<MapPoint> KeyFrame::getMapPoint(size_t idx) {
 
 std::shared_ptr<CameraModel> KeyFrame::getCalibration() {
     return calibration_;
+}
+
+std::shared_ptr<CameraModel> KeyFrame::getPHCalibration() {
+    return phcalibration_;
 }
 
 long unsigned int KeyFrame::getId() {
