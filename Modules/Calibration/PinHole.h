@@ -21,8 +21,8 @@
  * Implementation of the PinHole camera model with 4 parameters
  */
 
-#ifndef JJSLAM_PINHOLE_H
-#define JJSLAM_PINHOLE_H
+#ifndef SLAM_PINHOLE_H
+#define SLAM_PINHOLE_H
 
 #include "CameraModel.h"
 
@@ -58,7 +58,7 @@ public:
     /*
      * Implementation of the pinhole unprojection function but using z measurements
      */
-    void unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, double z);
+    //void unprojectWithZ(const Eigen::Vector2f& p2D, Eigen::Vector3f& p3D, double z);
 
     /*
      * Implementation of the jacobian matrix of the pinhole projection function
@@ -71,7 +71,7 @@ public:
     void unprojectJac(const Eigen::Vector2f& p2D, Eigen::Matrix<float,3,2>& Jac);
 
 
-    Eigen::Matrix3f getCalibrationMatrix() const;
+    // Eigen::Matrix3f getCalibrationMatrix() const;
 };
 
 

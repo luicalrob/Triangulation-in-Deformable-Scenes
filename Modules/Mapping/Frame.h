@@ -46,8 +46,10 @@ public:
     Frame(const int nFeatures, const int nGridCols, const int nGridRows,
           const int nImCols, const int nImRows, int nScales, float fScaleFactor,
           const std::shared_ptr<CameraModel> calibration,
+          const std::shared_ptr<CameraModel> phcalibration,
           const std::vector<float>& vDistortion = {},
-          const double dScale = 0.0);
+          const double dScale = 0.0,
+          const float depthError = 0.0);
 
     /*
      * Sets the pose of the Frame
@@ -134,6 +136,8 @@ public:
      */
     std::shared_ptr<CameraModel> getCalibration();
 
+    std::shared_ptr<CameraModel> getPHCalibration();
+
     /*
      * Swaps the contents of 2 frames
      */
@@ -204,6 +208,8 @@ public:
      */
     void setIm(cv::Mat& im);
 
+    void setRgbIm(cv::Mat& im);
+
     /*
      * Sets the depth image for the Frame
      */
@@ -214,6 +220,8 @@ public:
      */
     cv::Mat getIm();
 
+    cv::Mat getRgbIm();
+
     /*
      * Gets the depth image of the frame
      */
@@ -223,6 +231,21 @@ public:
      * Gets the depth scale of the depth image of the frame
      */
     double getDepthScale();
+
+    /*
+     * Gets Frame estimated depth scale (up to scale depth measurements) (real images)
+     */
+    double getEstimatedDepthScale();
+
+    /*
+     * Set KF estimated depth scale (up to scale depth measurements) (real images)
+     */
+    void setEstimatedDepthScale(double scale);
+
+    /*
+     * Gets the depth error introduced to the real depth measurements
+     */
+    float getDepthError();
 
     /*
      * Checks that all MapPoints matched are good i.e. their error is low. ONLY USED FOR DEBUG PURPOSES
@@ -258,6 +281,7 @@ private:
     //     Calibration
     //------------------------
     std::shared_ptr<CameraModel> calibration_;  //Camera calibration
+    std::shared_ptr<CameraModel> phcalibration_;
     std::vector<float> vDistortion_;                //Distortion parameters (optional)
     float minCol_, maxCol_;                         //Undistorted image boundaries (cols)
     float minRow_, maxRow_;                         //Undistorted image boundaries (rows)
@@ -278,9 +302,12 @@ private:
     std::vector<float> vSigma2_, vInvSigma2_;           //Uncertainties for a KeyPoint extracted at a image scale
 
     cv::Mat im_;
+    cv::Mat rgbIm_;
     cv::Mat depthIm_;
     double timestamp_;
-    double depthScale_;
+    double imageDepthScale_ = 1.0; // for simulatng an unknown scale
+    double estimatedDepthScale_ = 1.0; // scale estimated
+    float depthError_;
 };
 
 

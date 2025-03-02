@@ -446,7 +446,7 @@ void localBundleAdjustment(Map* pMap, ID currKeyFrameId){
 void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std::shared_ptr<MapVisualizer>& mapVisualizer,
                             const std::vector<Eigen::Vector3f> originalPoints, const std::vector<Eigen::Vector3f> movedPoints) {
     float simulatedRepErrorStanDesv = settings.getSimulatedRepError();
-    float SimulatedDepthErrorStanDesv = settings.getSimulatedDepthError();
+    float SimulatedDepthErrorStanDesv = settings.getSimulatedDepthWeight()/1000;
 
     double repBalanceWeight = settings.getOptRepWeight();
     double arapBalanceWeight = settings.getOptArapWeight();
@@ -479,7 +479,7 @@ void deformationOptimization(std::shared_ptr<Map> pMap, Settings& settings, std:
     std::unordered_map<ID, std::shared_ptr<MapPoint>> mapPoints_corrected = pMap->getMapPoints();
 
     double optimizationUpdate = 100;
-    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.00001*mapPoints_corrected.size()); i++){ 
+    for(int i = 1; i <= nOptimizations && optimizationUpdate >= (0.0001*mapPoints_corrected.size()); i++){ 
         // correct error
         if (OptSelection == "open3DArap") {
             arapOpen3DOptimization(pMap.get());
@@ -705,24 +705,22 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
             mTGlobalId[T] = currId;
             currId++;
 
-            // double ds_1 = static_cast<double>(pKF1->getEstimatedDepthScale());
-            // double ds_2 = static_cast<double>(pKF2->getEstimatedDepthScale());
-            // DepthScale_ dscale1 = std::make_shared<double>(ds_1);
-            // DepthScale_ dscale2 = std::make_shared<double>(ds_2);
+            double ds_1 = pKF1->getEstimatedDepthScale();
+            double ds_2 = pKF2->getEstimatedDepthScale();
 
-            // VertexDepthScale* vScale1 = new VertexDepthScale();
-            // vScale1->setEstimate(ds_1);
-            // vScale1->setId(currId);
-            // optimizer.addVertex(vScale1);
-            // mKeyFrameId[pKF1] = currId;
-            // currId++;
+            VertexDepthScale* vScale1 = new VertexDepthScale();
+            vScale1->setEstimate(ds_1);
+            vScale1->setId(currId);
+            optimizer.addVertex(vScale1);
+            mKeyFrameId[pKF1] = currId;
+            currId++;
 
-            // VertexDepthScale* vScale2 = new VertexDepthScale();
-            // vScale2->setEstimate(ds_2);
-            // vScale2->setId(currId);
-            // optimizer.addVertex(vScale2);
-            // mKeyFrameId[pKF2] = currId;
-            // currId++;
+            VertexDepthScale* vScale2 = new VertexDepthScale();
+            vScale2->setEstimate(ds_2);
+            vScale2->setId(currId);
+            optimizer.addVertex(vScale2);
+            mKeyFrameId[pKF2] = currId;
+            currId++;
 
             for (size_t mpIndex = 0; mpIndex < v1MPs.size(); mpIndex++) {
                 MapPoint_ pMPi1 = v1MPs[mpIndex];
@@ -815,7 +813,6 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
 
                 // DEPTH ERROR //
                 //Set fisrt depth edge
-                double depth = static_cast<double>(pKF1->getDepthMeasure(mpIndex));
                 double d1 = pKF1->getDepthMeasure(uv1.x, uv1.y, false);
                 EdgeDepthCorrection* eD1 = new EdgeDepthCorrection();
 
@@ -828,10 +825,24 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 eD1->setInformation(informationMatrixDepth);
                 kfPose = pKF1->getPose();
                 eD1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
+                //eD1->scale = ds_1;
                 optimizer.addEdge(eD1);
 
+                // double d1 = pKF1->getDepthMeasure(uv1.x, uv1.y, false);
+                // EdgeDepthWithoutScaleCorrection* eD1 = new EdgeDepthWithoutScaleCorrection();
+
+                // eD1->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[firstPointToOptimize])));
+                // eD1->setMeasurement(d1);
+                // Eigen::Matrix<double, 1, 1> informationMatrixDepth;
+                // double depthUncertainty = static_cast<double>(DepthError);
+                // informationMatrixDepth(0, 0) = 1/(depthUncertainty * depthUncertainty);
+                // eD1->setInformation(informationMatrixDepth);
+                // kfPose = pKF1->getPose();
+                // eD1->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
+                // eD1->scale = ds_1;
+                // optimizer.addEdge(eD1);
+
                 //Set second depth edge
-                //depth = static_cast<double>(pKF2->getDepthMeasure(mpIndex));
                 double d2 = pKF2->getDepthMeasure(uv2.x, uv2.y, false);
 
                 EdgeDepthCorrection* eD2 = new EdgeDepthCorrection();
@@ -843,6 +854,18 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                 kfPose = pKF2->getPose();
                 eD2->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
                 optimizer.addEdge(eD2);
+
+                // double d2 = pKF2->getDepthMeasure(uv2.x, uv2.y, false);
+
+                // EdgeDepthWithoutScaleCorrection* eD2 = new EdgeDepthWithoutScaleCorrection();
+
+                // eD2->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(mMapPointId[secondPointToOptimize])));
+                // eD2->setMeasurement(d2);
+                // eD2->setInformation(informationMatrixDepth);
+                // kfPose = pKF2->getPose();
+                // eD2->cameraPose = g2o::SE3Quat(kfPose.unit_quaternion().cast<double>(),kfPose.translation().cast<double>());
+                // eD2->scale = ds_2;
+                // optimizer.addEdge(eD2);
 
 
                 auto it = invertedPosIndexes.find(mpIndex);
@@ -897,6 +920,10 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                         currId++;
                     }
 
+                    // Eigen::Vector3f t1 = pKF1->getPose().inverse().translation();
+                    // Eigen::Vector3f t2 = pKF2->getPose().inverse().translation();
+                    // float norm = (t2 - t1).norm();
+
                     //Set ARAP edge
                     EdgeARAP* eArap = new EdgeARAP();
 
@@ -912,9 +939,11 @@ void arapOptimization(Map* pMap, double repBalanceWeight, double globalBalanceWe
                     eArap->weight = edge_weights[GetOrderedEdge(i, j)];
                     eArap->alpha = alphaWeight;
                     eArap->beta = betaWeight;
+                    double area = static_cast<double>(mesh->GetSurfaceArea());
+                    eArap->area = area;
 
                     Eigen::Matrix<double, 1, 1> informationMatrixArap;
-                    informationMatrixArap(0, 0) = arapBalanceWeight * std::pow(mesh->triangles_.size(), 2); // * distancesInvTipDesv;
+                    informationMatrixArap(0, 0) = (arapBalanceWeight) * std::pow(mesh->triangles_.size(), 2);// * std::pow(area, 5); // * distancesInvTipDesv;
 
                     eArap->setInformation(informationMatrixArap);
                     double measurementArap = 0.0;

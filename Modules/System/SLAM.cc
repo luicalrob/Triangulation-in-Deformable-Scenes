@@ -54,11 +54,11 @@ SLAM::SLAM(const std::string& settingsFile, const PoseData& pose) {
 
     refFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(),settings_.getNumberOfScales(), settings_.getScaleFactor(),
-                       settings_.getCalibration(),settings_.getDistortionParameters());
+                       settings_.getCalibration(), settings_.getPHCalibration(), settings_.getDistortionParameters(), settings_.getSimulatedDepthError());
 
     currFrame_ = Frame(settings_.getFeaturesPerImage(),settings_.getGridCols(),settings_.getGridRows(),
                        settings_.getImCols(),settings_.getImRows(), settings_.getNumberOfScales(), settings_.getScaleFactor(),
-                       settings_.getCalibration(),settings_.getDistortionParameters());
+                       settings_.getCalibration(), settings_.getPHCalibration() ,settings_.getDistortionParameters(), settings_.getSimulatedDepthError());
 
     prevCalibration_ = refFrame_.getCalibration();
     currCalibration_ = currFrame_.getCalibration();
@@ -117,7 +117,7 @@ bool SLAM::processImage(const cv::Mat &im, const cv::Mat &depthIm, Sophus::SE3f&
     std::cerr << "Let's do Mapping! " << std::endl;
 
     // Do mapping
-    bool goodMapped = mapper_.doMapping(grayIm, depthIm, Tcw_, nKF, nMPs, timer);
+    bool goodMapped = mapper_.doMapping(im, grayIm, depthIm, Tcw_, nKF, nMPs, timer);
     
     if (goodMapped) {
         startMeasurementsOnFile();
@@ -148,7 +148,9 @@ bool SLAM::processSimulatedImage(int &nMPs, clock_t &timer) {
 }
 
 cv::Mat SLAM::convertImageToGrayScale(const cv::Mat &im) {
-    cv::Mat grayScaled;
+    cv::Mat grayScaled, mImGreen, mImBGR;
+    grayScaled = im;
+    mImBGR = cv::Mat();
 
     if(im.type() == CV_8U)
         grayScaled = im;
@@ -156,7 +158,12 @@ cv::Mat SLAM::convertImageToGrayScale(const cv::Mat &im) {
         cvtColor(im,grayScaled,cv::COLOR_RGB2GRAY);
     }
     else if(im.channels()==4){
+        cvtColor(im,mImBGR,cv::COLOR_BGRA2BGR);
         cvtColor(im,grayScaled,cv::COLOR_BGRA2GRAY);
+        extractChannel(mImBGR, mImGreen, 1);
+        grayScaled = mImGreen.clone();
+
+        //cvtColor(im,grayScaled,cv::COLOR_BGRA2GRAY);
     }
 
     return grayScaled;

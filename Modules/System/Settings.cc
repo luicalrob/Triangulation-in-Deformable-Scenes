@@ -15,6 +15,7 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "Calibration/KannalaBrandt8.h"
 #include "Calibration/PinHole.h"
 
 #include "Settings.h"
@@ -38,9 +39,16 @@ Settings::Settings(const std::string& configFile) {
     float fy = fSettings["Camera.fy"];
     float cx = fSettings["Camera.cx"];
     float cy = fSettings["Camera.cy"];
-    vector<float> vCalibration = {fx,fy,cx,cy};
 
-    calibration_ = shared_ptr<CameraModel>(new PinHole(vCalibration));
+    float k0 = fSettings["Camera.d0"];
+    float k1 = fSettings["Camera.d1"];
+    float k2 = fSettings["Camera.d2"];
+    float k3 = fSettings["Camera.d3"];
+    vector<float> vCalibration = {fx,fy,cx,cy,k0,k1,k2,k3};
+    vector<float> vCalibration1 = {fx,fy,cx,cy};
+
+    calibration_ = shared_ptr<CameraModel>(new KannalaBrandt8(vCalibration));
+    pinHolecalibration_ = shared_ptr<CameraModel>(new PinHole(vCalibration1));
 
     //Read (if exists) distortion parameters
     if(!fSettings["Camera.k1"].empty()){
@@ -63,6 +71,8 @@ Settings::Settings(const std::string& configFile) {
     imRows_ = fSettings["Camera.rows"];
 
     //Read Feature extractor parameters
+
+    fSettings["FeatureExtractor.imageBoderMask"] >> borderMask_;
     nFeatures_ = fSettings["FeatureExtractor.nFeatures"];
     nScales_ = fSettings["FeatureExtractor.nScales"];
     fScaleFactor_ = fSettings["FeatureExtractor.fScaleFactor"];
@@ -85,6 +95,7 @@ Settings::Settings(const std::string& configFile) {
 
     nMinCommonObs_ = fSettings["Map.minObs"];
     fMinCos_ = fSettings["Triangulation.minCos"];
+    fMinMatches_ = fSettings["Triangulation.minMatches"];
 
     //LUIS
     std::string checksString;
@@ -110,6 +121,7 @@ Settings::Settings(const std::string& configFile) {
     SimulatedRepError_ = fSettings["Keypoints.RepError"];
     DecimalsRepError_ = fSettings["Keypoints.decimalsApproximation"];
     SimulatedDepthError_ = fSettings["Measurements.DepthError"];
+    SimulatedDepthWeight_ = fSettings["Measurements.DepthWeight"];
     SimulatedDepthScaleC1_ = fSettings["Measurements.DepthScale.C1"];
     SimulatedDepthScaleC2_ = fSettings["Measurements.DepthScale.C2"];
     DepthMeasurementsScale_ = fSettings["Measurements.Depth.Scale"];
@@ -213,6 +225,10 @@ std::shared_ptr<CameraModel> Settings::getCalibration() {
     return calibration_;
 }
 
+std::shared_ptr<CameraModel> Settings::getPHCalibration() {
+    return pinHolecalibration_;
+}
+
 std::vector<float> Settings::getDistortionParameters() {
     return vDistortion_;
 }
@@ -223,6 +239,10 @@ int Settings::getImCols() {
 
 int Settings::getImRows() {
     return imRows_;
+}
+
+std::string Settings::getBorderMask() {
+    return borderMask_;
 }
 
 int Settings::getFeaturesPerImage() {
@@ -277,6 +297,10 @@ int Settings::getMinCommonObs(){
     return nMinCommonObs_;
 }
 
+float Settings::getMinMatches(){
+    return fMinMatches_;
+}
+
 float Settings::getMinCos(){
     return fMinCos_;
 }
@@ -307,6 +331,10 @@ int Settings::getDecimalsRepError(){
 
 float Settings::getSimulatedDepthError(){
     return SimulatedDepthError_;
+}
+
+float Settings::getSimulatedDepthWeight(){
+    return SimulatedDepthWeight_;
 }
 
 float Settings::getSimulatedDepthScaleC1(){

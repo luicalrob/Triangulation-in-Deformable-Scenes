@@ -49,8 +49,8 @@ public:
      * Basic constructor: it takes the number of scales for the multi scale extracion, the desired number of features,
      * and 2 FAST thresholds
      */
-    FAST(int nScales, float fScaleFactor, int nFeatures, int thFAST, int minThFAST) :
-    nScales_(nScales), fScaleFactor_(fScaleFactor), nMaxFeatures_(nFeatures), thFast_(thFAST), minThFAST_(minThFAST) {
+    FAST(int nScales, float fScaleFactor, int nFeatures, int thFAST, int minThFAST, std::string borderMask) :
+    nScales_(nScales), fScaleFactor_(fScaleFactor), nMaxFeatures_(nFeatures), thFast_(thFAST), minThFAST_(minThFAST), borderMask_(borderMask) {
         vScaleFactor_.resize(nScales_);
         vInvScaleFactor_.resize(nScales_);
 
@@ -107,7 +107,7 @@ private:
     /*
      * Computes KeyPoints and distribute them with an oct tree
      */
-    void computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKeypoints);
+    void computeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint>>& allKeypoints, const std::vector<cv::Mat>& reflectionMasks);
 
     /*
      * Distributes a given set of KeyPoints with an octree
@@ -125,6 +125,9 @@ private:
      */
     float IC_Angle(const cv::Mat& image, cv::Point2f pt,  const std::vector<int> & u_max);
 
+    std::vector<cv::Mat> GenerateMasks(const cv::Mat &image, const cv::Mat &borderMask, int numOctaves, bool bBorder, bool bReflexion);
+
+    std::string borderMask_;
     int nScales_;               //Number of pyramid levels
     float fScaleFactor_;        //Scale factor for the downsampling in the image pyramid
     int nMaxFeatures_;          //Max number of desired features
